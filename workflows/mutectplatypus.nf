@@ -104,6 +104,7 @@ def bed_intervals_options      = modules['bed_intervals']
 
 // Stage dummy file to be used as an optional input where required
 include { CREATE_INTERVALS_BED }   from '../modules/local/create_intervals_bed/main' addParams(options: bed_intervals_options)
+include { BUILD_INTERVALS }        from '../modules/local/build_intervals/main'
 
 ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 
