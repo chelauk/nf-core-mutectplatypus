@@ -11,7 +11,15 @@ WorkflowMutectplatypus.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
-def checkPathParamList = [ params.input, params.multiqc_config, params.fasta ]
+def checkPathParamList = [
+    params.input,
+    params.multiqc_config,
+    params.fasta,
+    params.fasta_fai,
+    params.dict,
+    params.germline_resource,
+    params.germline_resource_idx
+    ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
@@ -57,8 +65,111 @@ multiqc_options.args += params.multiqc_title ? Utils.joinModuleArgs(["--title \"
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { FASTQC  } from '../modules/nf-core/modules/fastqc/main'  addParams( options: modules['fastqc'] )
+
 include { MULTIQC } from '../modules/nf-core/modules/multiqc/main' addParams( options: multiqc_options   )
+
+
+//
+// MODULE: platypus module
+//
+def platypusvariant_options   = modules['platypusvariant']
+include { PLATYPUSVARIANT } from '../modules/local/platypusvariant' addParams( options: platypusvariant_options )
+
+//
+// MODULE: bcftools module
+//
+
+def bcftools_options          = modules['bcftools']
+include { BCFTOOLS_CONCAT } from '../modules/nf-core/modules/bcftools/concat/main' addParams( options: bcftools_options)
+
+//
+// MODULE: filter platypus module
+//
+
+def filter_platypus_options    = modules['filter_platypus']
+include { FILTERPLATYPUS } from '../modules/local/filterplatypus.nf' addParams( options: filter_platypus_options)
+
+//
+// MODULE: bgzip module
+//
+
+def bgzip_options              = modules['bgzip_vcfs']
+include { BGZIP } from '../modules/local/bgzip' addParams( options: bgzip_options)
+
+
+//
+// MODULE: create_bed_intervals module
+//
+def bed_intervals_options      = modules['bed_intervals']
+
+// Stage dummy file to be used as an optional input where required
+include { CREATE_INTERVALS_BED }   from '../modules/local/create_intervals_bed/main' addParams(options: bed_intervals_options)
+
+ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
+
+// Initialize file channels based on params, defined in the params.genomes[params.genome] scope
+
+fasta                 = params.fasta                 ? Channel.fromPath(params.fasta).collect()                 : ch_dummy_file
+fasta_fai             = params.fasta_fai             ? Channel.fromPath(params.fasta_fai).collect()             : ch_dummy_file
+dict                  = params.dict                  ? Channel.fromPath(params.dict).collect()                  : ch_dummy_file
+germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : ch_dummy_file
+germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : ch_dummy_file
+
+
+// Initialise input sample
+csv_file = file(params.input)
+input_samples  = extract_csv(csv_file)
+
+def extract_csv(csv_file) {
+    Channel.from(csv_file).splitCsv(header: true)
+        //Retrieves number of lanes by grouping together by patient and sample and counting how many entries there are for this combination
+        .map{ row ->
+            if (!(row.patient && row.sample)) log.warn "Missing or unknown field in csv file header"
+            [[row.patient.toString(), row.sample.toString()], row]
+        }.groupTuple()
+        .map{ meta, rows ->
+            size = rows.size()
+            [rows, size]
+        }.transpose()
+        .map{ row, numLanes -> //from here do the usual thing for csv parsing
+        def meta = [:]
+
+        //TODO since it is mandatory: error/warning if not present?
+        // Meta data to identify samplesheet
+        // Both patient and sample are mandatory
+        // Several sample can belong to the same patient
+        // Sample should be unique for the patient
+        if (row.patient) meta.patient = row.patient.toString()
+        if (row.sample)  meta.sample  = row.sample.toString()
+
+        // If no gender specified, gender is not considered
+        // gender is only mandatory for somatic CNV
+        if (row.gender) meta.gender = row.gender.toString()
+        else meta.gender = "NA"
+
+        // If no status specified, sample is assumed normal
+        if (row.status) meta.status = row.status.toInteger()
+        else meta.status = 0
+
+        // create control id necessary for filter platypus
+        if (row.bam_c) {
+            meta.control = file(row.bam_c).getName()
+            meta.control = meta.control.toString().minus('.recal.bam')
+        }
+
+        // mapping with platypus
+        if (row.vcf && row.bam_t) {
+            def vcf         = file(row.vcf, checkIfExists: true)
+            def vcf_tbi         = file(row.vcf_tbi, checkIfExists: true)
+            def bam_t       = file(row.bam_t, checkIfExists: true)
+            def bam_t_bai   = file(row.bam_t_bai, checkIfExists: true)
+            def bam_c       = file(row.bam_c, checkIfExists: true)
+            def bam_c_bai   = file(row.bam_c_bai, checkIfExists: true)
+            return [meta, [vcf, vcf_tbi, bam_t, bam_t_bai, bam_c, bam_c_bai]]
+        // recalibration
+        }
+    }
+}
 
 /*
 ========================================================================================
@@ -73,21 +184,10 @@ workflow MUTECTPLATYPUS {
 
     ch_software_versions = Channel.empty()
 
-    //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
-    INPUT_CHECK (
-        ch_input
-    )
-
-    //
-    // MODULE: Run FastQC
-    //
-    FASTQC (
-        INPUT_CHECK.out.reads
-    )
-    ch_software_versions = ch_software_versions.mix(FASTQC.out.version.first().ifEmpty(null))
-
+    if (!params.intervals)
+        result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai))
+    else
+        result_intervals = CREATE_INTERVALS_BED(file(params.intervals))
     //
     // MODULE: Pipeline reporting
     //
@@ -114,7 +214,6 @@ workflow MUTECTPLATYPUS {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(GET_SOFTWARE_VERSIONS.out.yaml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
         ch_multiqc_files.collect()
