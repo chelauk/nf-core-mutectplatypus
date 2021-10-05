@@ -166,8 +166,7 @@ def extract_csv(csv_file) {
 
 def make_mutect2_input(input) {
     return input
-        .map { meta, files -> [ meta.patient, meta.sample, meta.status
-        [files[0],files[1]]}
+        .map { meta, files -> [ meta.patient, meta.sample, meta.status, [files[0],files[1]]}
         .groupTuple()
         .map { patient, status, bams  -> [ patient,control,bams.flatten()] }
 }
