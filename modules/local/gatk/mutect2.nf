@@ -4,7 +4,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 options        = initOptions(params.options)
 
-process GATK$_MUTECT2 {
+process GATK4_MUTECT2 {
     tag "$meta.id"
     label 'process_medium'
     publishDir "${params.outdir}",

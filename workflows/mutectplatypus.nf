@@ -121,6 +121,8 @@ germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.g
 csv_file = file(params.input)
 input_samples  = extract_csv(csv_file)
 
+mutect_input = make_mutect_input(input_samples)
+
 def extract_csv(csv_file) {
     Channel.from(csv_file).splitCsv(header: true)
         //Retrieves number of lanes by grouping together by patient and sample and counting how many entries there are for this combination
@@ -142,6 +144,7 @@ def extract_csv(csv_file) {
         // Sample should be unique for the patient
         if (row.patient) meta.patient = row.patient.toString()
         if (row.sample)  meta.sample  = row.sample.toString()
+        meta.id                       = meta.patient + "_" meta.sample
 
         // If no gender specified, gender is not considered
         // gender is only mandatory for somatic CNV
@@ -152,24 +155,21 @@ def extract_csv(csv_file) {
         if (row.status) meta.status = row.status.toInteger()
         else meta.status = 0
 
-        // create control id necessary for filter platypus
-        if (row.bam_c) {
-            meta.control = file(row.bam_c).getName()
-            meta.control = meta.control.toString().minus('.recal.bam')
-        }
-
-        // mapping with platypus
-        if (row.vcf && row.bam_t) {
-            def vcf         = file(row.vcf, checkIfExists: true)
-            def vcf_tbi         = file(row.vcf_tbi, checkIfExists: true)
-            def bam_t       = file(row.bam_t, checkIfExists: true)
-            def bam_t_bai   = file(row.bam_t_bai, checkIfExists: true)
-            def bam_c       = file(row.bam_c, checkIfExists: true)
-            def bam_c_bai   = file(row.bam_c_bai, checkIfExists: true)
-            return [meta, [vcf, vcf_tbi, bam_t, bam_t_bai, bam_c, bam_c_bai]]
+        if (row.bam && row.bai) {
+            def bam        = file(row.bam, checkIfExists: true)
+            def bai        = file(row.bai, checkIfExists: true)
+            return [meta, [bam, bai]]
         // recalibration
         }
     }
+}
+
+def make_mutect2_input(input) {
+    return input
+        .map { meta, files -> [ meta.patient, meta.sample, meta.status
+        [files[0],files[1]]}
+        .groupTuple()
+        .map { patient, status, bams  -> [ patient,control,bams.flatten()] }
 }
 
 /*
@@ -189,6 +189,17 @@ workflow MUTECTPLATYPUS {
         result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai))
     else
         result_intervals = CREATE_INTERVALS_BED(file(params.intervals))
+
+    mutect_input.view()
+    GATK4_MUTECT2(
+        fasta,
+        fasta_fai,
+        dict,
+        germline_resource,
+        germline_resource_idx
+        bam,
+        bai
+    )
     //
     // MODULE: Pipeline reporting
     //
