@@ -6,6 +6,12 @@
             "fastqc": {
                 "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
             },
+            "gatk4/calculatecontamination": {
+                "git_sha": "aa32a8a72eab0c0fb4c748678916be57126a4f61"
+            },
+            "gatk4/getpileupsummaries": {
+                "git_sha": "49da8642876ae4d91128168cd0db4f1c858d7792"
+            },
             "multiqc": {
                 "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
             }

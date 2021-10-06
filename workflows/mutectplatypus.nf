@@ -183,7 +183,7 @@ def multiqc_report = []
 workflow MUTECTPLATYPUS {
 
     ch_software_versions = Channel.empty()
-    
+
 	result_intervals = Channel.empty()
     if (!params.intervals)
         result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai))
@@ -219,6 +219,17 @@ workflow MUTECTPLATYPUS {
         dict,
         germline_resource,
         germline_resource_idx,
+    )
+    // split input
+    pileup_input = input_samples.branch { tumour: meta.status == 1
+                           normal: meta.status == 0 }
+
+    pileup.tumour.view()
+
+    PILEUP_SUMMARIES (
+        bam_intervals,
+        germline_resource,
+        germline_resource_idx
     )
 
     //
