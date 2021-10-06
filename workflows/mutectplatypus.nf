@@ -165,9 +165,9 @@ def extract_csv(csv_file) {
 
 def make_mutect_input(input) {
     return input
-        .map { meta, files -> [ meta.patient, meta.id, meta.status, [files[0],files[1]]] }
+        .map { meta, files -> [ meta.patient, meta.id, meta.status, files[0],files[1]] }
 		.groupTuple()
-		.map { patient, id, status, files -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /control/ }], files.flatten()]}
+		.map { patient, id, status, bam, bai -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /control/ }], bam, bai ]}
 }
 
 
@@ -190,7 +190,12 @@ workflow MUTECTPLATYPUS {
         result_intervals = CREATE_INTERVALS_BED(file(params.intervals))
 
     mutect_input.view()
-    GATK4_MUTECT2(
+    fasta.view()
+	fasta_fai.view()
+    dict.view()
+	germline_resource.view()
+	germline_resource_idx.view()
+	GATK4_MUTECT2(
 	    mutect_input,
         fasta,
         fasta_fai,
