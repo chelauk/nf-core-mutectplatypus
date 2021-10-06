@@ -28,5 +28,9 @@ process BUILD_INTERVALS {
     """
     awk -v FS='\t' -v OFS='\t' '{ print \$1, \"0\", \$2 }' ${fai} > ${fai.baseName}.bed
     """
+    stub:
+    """
+    awk -v FS='\t' -v OFS='\t' '{ print \$1, \"0\", \$2 }' ${fai} > ${fai.baseName}.bed
+    """
 }
 
