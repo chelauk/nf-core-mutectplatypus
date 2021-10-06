@@ -29,7 +29,7 @@ process GATK4_MUTECT2 {
     }
 
     input:
-    tuple val(patient), val(which_tumour), val(which_norm), path(bam), path(bai)
+    tuple val(patient), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
     path fasta
     path fasta_fai
     path dict
@@ -63,7 +63,8 @@ process GATK4_MUTECT2 {
         ${inputsCommand} \\
         ${normalsCommand} \\
         ${panelsCommand} \\
-        -O ${prefix}.vcf.gz \\
+        -L $intervals \\
+		-O ${prefix}.vcf.gz \\
         --af-of-alleles-not-in-resource 0.0000025 \\
         --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter \\
         $options.args
@@ -90,6 +91,7 @@ process GATK4_MUTECT2 {
     """
     echo -e "gatk gatk Mutect2 \\\n
              -R ${fasta} \\\n
+             -L ${intervals} \\\n
              ${inputsCommand} \\\n
              ${normalsCommand} \\\n
              ${panelsCommand} \\\n

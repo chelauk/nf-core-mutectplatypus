@@ -183,20 +183,37 @@ def multiqc_report = []
 workflow MUTECTPLATYPUS {
 
     ch_software_versions = Channel.empty()
-
+    
+	result_intervals = Channel.empty()
     if (!params.intervals)
         result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai))
     else
         result_intervals = CREATE_INTERVALS_BED(file(params.intervals))
 
-    mutect_input.view()
-    fasta.view()
-	fasta_fai.view()
-    dict.view()
-	germline_resource.view()
-	germline_resource_idx.view()
+    result_intervals = result_intervals.flatten()
+        .map{ intervalFile ->
+            def duration = 0.0
+            for (line in intervalFile.readLines()) {
+                final fields = line.split('\t')
+                if (fields.size() >= 5) duration += fields[4].toFloat()
+                else {
+                    start = fields[1].toInteger()
+                    end = fields[2].toInteger()
+                    duration += (end - start) / params.nucleotides_per_second
+                }
+            }
+            [duration, intervalFile]
+        }.toSortedList({ a, b -> b[0] <=> a[0] })
+        .flatten().collate(2)
+        .map{duration, intervalFile -> intervalFile}
+
+    mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
+        patient = patient + "_" + intervals.baseName
+        [patient, which_tumour, which_norm, bam, bai, intervals]
+    }.set{bam_intervals}
+
 	GATK4_MUTECT2(
-	    mutect_input,
+	    bam_intervals,
         fasta,
         fasta_fai,
         dict,
