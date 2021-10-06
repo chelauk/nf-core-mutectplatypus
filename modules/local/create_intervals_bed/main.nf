@@ -100,4 +100,3 @@ process CREATE_INTERVALS_BED {
         }' ${intervals}
         """
 }
-}
