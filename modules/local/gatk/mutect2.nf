@@ -1,4 +1,14 @@
 // Import generic module functions
+
+/* The gnomAD resource af-only-gnomad_grch38.vcf.gz represents ~200k exomes and ~16k genomes and the tutorial data is exome data,
+ * so we adjust --af-of-alleles-not-in-resource to 0.0000025 which corresponds to 1/(2*exome samples).
+ * Include reads whose mate maps to a different contig. For our somatic analysis that uses alt-aware and post-alt processed alignments
+ * to GRCh38, we disable a specific read filter with --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter.
+ * This filter removes from analysis paired reads whose mate maps to a different contig. Because of the way BWA criss-crosses
+ * mate information for mates that align better to alternate contigs (alt-aware mapping to GRCh38), we want to include these types
+ * of reads in our analysis. Otherwise, we may miss out on detecting SNVs and indels associated with alternate haplotypes.
+ * Disabling this filter deviates from current production practices.
+ */
 include { initOptions; saveFiles; getSoftwareName } from './functions'
 
 params.options = [:]
@@ -54,6 +64,8 @@ process GATK4_MUTECT2 {
         ${normalsCommand} \\
         ${panelsCommand} \\
         -O ${prefix}.vcf.gz \\
+        --af-of-alleles-not-in-resource 0.0000025 \\
+        --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter \\
         $options.args
     cat <<-END_VERSIONS > versions.yml
     ${getProcessName(task.process)}:
