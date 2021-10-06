@@ -29,7 +29,7 @@ process GATK4_MUTECT2 {
     }
 
     input:
-    tuple val(patient), val(which_tumour), val(which_control), path(bam), path(bai)
+    tuple val(patient), val(which_tumour), val(which_norm), path(bam), path(bai)
     path fasta
     path fasta_fai
     path dict
@@ -37,10 +37,10 @@ process GATK4_MUTECT2 {
     path germline_resource_idx
 
     output:
-    tuple val(meta), path("*.vcf.gz")     , emit: vcf
-    tuple val(meta), path("*.tbi")        , emit: tbi
-    tuple val(meta), path("*.stats")      , emit: stats
-    tuple val(meta), path("*.f1r2.tar.gz"), optional:true, emit: f1r2
+    tuple val(patient), path("*.vcf.gz")     , emit: vcf
+    tuple val(patient), path("*.tbi")        , emit: tbi
+    tuple val(patient), path("*.stats")      , emit: stats
+    tuple val(patient), path("*.f1r2.tar.gz"), optional:true, emit: f1r2
     path "versions.yml"                   , emit: versions
 
     script:
@@ -90,15 +90,15 @@ process GATK4_MUTECT2 {
     """
     echo -e "gatk gatk Mutect2 \\\n
              -R ${fasta} \\\n
-        ${inputsCommand} \\\n
-        ${normalsCommand} \\\n
-        ${panelsCommand} \\\n
-        -O ${prefix}.vcf.gz \\\n
-        $options.args        \n"
+             ${inputsCommand} \\\n
+             ${normalsCommand} \\\n
+             ${panelsCommand} \\\n
+             -O ${prefix}.vcf.gz \\\n
+            $options.args        \n"
     touch ${patient}.vcf.gz
-    touch ${patient}.vcf.gz.tbi"
-    touch ${patient}.stats"
-    touch ${patient}.f1r2.tar.gz"
-    touch "gatk.versions.yml"
+    touch ${patient}.vcf.gz.tbi
+    touch ${patient}.stats
+    touch ${patient}.f1r2.tar.gz
+    touch versions.yml
     """
 }
