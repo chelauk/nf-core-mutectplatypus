@@ -68,7 +68,6 @@ multiqc_options.args += params.multiqc_title ? Utils.joinModuleArgs(["--title \"
 
 include { MULTIQC } from '../modules/nf-core/modules/multiqc/main' addParams( options: multiqc_options   )
 
-
 //
 // MODULE: platypus module
 //
@@ -96,7 +95,6 @@ include { FILTERPLATYPUS } from '../modules/local/filterplatypus.nf' addParams( 
 def bgzip_options              = modules['bgzip_vcfs']
 include { BGZIP } from '../modules/local/bgzip' addParams( options: bgzip_options)
 
-
 //
 // MODULE: create_bed_intervals module
 //
@@ -105,6 +103,8 @@ def bed_intervals_options      = modules['bed_intervals']
 // Stage dummy file to be used as an optional input where required
 include { CREATE_INTERVALS_BED }   from '../modules/local/create_intervals_bed/main' addParams(options: bed_intervals_options)
 include { BUILD_INTERVALS }        from '../modules/local/build_intervals/main'
+
+include { GATK4_MUTECT2 }          from '../modules/local/gatk/mutect2'
 
 ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 
@@ -115,7 +115,6 @@ fasta_fai             = params.fasta_fai             ? Channel.fromPath(params.f
 dict                  = params.dict                  ? Channel.fromPath(params.dict).collect()                  : ch_dummy_file
 germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : ch_dummy_file
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : ch_dummy_file
-
 
 // Initialise input sample
 csv_file = file(params.input)
@@ -144,7 +143,7 @@ def extract_csv(csv_file) {
         // Sample should be unique for the patient
         if (row.patient) meta.patient = row.patient.toString()
         if (row.sample)  meta.sample  = row.sample.toString()
-        meta.id                       = meta.patient + "_" meta.sample
+        meta.id                       = meta.patient + "_" +  meta.sample
 
         // If no gender specified, gender is not considered
         // gender is only mandatory for somatic CNV
@@ -152,8 +151,8 @@ def extract_csv(csv_file) {
         else meta.gender = "NA"
 
         // If no status specified, sample is assumed normal
-        if (row.status) meta.status = row.status.toInteger()
-        else meta.status = 0
+        if (row.status) meta.status = row.status.toString()
+        else meta.status = "NA"
 
         if (row.bam && row.bai) {
             def bam        = file(row.bam, checkIfExists: true)
@@ -164,12 +163,13 @@ def extract_csv(csv_file) {
     }
 }
 
-def make_mutect2_input(input) {
+def make_mutect_input(input) {
     return input
-        .map { meta, files -> [ meta.patient, meta.sample, meta.status, [files[0],files[1]]}
-        .groupTuple()
-        .map { patient, status, bams  -> [ patient,control,bams.flatten()] }
+        .map { meta, files -> [ meta.patient, meta.id, meta.status, [files[0],files[1]]] }
+		.groupTuple()
+		.map { patient, id, status, files -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /control/ }], files]}
 }
+
 
 /*
 ========================================================================================
@@ -191,14 +191,14 @@ workflow MUTECTPLATYPUS {
 
     mutect_input.view()
     GATK4_MUTECT2(
+	    mutect_input,
         fasta,
         fasta_fai,
         dict,
         germline_resource,
-        germline_resource_idx
-        bam,
-        bai
+        germline_resource_idx,
     )
+
     //
     // MODULE: Pipeline reporting
     //
