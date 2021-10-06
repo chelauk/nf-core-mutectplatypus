@@ -221,18 +221,19 @@ workflow MUTECTPLATYPUS {
         germline_resource_idx,
     )
     // split input
-    pileup_input = input_samples.branch { tumour: meta.status == 1
-                           normal: meta.status == 0 }
+    input_samples.branch{ tumour: it[0]["status"] == "tumour"
+	                      normal: it[0]["status"] == "control"
+						 }
+                  .set{pileup}
+	
+    pileup.tumour.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
+        patient = patient + "_" + intervals.baseName
+        [patient, which_tumour, which_norm, bam, bai, intervals]
+    }.set{pileuptumour_intervals}
 
-    pileup.tumour.view()
-
-    PILEUP_SUMMARIES (
-        bam_intervals,
-        germline_resource,
-        germline_resource_idx
-    )
-
-    //
+	
+    
+	//
     // MODULE: Pipeline reporting
     //
     ch_software_versions
