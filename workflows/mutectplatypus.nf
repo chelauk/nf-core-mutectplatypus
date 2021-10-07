@@ -111,6 +111,9 @@ include { GATK4_GETPILEUPSUMMARIES } from '../modules/nf-core/modules/gatk4/getp
 include { GATK4_GATHERPILEUPSUMMARIES } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
 
 include { GATK4_CALCULATECONTAMINATION } from '../modules/nf-core/modules/gatk4/calculatecontamination/main'
+
+include { GATK4_FILTERMUTECT } from '../modules/nf-core/modules/gatk4/filtermutect/main'
+
 ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 
 // Initialize file channels based on params, defined in the params.genomes[params.genome] scope
@@ -216,7 +219,7 @@ workflow MUTECTPLATYPUS {
     }.set{bam_intervals}
 
 	GATK4_MUTECT2(
-	    bam_intervals,
+        bam_intervals,
         fasta,
         fasta_fai,
         dict,
@@ -233,9 +236,9 @@ workflow MUTECTPLATYPUS {
 
     // split input to create tables for each tumour
     input_samples.branch{ tumour: it[0]["status"] == "tumour"
-	                      normal: it[0]["status"] == "control"
-						 }
-                  .set{pileup}
+                          normal: it[0]["status"] == "control"
+                        }
+                    .set{pileup}
 
     pileup.tumour
         .combine(result_intervals)
@@ -249,17 +252,32 @@ workflow MUTECTPLATYPUS {
         )
 
     gather_pileups = GATK4_GETPILEUPSUMMARIES.out.table
-	  .groupTuple(by: 1)
-	  .map { patient, id, id_intervals, status, pileup_tables -> [ patient.unique()[0], id, id_intervals, status.unique()[0], pileup_tables ] }
+        .groupTuple(by: 1)
+        .map { patient, id, id_intervals, status, pileup_tables -> [ patient.unique()[0], id, id_intervals, status.unique()[0], pileup_tables ] }
 
 
-  GATK4_GATHERPILEUPSUMMARIES (
+    GATK4_GATHERPILEUPSUMMARIES (
         gather_pileups,
- 		dict
+        dict
     )
-  GATK4_CALCULATECONTAMINATION (
+    GATK4_CALCULATECONTAMINATION (
         GATK4_GATHERPILEUPSUMMARIES.out.gathered_table
-  )
+    )
+
+    contamination_ch = GATK4_CALCULATECONTAMINATION.out.contamination.groupTuple()
+    segmentation_ch = GATK4_CALCULATECONTAMINATION.out.segmentation.groupTuple()
+
+    for_filter = contamination_ch.join(segmentation_ch)
+    filter_input = GATK4_MUTECT2.out.vcf.join(GATK4_LEARNORIENTATION.out.flr2)
+    for_filter.view()
+    filter_input.view()
+
+    //GATK4_FILTERMUTECT (
+    //    GATK4_MUTECT2.out.vcf,
+    //    contamination_ch,
+    //    segmentation_ch,
+    //    GATK4_LEARNORIENTATION.out.flr2
+    //)
 	//
     // MODULE: Pipeline reporting
     //

@@ -4,8 +4,8 @@ include { initOptions; saveFiles; getSoftwareName; getProcessName } from './func
 params.options = [:]
 options        = initOptions(params.options)
 
-process GATK4_FILTERMUTECT {
-    tag "$id"
+process GATK4_LEARNORIENTATION {
+    tag "$patient"
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -19,25 +19,19 @@ process GATK4_FILTERMUTECT {
     }
 
     input:
-    tuple val(patient), path(vcf) 
-	tuple val(patient_con), val(id_con), val(status_con), path(contamination_table)    
-    tuple val(patient_seg), val(id_seg), val(status_seg), path(segmentation_table) 
+	tuple val(patient), path(flr2)
 
     output:
-    tuple val(patient), path("*.vcf.gz")      , emit: vcf
-    path "versions.yml"                       , emit: versions
+    tuple val(patient), path("*tar.gz")         , emit: flr2
+    path "versions.yml"                                          , emit: versions
 
     script:
-    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${patient}"
-    def allsegs = segmentation_table.collect{ "--segmentation-table ${it} " }.join(' ')
-    def allconts = contamination_table.collect{ "--contamination-table ${it} " }.join(' ')
+    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
+    def input  = flr2.collect{ "-I ${it} " }.join(' ')
     """
-    gatk FilterMutectCalls \
-    -V ${vcf} \
-    ${allsegs} \
-    ${allconts} \
-    --ob-priors priors.tar.gz \
-    -O ${prefix}.mutect2.filtered.vcf
+    gatk LearnReadOrientationModel \\
+        ${input} \\
+        -O ${prefix}.read-orientation-model.tar.gz \\
         $options.args
 
     cat <<-END_VERSIONS > versions.yml
@@ -48,7 +42,12 @@ process GATK4_FILTERMUTECT {
     stub:
     def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
     """
-    echo -e  "gatk 
+    echo -e  "gatk LearnReadOrientationModel \\
+        ${input} \\
+        -O ${prefix}.read-orientation-model.tar.gz \\
+        $options.args"
+
+    touch ${prefix}..read-orientation-model.tar.gz
 	touch versions.yml
 	"""
 }
