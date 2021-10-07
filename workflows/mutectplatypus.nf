@@ -221,7 +221,9 @@ workflow MUTECTPLATYPUS {
         germline_resource,
         germline_resource_idx,
     )
-    // split input
+
+
+    // split input to create tables for each tumour
     input_samples.branch{ tumour: it[0]["status"] == "tumour"
 	                      normal: it[0]["status"] == "control"
 						 }
@@ -237,6 +239,12 @@ workflow MUTECTPLATYPUS {
         germline_resource,
         germline_resource_idx
         )
+
+    gather_pileups = GATK4_GETPILEUPSUMMARIES.out.table.groupTuple(by: 1)
+//    tuple val(patient), val(id), val(id_intervals), val(status), path('*.pileups.table'), emit: table
+//    GATK_GATHERPILEUPSUMMARIES (
+//        dict
+/    )
 
 	//
     // MODULE: Pipeline reporting

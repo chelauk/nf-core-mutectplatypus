@@ -24,8 +24,8 @@ process GATK4_GETPILEUPSUMMARIES {
     path germline_resource_idx
 
     output:
-    tuple val(meta), path('*.pileups.table'), emit: table
-    path "versions.yml"           , emit: versions
+    tuple val(patient), val(id), val(id_intervals), val(status), path('*.pileups.table'), emit: table
+    path "versions.yml"                     , emit: versions
 
     script:
     def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${id_intervals}"
