@@ -76,7 +76,7 @@ process GATK4_MUTECT2 {
 
     stub:
     def software = getSoftwareName(task.process)
-    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${patient}"
+    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${patient_interval}"
     def inputsList = []
     def normalsList = []
     def panelsCommand = ''
@@ -97,10 +97,10 @@ process GATK4_MUTECT2 {
              ${panelsCommand} \\\n
              -O ${prefix}.vcf.gz \\\n
             $options.args        \n"
-    touch ${patient}.vcf.gz
-    touch ${patient}.vcf.gz.tbi
-    touch ${patient}.stats
-    touch ${patient}.f1r2.tar.gz
+    touch ${prefix}.vcf.gz
+    touch ${prefix}.vcf.gz.tbi
+    touch ${prefix}.stats
+    touch ${prefix}.f1r2.tar.gz
     touch versions.yml
     """
 }
