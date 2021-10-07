@@ -14,6 +14,7 @@ process CONCAT_VCF {
     conda (params.enable_conda ? "bioconda::htslib=1.12" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
         //TODO: No singularity container at the moment, use docker container for the moment
+		https://depot.galaxyproject.org/singularity/htslib%3A1.12--hd3b49d5_0
         container "quay.io/biocontainers/htslib:1.12--h9093b5e_1"
     } else {
         container "quay.io/biocontainers/htslib:1.12--hd3b49d5_0"
@@ -23,23 +24,20 @@ process CONCAT_VCF {
     input:
     tuple val(patient), path(vcf)
     path fasta_fai
-    path bed
 
     output:
-    tuple val(patient), path("*_*.vcf.gz"), path("*_*.vcf.gz.tbi"), emit: vcf
+    tuple val(patient), path("*concatenated.vcf.gz"), path("*concatenated.vcf.gz.tbi"), emit: vcf
 
     script:
     def prefix           = options.suffix ? "${options.suffix}_${meta.id}" : "${patient}"
-    def target_options   = params.target_bed ? "-t ${bed}" : ""
     """
-    concatenateVCFs.sh -i ${fai} -c ${task.cpus} -o ${prefix}.vcf ${target_options}
+    concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf
     """
     stub:
     def prefix           = options.suffix ? "${options.suffix}_${meta.id}" : "${patient}"
-    def target_options   = params.target_bed ? "-t ${bed}" : ""
     """
-    echo -e "concatenateVCFs.sh -i ${fai} -c ${task.cpus} -o ${prefix}.vcf ${target_options}"
-    touch ${prefix}.vcf.gz
-    touch ${prefix}.vcf.gz.tbi
+    echo -e "concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf"
+    touch ${prefix}_concatenated.vcf.gz
+    touch ${prefix}_concatenated.vcf.gz.tbi
     """
 }
