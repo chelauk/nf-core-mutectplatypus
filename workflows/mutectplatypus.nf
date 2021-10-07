@@ -208,8 +208,8 @@ workflow MUTECTPLATYPUS {
         .map{duration, intervalFile -> intervalFile}
 
     mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
-        patient = patient + "_" + intervals.baseName
-        [patient, which_tumour, which_norm, bam, bai, intervals]
+        patient_interval = patient + "_" + intervals.baseName
+        [patient, patient_interval,which_tumour, which_norm, bam, bai, intervals]
     }.set{bam_intervals}
 
 	GATK4_MUTECT2(
@@ -225,14 +225,14 @@ workflow MUTECTPLATYPUS {
 	                      normal: it[0]["status"] == "control"
 						 }
                   .set{pileup}
-	
+
     pileup.tumour.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
-        patient = patient + "_" + intervals.baseName
-        [patient, which_tumour, which_norm, bam, bai, intervals]
+        patient_interval = patient + "_" + intervals.baseName
+        [patient, patient_interval, which_tumour, which_norm, bam, bai, intervals]
     }.set{pileuptumour_intervals}
 
-	
-    
+
+
 	//
     // MODULE: Pipeline reporting
     //
