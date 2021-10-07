@@ -29,7 +29,7 @@ process GATK4_MUTECT2 {
     }
 
     input:
-    tuple val(patient), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
+    tuple val(patient), val(patient_interval), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
     path fasta
     path fasta_fai
     path dict
@@ -45,7 +45,7 @@ process GATK4_MUTECT2 {
 
     script:
     def software = getSoftwareName(task.process)
-    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${patient}"
+    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${patient_interval}"
     def inputsList = []
     def normalsList = []
     def panelsCommand = ''
