@@ -224,6 +224,12 @@ workflow MUTECTPLATYPUS {
         germline_resource_idx,
     )
 
+    concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
+    CONCAT_VCF (
+        concat_input
+        fasta_fai,
+        target_bed
+    )
 
     // split input to create tables for each tumour
     input_samples.branch{ tumour: it[0]["status"] == "tumour"
