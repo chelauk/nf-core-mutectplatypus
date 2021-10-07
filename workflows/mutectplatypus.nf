@@ -112,7 +112,7 @@ include { GATK4_GATHERPILEUPSUMMARIES } from '../modules/nf-core/modules/gatk4/g
 
 include { GATK4_CALCULATECONTAMINATION } from '../modules/nf-core/modules/gatk4/calculatecontamination/main'
 
-include { GATK4_FILTERMUTECT } from '../modules/nf-core/modules/gatk4/filtermutect/main'
+include { CONCAT_VCF } from '../modules/nf-core/modules/concat_vcf/main.nf'
 
 ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 
@@ -229,9 +229,8 @@ workflow MUTECTPLATYPUS {
 
     concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
     CONCAT_VCF (
-        concat_input
+        concat_input,
         fasta_fai,
-        target_bed
     )
 
     // split input to create tables for each tumour
