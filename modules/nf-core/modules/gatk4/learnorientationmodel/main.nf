@@ -19,15 +19,15 @@ process GATK4_LEARNORIENTATION {
     }
 
     input:
-	tuple val(patient), path(flr2)
+	tuple val(patient), path(f1r2)
 
     output:
-    tuple val(patient), path("*tar.gz")         , emit: flr2
+    tuple val(patient), path("*tar.gz")         , emit: orientation_model
     path "versions.yml"                                          , emit: versions
 
     script:
-    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
-    def input  = flr2.collect{ "-I ${it} " }.join(' ')
+    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${patient}"
+    def input  = f1r2.collect{ "-I ${it} " }.join(' ')
     """
     gatk LearnReadOrientationModel \\
         ${input} \\
@@ -40,14 +40,15 @@ process GATK4_LEARNORIENTATION {
     END_VERSIONS
     """
     stub:
-    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
+    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${patient}"
+	def input  = f1r2.collect{ "-I ${it} " }.join(' ')
     """
     echo -e  "gatk LearnReadOrientationModel \\
         ${input} \\
         -O ${prefix}.read-orientation-model.tar.gz \\
         $options.args"
 
-    touch ${prefix}..read-orientation-model.tar.gz
+    touch ${prefix}.read-orientation-model.tar.gz
 	touch versions.yml
 	"""
 }

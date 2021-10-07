@@ -106,13 +106,17 @@ include { BUILD_INTERVALS }        from '../modules/local/build_intervals/main'
 
 include { GATK4_MUTECT2 }          from '../modules/local/gatk/mutect2'
 
+include { GATK4_LEARNORIENTATION }  from '../modules/nf-core/modules/gatk4/learnorientationmodel/main'
+
 include { GATK4_GETPILEUPSUMMARIES } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
 
 include { GATK4_GATHERPILEUPSUMMARIES } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
 
 include { GATK4_CALCULATECONTAMINATION } from '../modules/nf-core/modules/gatk4/calculatecontamination/main'
 
-include { CONCAT_VCF } from '../modules/nf-core/modules/concat_vcf/main.nf'
+include { CONCAT_VCF } from '../modules/nf-core/modules/concat_vcf/main'
+
+include { GATK4_FILTERMUTECT } from '../modules/nf-core/modules/gatk4/filtermutect/main'
 
 ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 
@@ -226,6 +230,9 @@ workflow MUTECTPLATYPUS {
         germline_resource,
         germline_resource_idx,
     )
+    
+	orientation_in = GATK4_MUTECT2.out.f1r2.groupTuple()
+	GATK4_LEARNORIENTATION ( orientation_in )
 
     concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
     CONCAT_VCF (
@@ -267,16 +274,18 @@ workflow MUTECTPLATYPUS {
     segmentation_ch = GATK4_CALCULATECONTAMINATION.out.segmentation.groupTuple()
 
     for_filter = contamination_ch.join(segmentation_ch)
-    filter_input = GATK4_MUTECT2.out.vcf.join(GATK4_LEARNORIENTATION.out.flr2)
-    for_filter.view()
-    filter_input.view()
+	                             .map{ patient, id, status, contamination, id2, status2, segmentation ->
+								       [patient,contamination,segmentation] }
+    
+	filter_input = GATK4_MUTECT2.out.vcf.join(GATK4_LEARNORIENTATION.out.orientation_model)
+    //for_filter.view()
+    filter_input = filter_input.join(for_filter)
 
-    //GATK4_FILTERMUTECT (
-    //    GATK4_MUTECT2.out.vcf,
-    //    contamination_ch,
-    //    segmentation_ch,
-    //    GATK4_LEARNORIENTATION.out.flr2
-    //)
+    GATK4_FILTERMUTECT (
+        filter_input,
+		fasta,
+		fasta_fai
+    )
 	//
     // MODULE: Pipeline reporting
     //

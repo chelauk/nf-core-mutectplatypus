@@ -5,7 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process GATK4_FILTERMUTECT {
-    tag "$id"
+    tag "$patient"
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -19,12 +19,12 @@ process GATK4_FILTERMUTECT {
     }
 
     input:
-    tuple val(patient), path(vcf) 
-	tuple val(patient_con), val(id_con), val(status_con), path(contamination_table)    
-    tuple val(patient_seg), val(id_seg), val(status_seg), path(segmentation_table) 
+    tuple val(patient), path(vcf), path(orientation_model), path(contamination_table), path(segmentation_table)
+    path fasta
+	path fasta_fai
 
     output:
-    tuple val(patient), path("*.vcf.gz")      , emit: vcf
+    tuple val(patient), path("*.filtered.vcf.gz")      , emit: vcf
     path "versions.yml"                       , emit: versions
 
     script:
@@ -32,12 +32,13 @@ process GATK4_FILTERMUTECT {
     def allsegs = segmentation_table.collect{ "--segmentation-table ${it} " }.join(' ')
     def allconts = contamination_table.collect{ "--contamination-table ${it} " }.join(' ')
     """
-    gatk FilterMutectCalls \
-    -V ${vcf} \
-    ${allsegs} \
-    ${allconts} \
-    --ob-priors priors.tar.gz \
-    -O ${prefix}.mutect2.filtered.vcf
+    gatk FilterMutectCalls \\
+	-R ${fasta} \\
+    -V ${vcf} \\
+    ${allsegs} \\
+    ${allconts} \\
+    --ob-priors $orientation_model \\\
+    -O ${prefix}.mutect2.filtered.vcf.gz
         $options.args
 
     cat <<-END_VERSIONS > versions.yml
@@ -45,11 +46,21 @@ process GATK4_FILTERMUTECT {
         ${getSoftwareName(task.process)}: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
     END_VERSIONS
     """
+
     stub:
-    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
+    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${patient}"
+    def allsegs = segmentation_table.collect{ "--segmentation-table ${it} " }.join(' ')
+    def allconts = contamination_table.collect{ "--contamination-table ${it} " }.join(' ')
     """
-    echo -e  "gatk 
-	touch versions.yml
+    echo -e  "gatk FilterMutectCalls \\
+	-R ${fasta} \\
+    -V ${vcf} \\
+    ${allsegs} \\
+    ${allconts} \\
+    --ob-priors $orientation_model \\
+    -O ${prefix}.mutect2.filtered.vcf.gz"
+    touch ${prefix}.mutect2.filtered.vcf.gz
+    touch versions.yml
 	"""
 }
 
