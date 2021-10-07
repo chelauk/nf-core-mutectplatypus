@@ -230,7 +230,7 @@ workflow MUTECTPLATYPUS {
     pileup.tumour
         .combine(result_intervals)
         .map { meta, files, intervals -> [ meta.patient, meta.id, meta.id + "_" + intervals.baseName, meta.status, files[0],files[1], intervals] }
-    }.set{pileuptumour_intervals}
+        .set{pileuptumour_intervals}
 
     GATK4_GETPILEUPSUMMARIES(
         pileuptumour_intervals,

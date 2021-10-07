@@ -5,7 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process GATK4_GETPILEUPSUMMARIES {
-    tag "$patient_interval"
+    tag "$id_interval"
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -24,7 +24,7 @@ process GATK4_GETPILEUPSUMMARIES {
     path germline_resource_idx
 
     output:
-    tuple val(meta), path('*.pileups.table'), emit: table
+    tuple val(patient), val(id), val(id_intervals), val(status), path('*.pileups.table'), emit: table
     path "versions.yml"           , emit: versions
 
     script:
@@ -52,7 +52,7 @@ process GATK4_GETPILEUPSUMMARIES {
         -L $intervals \\\n
         -O ${prefix}.pileups.table \\\n
         $options.args"
-
+    touch ${prefix}.pileups.table
     touch versions.yml
     """
 }
