@@ -5,7 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process GATK4_CALCULATECONTAMINATION {
-    tag "$meta.id"
+    tag "$id"
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -19,24 +19,20 @@ process GATK4_CALCULATECONTAMINATION {
     }
 
     input:
-    tuple val(meta), path(pileup), path(matched)
-    val segmentout
+	tuple val(patient), val(id), val(status), path(table)
 
     output:
-    tuple val(meta), path('*.contamination.table')               , emit: contamination
-    tuple val(meta), path('*.segmentation.table') , optional:true, emit: segmentation
+    tuple val(patient), val(id), val(status), path('*.contamination.table')               , emit: contamination
+    tuple val(patient), val(id), val(status), path('*.segmentation.table') , optional:true, emit: segmentation
     path "versions.yml"                                          , emit: versions
 
     script:
-    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}"
-    def matched_command = matched ? " -matched ${matched} " : ''
-    def segment_command = segmentout ? " -segments ${prefix}.segmentation.table" : ''
+    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
     """
     gatk CalculateContamination \\
-        -I $pileup \\
-        $matched_command \\
+        -I ${table} \\
+        -segments ${prefix}.segmentation.table \\
         -O ${prefix}.contamination.table \\
-        $segment_command \\
         $options.args
 
     cat <<-END_VERSIONS > versions.yml
@@ -44,4 +40,18 @@ process GATK4_CALCULATECONTAMINATION {
         ${getSoftwareName(task.process)}: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
     END_VERSIONS
     """
+    stub:
+    def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
+    """
+    echo -e  "gatk CalculateContamination \\
+        -I ${table} \\
+        -segments ${prefix}.segmentation.table \\
+        -O ${prefix}.contamination.table \\
+        $options.args"
+
+    touch ${prefix}.segmentation.table
+	touch ${prefix}.contamination.table
+	touch versions.yml
+	"""
 }
+

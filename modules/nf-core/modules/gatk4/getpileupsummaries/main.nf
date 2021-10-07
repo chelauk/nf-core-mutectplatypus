@@ -5,7 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process GATK4_GETPILEUPSUMMARIES {
-    tag "$id_interval"
+    tag "$id_intervals"
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,

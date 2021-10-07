@@ -108,6 +108,9 @@ include { GATK4_MUTECT2 }          from '../modules/local/gatk/mutect2'
 
 include { GATK4_GETPILEUPSUMMARIES } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
 
+include { GATK4_GATHERPILEUPSUMMARIES } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
+
+include { GATK4_CALCULATECONTAMINATION } from '../modules/nf-core/modules/gatk4/calculatecontamination/main'
 ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 
 // Initialize file channels based on params, defined in the params.genomes[params.genome] scope
@@ -171,7 +174,6 @@ def make_mutect_input(input) {
 		.groupTuple()
 		.map { patient, id, status, bam, bai -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /control/ }], bam, bai ]}
 }
-
 
 /*
 ========================================================================================
@@ -240,12 +242,18 @@ workflow MUTECTPLATYPUS {
         germline_resource_idx
         )
 
-    gather_pileups = GATK4_GETPILEUPSUMMARIES.out.table.groupTuple(by: 1)
-//    tuple val(patient), val(id), val(id_intervals), val(status), path('*.pileups.table'), emit: table
-//    GATK_GATHERPILEUPSUMMARIES (
-//        dict
-/    )
+    gather_pileups = GATK4_GETPILEUPSUMMARIES.out.table
+	  .groupTuple(by: 1)
+	  .map { patient, id, id_intervals, status, pileup_tables -> [ patient.unique()[0], id, id_intervals, status.unique()[0], pileup_tables ] }
 
+
+  GATK4_GATHERPILEUPSUMMARIES (
+        gather_pileups,
+ 		dict
+    )
+  GATK4_CALCULATECONTAMINATION (
+        GATK4_GATHERPILEUPSUMMARIES.out.gathered_table
+  )
 	//
     // MODULE: Pipeline reporting
     //
