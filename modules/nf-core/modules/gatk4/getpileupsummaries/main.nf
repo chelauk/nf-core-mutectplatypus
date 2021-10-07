@@ -5,7 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process GATK4_GETPILEUPSUMMARIES {
-    tag "$meta.id"
+    tag "$patient_interval"
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -19,26 +19,21 @@ process GATK4_GETPILEUPSUMMARIES {
     }
 
     input:
-    tuple val(meta), path(bam), path(bai)
-    path variants
-    path variants_idx
-    path sites
+    tuple val(patient), val(id), val(id_intervals), val(status), path(bam), path(bai), path(intervals)
+    path germline_resource
+    path germline_resource_idx
 
     output:
     tuple val(meta), path('*.pileups.table'), emit: table
     path "versions.yml"           , emit: versions
 
     script:
-    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}"
-    def sitesCommand = ''
-
-    sitesCommand = sites ? " -L ${sites} " : " -L ${variants} "
-
+    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${id_intervals}"
     """
     gatk GetPileupSummaries \\
         -I $bam \\
-        -V $variants \\
-        $sitesCommand \\
+        -V $germline_resource \\
+        -L $intervals \\
         -O ${prefix}.pileups.table \\
         $options.args
 
@@ -46,5 +41,18 @@ process GATK4_GETPILEUPSUMMARIES {
     ${getProcessName(task.process)}:
         ${getSoftwareName(task.process)}: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
     END_VERSIONS
+    """
+
+    stub:
+    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${id_intervals}"
+    """
+    echo -e "gatk GetPileupSummaries \\\n
+        -I $bam \\\n
+        -V $germline_resource \\\n
+        -L $intervals \\\n
+        -O ${prefix}.pileups.table \\\n
+        $options.args"
+
+    touch versions.yml
     """
 }

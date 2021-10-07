@@ -106,6 +106,8 @@ include { BUILD_INTERVALS }        from '../modules/local/build_intervals/main'
 
 include { GATK4_MUTECT2 }          from '../modules/local/gatk/mutect2'
 
+include { GATK4_GETPILEUPSUMMARIES } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
+
 ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 
 // Initialize file channels based on params, defined in the params.genomes[params.genome] scope
@@ -225,11 +227,16 @@ workflow MUTECTPLATYPUS {
 						 }
                   .set{pileup}
 
-    pileup.tumour.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
-        [patient, patient + "_" + intervals.baseName, which_tumour, which_norm, bam, bai, intervals]
+    pileup.tumour
+        .combine(result_intervals)
+        .map { meta, files, intervals -> [ meta.patient, meta.id, meta.id + "_" + intervals.baseName, meta.status, files[0],files[1], intervals] }
     }.set{pileuptumour_intervals}
 
-
+    GATK4_GETPILEUPSUMMARIES(
+        pileuptumour_intervals,
+        germline_resource,
+        germline_resource_idx
+        )
 
 	//
     // MODULE: Pipeline reporting
