@@ -17,6 +17,7 @@ def checkPathParamList = [
     params.fasta,
     params.fasta_fai,
     params.dict,
+    params.pon,
     params.germline_resource,
     params.germline_resource_idx
     ]
@@ -125,6 +126,7 @@ ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExi
 fasta                 = params.fasta                 ? Channel.fromPath(params.fasta).collect()                 : ch_dummy_file
 fasta_fai             = params.fasta_fai             ? Channel.fromPath(params.fasta_fai).collect()             : ch_dummy_file
 dict                  = params.dict                  ? Channel.fromPath(params.dict).collect()                  : ch_dummy_file
+pon                   = params.pon                  ? Channel.fromPath(params.pon).collect()                    : ch_dummy_file
 germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : ch_dummy_file
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : ch_dummy_file
 
@@ -155,7 +157,10 @@ def extract_csv(csv_file) {
         // Sample should be unique for the patient
         if (row.patient) meta.patient = row.patient.toString()
         if (row.sample)  meta.sample  = row.sample.toString()
-        meta.id                       = meta.patient + "_" +  meta.sample
+        if (row.id) == "NA" { meta.id   = meta.patient + "_" +  meta.sample
+        } else {
+            meta.id = row.id.toString()
+        }
 
         // If no gender specified, gender is not considered
         // gender is only mandatory for somatic CNV
@@ -227,10 +232,11 @@ workflow MUTECTPLATYPUS {
         fasta,
         fasta_fai,
         dict,
+        pon,
         germline_resource,
         germline_resource_idx,
     )
-    
+
 	orientation_in = GATK4_MUTECT2.out.f1r2.groupTuple()
 	GATK4_LEARNORIENTATION ( orientation_in )
 
@@ -276,7 +282,7 @@ workflow MUTECTPLATYPUS {
     for_filter = contamination_ch.join(segmentation_ch)
 	                             .map{ patient, id, status, contamination, id2, status2, segmentation ->
 								       [patient,contamination,segmentation] }
-    
+
 	filter_input = GATK4_MUTECT2.out.vcf.join(GATK4_LEARNORIENTATION.out.orientation_model)
     //for_filter.view()
     filter_input = filter_input.join(for_filter)

@@ -33,6 +33,7 @@ process GATK4_MUTECT2 {
     path fasta
     path fasta_fai
     path dict
+    path pon
     path germline_resource
     path germline_resource_idx
 
@@ -86,7 +87,7 @@ process GATK4_MUTECT2 {
     inputsCommand = inputsList.join( ' ')
     which_norm.each() {a -> normalsList.add(" -normal " + a ) }
     normalsCommand = normalsList.join( ' ')
-    panelsCommand = " --germline-resource $germline_resource --f1r2-tar-gz ${prefix}.f1r2.tar.gz"
+    panelsCommand = " --germline-resource $germline_resource --f1r2-tar-gz ${prefix}.f1r2.tar.gz --panel-of-normals $pon"
 
     """
     echo -e "gatk gatk Mutect2 \\\n
