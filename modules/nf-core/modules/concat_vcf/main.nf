@@ -31,10 +31,6 @@ process CONCAT_VCF {
     script:
     def prefix           = options.suffix ? "${options.suffix}_${meta.id}" : "${patient}"
     """
-    for i in *vcf.gz
-	  do
-        bgzip -d \$i
-	  done
 	concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf
     """
     stub:

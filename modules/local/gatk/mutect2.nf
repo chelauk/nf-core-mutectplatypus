@@ -46,7 +46,7 @@ process GATK4_MUTECT2 {
 
     script:
     def software = getSoftwareName(task.process)
-    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${patient_interval}"
+    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${interval_patient}"
     def inputsList = []
     def normalsList = []
     def panelsCommand = ''
