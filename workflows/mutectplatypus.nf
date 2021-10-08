@@ -160,7 +160,7 @@ def extract_csv(csv_file) {
         // Sample should be unique for the patient
         if (row.patient) meta.patient = row.patient.toString()
         if (row.sample)  meta.sample  = row.sample.toString()
-         meta.id   = meta.patient + "_" +  meta.sample
+        meta.id   = meta.patient + "_" +  meta.sample
 
         // If no gender specified, gender is not considered
         // gender is only mandatory for somatic CNV
@@ -226,7 +226,7 @@ workflow MUTECTPLATYPUS {
     mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
         [patient, patient + "_" + intervals.baseName, which_tumour, which_norm, bam, bai, intervals]
     }.set{bam_intervals}
-
+    bam_intervals.view()
 	GATK4_MUTECT2(
         bam_intervals,
         fasta,
