@@ -26,12 +26,16 @@ process CONCAT_VCF {
     path fasta_fai
 
     output:
-    tuple val(patient), path("*concatenated.vcf.gz"), path("*concatenated.vcf.gz.tbi"), emit: vcf
+    tuple val(patient), path("*.vcf.gz"), path("*.vcf.gz.tbi"), emit: vcf
 
     script:
     def prefix           = options.suffix ? "${options.suffix}_${meta.id}" : "${patient}"
     """
-    concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf
+    for i in *vcf.gz
+	  do
+        bgzip -d \$i
+	  done
+	concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf
     """
     stub:
     def prefix           = options.suffix ? "${options.suffix}_${meta.id}" : "${patient}"

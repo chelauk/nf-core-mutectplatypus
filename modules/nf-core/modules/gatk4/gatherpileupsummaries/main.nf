@@ -32,16 +32,13 @@ process GATK4_GATHERPILEUPSUMMARIES {
 
     """
     gatk GatherPileupSummaries \\
-        --sequence-dict $dict \\
+        --sequence-dictionary $dict \\
         ${allPileups} \\
 		-O ${prefix}.pileups_gathered.table \\
         $options.args
 
-    cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
-        ${getSoftwareName(task.process)}: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
-    END_VERSIONS
-    """
+    echo "GATK4.2.0" > versions.yml
+	"""
     stub:
     def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
     def allPileups = pileup_tables.collect{ "-I ${it} " }.join(' ')

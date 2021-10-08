@@ -19,9 +19,10 @@ process GATK4_FILTERMUTECT {
     }
 
     input:
-    tuple val(patient), path(vcf), path(orientation_model), path(contamination_table), path(segmentation_table)
+    tuple val(patient), path(vcf), path(tbi), path(orientation_model), path(contamination_table), path(segmentation_table)
     path fasta
 	path fasta_fai
+	path dict
 
     output:
     tuple val(patient), path("*.filtered.vcf.gz")      , emit: vcf
@@ -29,7 +30,7 @@ process GATK4_FILTERMUTECT {
 
     script:
     def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${patient}"
-    def allsegs = segmentation_table.collect{ "--segmentation-table ${it} " }.join(' ')
+    def allsegs = segmentation_table.collect{ "--tumor-segmentation ${it} " }.join(' ')
     def allconts = contamination_table.collect{ "--contamination-table ${it} " }.join(' ')
     """
     gatk FilterMutectCalls \\
@@ -37,9 +38,9 @@ process GATK4_FILTERMUTECT {
     -V ${vcf} \\
     ${allsegs} \\
     ${allconts} \\
-    --ob-priors $orientation_model \\\
-    -O ${prefix}.mutect2.filtered.vcf.gz
-        $options.args
+    --ob-priors $orientation_model \\
+    -O ${prefix}.mutect2.filtered.vcf.gz \\
+    $options.args
 
     cat <<-END_VERSIONS > versions.yml
     ${getProcessName(task.process)}:

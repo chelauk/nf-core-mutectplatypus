@@ -29,6 +29,7 @@ process GATK4_CALCULATECONTAMINATION {
     script:
     def prefix = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
     """
+	awk -v FS='\t' -v OFS='\t' 'NR<3{print \$0;next}{print \$0| "sort -k1,1 -k2,2n"}' $table > temp && mv temp  $table 
     gatk CalculateContamination \\
         -I ${table} \\
         -segments ${prefix}.segmentation.table \\

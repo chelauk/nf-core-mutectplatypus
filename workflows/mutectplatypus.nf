@@ -117,7 +117,8 @@ include { GATK4_CALCULATECONTAMINATION } from '../modules/nf-core/modules/gatk4/
 
 include { CONCAT_VCF } from '../modules/nf-core/modules/concat_vcf/main'
 
-include { GATK4_FILTERMUTECT } from '../modules/nf-core/modules/gatk4/filtermutect/main'
+def filter_options          = modules['filter_mutect']
+include { GATK4_FILTERMUTECT } from '../modules/nf-core/modules/gatk4/filtermutect/main' addParams( options: filter_options)
 
 ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 
@@ -157,10 +158,7 @@ def extract_csv(csv_file) {
         // Sample should be unique for the patient
         if (row.patient) meta.patient = row.patient.toString()
         if (row.sample)  meta.sample  = row.sample.toString()
-        if (row.id) == "NA" { meta.id   = meta.patient + "_" +  meta.sample
-        } else {
-            meta.id = row.id.toString()
-        }
+         meta.id   = meta.patient + "_" +  meta.sample
 
         // If no gender specified, gender is not considered
         // gender is only mandatory for somatic CNV
@@ -245,7 +243,10 @@ workflow MUTECTPLATYPUS {
         concat_input,
         fasta_fai,
     )
-
+    merge_stats_in = GATK4_MUTECT2.out.stats.groupTuple()
+	GATK4_MERGESTATS(
+	merge_stats_in
+	)
     // split input to create tables for each tumour
     input_samples.branch{ tumour: it[0]["status"] == "tumour"
                           normal: it[0]["status"] == "control"
@@ -283,14 +284,15 @@ workflow MUTECTPLATYPUS {
 	                             .map{ patient, id, status, contamination, id2, status2, segmentation ->
 								       [patient,contamination,segmentation] }
 
-	filter_input = GATK4_MUTECT2.out.vcf.join(GATK4_LEARNORIENTATION.out.orientation_model)
+	filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNORIENTATION.out.orientation_model)
     //for_filter.view()
     filter_input = filter_input.join(for_filter)
 
     GATK4_FILTERMUTECT (
         filter_input,
 		fasta,
-		fasta_fai
+		fasta_fai,
+		dict
     )
 	//
     // MODULE: Pipeline reporting

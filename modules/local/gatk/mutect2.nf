@@ -69,11 +69,8 @@ process GATK4_MUTECT2 {
         --af-of-alleles-not-in-resource 0.0000025 \\
         --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter \\
         $options.args
-    cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
-        ${getSoftwareName(task.process)}: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
-    END_VERSIONS
-    """
+    echo "GATK4.2.0" > versions.yml
+	"""
 
     stub:
     def software = getSoftwareName(task.process)
