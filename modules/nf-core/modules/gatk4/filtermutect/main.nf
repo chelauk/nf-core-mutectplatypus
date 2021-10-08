@@ -19,7 +19,7 @@ process GATK4_FILTERMUTECT {
     }
 
     input:
-    tuple val(patient), path(vcf), path(tbi), path(orientation_model), path(contamination_table), path(segmentation_table)
+    tuple val(patient), path(vcf), path(tbi), path(orientation_model), path(contamination_table), path(segmentation_table), path(stats)
     path fasta
 	path fasta_fai
 	path dict

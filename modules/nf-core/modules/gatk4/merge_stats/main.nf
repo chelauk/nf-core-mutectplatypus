@@ -5,7 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process GATK4_MERGESTATS {
-    tag "$id"
+    tag "$patient"
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -22,7 +22,7 @@ process GATK4_MERGESTATS {
 	tuple val(patient), path(stats)
 
     output:
-    tuple val(patient), path("*merged.stats"), emit: contamination
+    tuple val(patient), path("${patient}.vcf.gz.stats"), emit: stats
     path "versions.yml"                                          , emit: versions
 
     script:
@@ -30,7 +30,7 @@ process GATK4_MERGESTATS {
     """
     gatk MergeMutectStats \\
         ${allstats} \\
-        -O ${patient}.merged.stats \\
+        -O ${patient}.vcf.gz.stats \\
         $options.args
 
     cat <<-END_VERSIONS > versions.yml
