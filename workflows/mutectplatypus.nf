@@ -184,7 +184,7 @@ def make_mutect_input(input) {
     return input
         .map { meta, files -> [ meta.patient, meta.id, meta.status, files[0],files[1]] }
 		.groupTuple()
-		.map { patient, id, status, bam, bai -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /control/ }], bam, bai ]}
+		.map { patient, id, status, bam, bai -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /normal/ }], bam, bai ]}
 }
 
 /*
