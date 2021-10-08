@@ -117,6 +117,8 @@ include { GATK4_CALCULATECONTAMINATION } from '../modules/nf-core/modules/gatk4/
 
 include { CONCAT_VCF } from '../modules/nf-core/modules/concat_vcf/main'
 
+include { GATK4_MERGESTATS } from '../modules/nf-core/modules/gatk4/merge_stats/main'
+
 def filter_options          = modules['filter_mutect']
 include { GATK4_FILTERMUTECT } from '../modules/nf-core/modules/gatk4/filtermutect/main' addParams( options: filter_options)
 
@@ -244,6 +246,7 @@ workflow MUTECTPLATYPUS {
         fasta_fai,
     )
     merge_stats_in = GATK4_MUTECT2.out.stats.groupTuple()
+
 	GATK4_MERGESTATS(
 	merge_stats_in
 	)
@@ -287,6 +290,7 @@ workflow MUTECTPLATYPUS {
 	filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNORIENTATION.out.orientation_model)
     //for_filter.view()
     filter_input = filter_input.join(for_filter)
+    filter_input = filter_input.join(GATK4_MERGESTATS.out.stats)
 
     GATK4_FILTERMUTECT (
         filter_input,
