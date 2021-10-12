@@ -29,7 +29,7 @@ process GATK4_MUTECT2 {
     }
 
     input:
-    tuple val(patient), val(patient_interval), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
+    tuple val(patient), val(interval_patient), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
     path fasta
     path fasta_fai
     path dict
@@ -38,8 +38,8 @@ process GATK4_MUTECT2 {
     path germline_resource_idx
 
     output:
-    tuple val(patient), path("*.vcf.gz")      , emit: vcf
-    tuple val(patient), path("*.tbi")         , emit: tbi
+    tuple val(patient), path("*.vcf")      , emit: vcf
+    //tuple val(patient), path("*.tbi")         , emit: tbi
     tuple val(patient), path("*.stats")       , emit: stats
     tuple val(patient), path("*.f1r2.tar.gz") , optional:true, emit: f1r2
     path "versions.yml"                       , emit: versions
@@ -65,7 +65,7 @@ process GATK4_MUTECT2 {
         ${normalsCommand} \\
         ${panelsCommand} \\
         -L $intervals \\
-		-O ${prefix}.vcf.gz \\
+		-O ${prefix}.vcf \\
         --af-of-alleles-not-in-resource 0.0000025 \\
         --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter \\
         $options.args

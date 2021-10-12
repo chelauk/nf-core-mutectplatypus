@@ -84,7 +84,7 @@ then
                 tail -n +$((L+1)) ${vcf}
             done
         done
-    ) | bgzip -@${cpus} > rawcalls.vcf.gz
+    ) |  awk '/^#/{print $0;next}{print $0 | "sort -k1,1 -k2,2n"}' | bgzip -@${cpus} > rawcalls.vcf.gz
     tabix rawcalls.vcf.gz
 else
     VCF=$(ls no_intervals*.vcf)

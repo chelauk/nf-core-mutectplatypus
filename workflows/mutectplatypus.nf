@@ -224,9 +224,9 @@ workflow MUTECTPLATYPUS {
         .map{duration, intervalFile -> intervalFile}
 
     mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
-        [patient, patient + "_" + intervals.baseName, which_tumour, which_norm, bam, bai, intervals]
+        [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
     }.set{bam_intervals}
-    bam_intervals.view()
+	
 	GATK4_MUTECT2(
         bam_intervals,
         fasta,
@@ -241,9 +241,11 @@ workflow MUTECTPLATYPUS {
 	GATK4_LEARNORIENTATION ( orientation_in )
 
     concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
+	target_intervals = file(params.intervals)
     CONCAT_VCF (
         concat_input,
         fasta_fai,
+		target_intervals
     )
     merge_stats_in = GATK4_MUTECT2.out.stats.groupTuple()
 
