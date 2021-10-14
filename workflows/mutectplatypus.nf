@@ -136,9 +136,9 @@ germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.g
 // Initialise input sample
 csv_file = file(params.input)
 input_samples  = extract_csv(csv_file)
-
+//input_samples.view()
 mutect_input = make_mutect_input(input_samples)
-
+//mutect_input.view()
 def extract_csv(csv_file) {
     Channel.from(csv_file).splitCsv(header: true)
         //Retrieves number of lanes by grouping together by patient and sample and counting how many entries there are for this combination
@@ -159,8 +159,9 @@ def extract_csv(csv_file) {
         // Several sample can belong to the same patient
         // Sample should be unique for the patient
         if (row.patient) meta.patient = row.patient.toString()
-        if (row.sample)  meta.sample  = row.sample.toString()
-        meta.id   = meta.patient + "_" +  meta.sample
+        if (row.id)      meta.id      = row.id.toString()
+		else { meta.sample  = row.sample.toString()
+               meta.id   = meta.patient + "_" +  meta.sample }
 
         // If no gender specified, gender is not considered
         // gender is only mandatory for somatic CNV
@@ -226,7 +227,6 @@ workflow MUTECTPLATYPUS {
     mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
         [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
     }.set{bam_intervals}
-	
 	GATK4_MUTECT2(
         bam_intervals,
         fasta,

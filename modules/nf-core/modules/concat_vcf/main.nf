@@ -25,7 +25,7 @@ process CONCAT_VCF {
 	path target_bed
 
     output:
-    tuple val(patient), path("*_*.vcf.gz"), path("*.vcf.gz.tbi"), emit: vcf
+    tuple val(patient), path("${patient}.vcf.gz"), path("*.vcf.gz.tbi"), emit: vcf
 
     script:
     def prefix           = options.suffix ? "${options.suffix}_${meta.id}" : "${patient}"
