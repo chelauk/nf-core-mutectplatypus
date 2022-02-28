@@ -202,10 +202,11 @@ workflow MUTECTPLATYPUS {
     ch_software_versions = Channel.empty()
 
 	result_intervals = Channel.empty()
-    if (!params.intervals)
-        result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai))
-    else
+    if (!params.intervals) {
+        result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai)) 
+		} else {
         result_intervals = CREATE_INTERVALS_BED(file(params.intervals))
+		}
 
     result_intervals = result_intervals.flatten()
         .map{ intervalFile ->
@@ -241,7 +242,7 @@ workflow MUTECTPLATYPUS {
 	GATK4_LEARNORIENTATION ( orientation_in )
 
     concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
-	target_intervals = file(params.intervals)
+	target_intervals = result_intervals
     CONCAT_VCF (
         concat_input,
         fasta_fai,
