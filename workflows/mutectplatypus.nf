@@ -136,7 +136,7 @@ germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.g
 // Initialise input sample
 csv_file = file(params.input)
 input_samples  = extract_csv(csv_file)
-//input_samples.view()
+input_samples.view()
 mutect_input = make_mutect_input(input_samples)
 //mutect_input.view()
 def extract_csv(csv_file) {

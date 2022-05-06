@@ -29,9 +29,9 @@ process CONCAT_VCF {
 
     script:
     def prefix           = options.suffix ? "${options.suffix}_${meta.id}" : "${patient}"
-    options = params.intervals ? "-t ${target_bed}" : ""
+//    options = params.intervals ? "-t ${target_bed}" : ""
 	"""
-	concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf ${options}
+	concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf
     """
     stub:
     def prefix           = options.suffix ? "${options.suffix}_${meta.id}" : "${patient}"
