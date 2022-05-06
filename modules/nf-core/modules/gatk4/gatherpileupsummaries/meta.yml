@@ -1,57 +1,42 @@
-name: gatk4_getpileupsummaries
-description: |
-  Summarizes counts of reads that support reference, alternate and other alleles for given sites. Results can be used with CalculateContamination. Requires a common germline variant sites file, such as from gnomAD.
+name: gatk4_gatherpileupsummaries
+description: write your description here
 keywords:
-  - gatk4
-  - getpileupsumaries
-  - readcountssummary
-  - germlinevariantsites
+  - sort
 tools:
   - gatk4:
-      description: |
-        Developed in the Data Sciences Platform at the Broad Institute, the toolkit offers a wide variety of tools
-        with a primary focus on variant discovery and genotyping. Its powerful processing engine
-        and high-performance computing features make it capable of taking on projects of any size.
+      description: Genome Analysis Toolkit (GATK4)
       homepage: https://gatk.broadinstitute.org/hc/en-us
-      documentation: https://gatk.broadinstitute.org/hc/en-us/categories/360002369672s
-      doi: 10.1158/1538-7445.AM2017-3590
+      documentation: https://gatk.broadinstitute.org/hc/en-us
+      tool_dev_url: https://github.com/broadinstitute/gatk
+      doi: "10.1158/1538-7445.AM2017-3590"
+      licence: ["BSD-3-clause"]
 
 input:
   - meta:
       type: map
       description: |
         Groovy Map containing sample information
-        e.g. [ id:'test' ]
-  - bam:
-      type: file
-      description: BAM file to be summarised.
-      pattern: "*.bam"
-  - bai:
-      type: file
-      description: BAM file index.
-      pattern: "*.bam.bai"
-  - variants:
-      type: file
-      description: Population vcf of germline sequencing, containing allele fractions. Is also used as sites file if no separate sites file is specified.
-      pattern: "*.vcf.gz"
-  - variants_idx:
-      type: file
-      description: Index file for the germline resource.
-      pattern: "*.vcf.gz.tbi"
-  - sites:
-      type: file
-      description: File containing specified sites to be used for the summary. If this option is not specified, variants file is used instead automatically.
-      pattern: "*.interval_list"
+        e.g. [ id:'test', single_end:false ]
+  - pileup:
+      type: (list of) file(s)
+      description: Pileup files from gatk4/getpileupsummaries
+      pattern: "*.pileups.table"
 
 output:
-  - pileup:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - table:
       type: file
-      description: File containing the pileup summary table.
-      pattern: "*.pileups.table"
+      description: pileup summaries table file
+      pattern: "*.pileupsummaries.table"
   - versions:
       type: file
       description: File containing software versions
       pattern: "versions.yml"
 
 authors:
-  - "@GCJMackenzie"
+  - "@FriederikeHanssen"
+  - "@maxulysse"
