@@ -4,16 +4,16 @@
   |\\ | |__  __ /  ` /  \\ |__) |__         }  {
   | \\| |       \\__, \\__/ |  \\ |___     \\`-._,-`-,
                                         `._,._,'
-  nf-core/mutectplatypus v${version}
+  nf-core/mytest v${version}
 ----------------------------------------------------
 
 Run Name: $runName
 
 <% if (success){
-    out << "## nf-core/mutectplatypus execution completed successfully! ##"
+    out << "## nf-core/mytest execution completed successfully! ##"
 } else {
     out << """####################################################
-## nf-core/mutectplatypus execution completed unsuccessfully! ##
+## nf-core/mytest execution completed unsuccessfully! ##
 ####################################################
 The exit status of the task that caused the workflow execution to fail was: $exitStatus.
 The full error message was:
@@ -36,5 +36,5 @@ Pipeline Configuration:
 <% out << summary.collect{ k,v -> " - $k: $v" }.join("\n") %>
 
 --
-nf-core/mutectplatypus
-https://github.com/nf-core/mutectplatypus
+nf-core/mytest
+https://github.com/nf-core/mytest

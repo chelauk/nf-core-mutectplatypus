@@ -1,12 +1,13 @@
-name: gatk4_gatherpileupsummaries
-description: write your description here
+name: gatk4_mergemutectstats
+description: Merges mutect2 stats generated on different intervals/regions
 keywords:
-  - sort
+  - mutectstats
+  - merge
 tools:
   - gatk4:
       description: Genome Analysis Toolkit (GATK4)
       homepage: https://gatk.broadinstitute.org/hc/en-us
-      documentation: https://gatk.broadinstitute.org/hc/en-us
+      documentation: https://gatk.broadinstitute.org/hc/en-us/categories/360002369672s
       tool_dev_url: https://github.com/broadinstitute/gatk
       doi: "10.1158/1538-7445.AM2017-3590"
       licence: ["BSD-3-clause"]
@@ -17,10 +18,10 @@ input:
       description: |
         Groovy Map containing sample information
         e.g. [ id:'test', single_end:false ]
-  - pileup:
+  - stats:
       type: (list of) file(s)
-      description: Pileup files from gatk4/getpileupsummaries
-      pattern: "*.pileups.table"
+      description: Stats file
+      pattern: "*.{stats}"
 
 output:
   - meta:
@@ -28,15 +29,14 @@ output:
       description: |
         Groovy Map containing sample information
         e.g. [ id:'test', single_end:false ]
-  - table:
-      type: file
-      description: pileup summaries table file
-      pattern: "*.pileupsummaries.table"
   - versions:
       type: file
       description: File containing software versions
       pattern: "versions.yml"
+  - stats:
+      type: file
+      description: Stats file
+      pattern: "*.vcf.gz.stats"
 
 authors:
   - "@FriederikeHanssen"
-  - "@maxulysse"
