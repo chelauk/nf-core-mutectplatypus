@@ -1,5 +1,5 @@
 process SAMPLESHEET_CHECK {
-
+    
     tag "$samplesheet"
     label 'process_low'
 
