@@ -9,6 +9,7 @@ from pathlib import Path
 
 logger = logging.getLogger()
 
+
 class RowChecker:
     """
     Define a service that can validate and transform each given row.
@@ -78,7 +79,8 @@ class RowChecker:
         self._validate_status(row)
         self._validate_bam(row)
         self._validate_bai(row)
-        self._seen.add((row[self._patient_col], row[self._sample_col], row[self._bam_col]))
+        self._seen.add(
+            (row[self._patient_col], row[self._sample_col], row[self._bam_col]))
         self.modified.append(row)
 
     def _validate_patient(self, row):
@@ -123,9 +125,9 @@ class RowChecker:
             f"Unrecognized status: {row[self._status_col]}\n"
             f"It should be one of: {', '.join(self.VALID_STATUSES)}"
         )
-        if any(row[self._status_col] == statuses  for statuses in ["control","normal"]):
+        if any(row[self._status_col] == statuses for statuses in ["control", "normal"]):
             row[self._status_col] = "normal"
-        elif any(row[self._status_col] == statuses for statuses in ["tumour","tumor"]):
+        elif any(row[self._status_col] == statuses for statuses in ["tumour", "tumor"]):
             row[self._status_col] = "tumour"
 
     def validate_unique_samples(self):
@@ -133,7 +135,9 @@ class RowChecker:
         Assert that the combination of sample name and BAM filename is unique.
 
         """
-        assert len(self._seen) == len(self.modified), "The pair of patient and sample name must be unique."
+        assert len(self._seen) == len(
+            self.modified), "The pair of patient and sample name must be unique."
+
 
 def sniff_format(handle):
     """
@@ -150,14 +154,16 @@ def sniff_format(handle):
         https://docs.python.org/3/glossary.html#term-text-file
 
     """
-    peek = handle.read(2048)
+    peek = handle.read(30)
     sniffer = csv.Sniffer()
     if not sniffer.has_header(peek):
-        logger.critical(f"The given sample sheet does not appear to contain a header.")
+        logger.critical(
+            f"The given sample sheet does not appear to contain a header.")
         sys.exit(1)
     dialect = sniffer.sniff(peek)
     handle.seek(0)
     return dialect
+
 
 def check_samplesheet(file_in, file_out):
     """
@@ -194,7 +200,8 @@ def check_samplesheet(file_in, file_out):
         reader = csv.DictReader(in_handle, dialect=sniff_format(in_handle))
         # Validate the existence of the expected header columns.
         if not required_columns.issubset(reader.fieldnames):
-            logger.critical(f"The sample sheet **must** contain the column headers: {', '.join(required_columns)}.")
+            logger.critical(
+                f"The sample sheet **must** contain the column headers: {', '.join(required_columns)}.")
             sys.exit(1)
         # Validate each row.
         checker = RowChecker()
@@ -212,6 +219,7 @@ def check_samplesheet(file_in, file_out):
         writer.writeheader()
         for row in checker.modified:
             writer.writerow(row)
+
 
 def parse_args(argv=None):
     """Define and immediately parse command line arguments."""
@@ -240,10 +248,12 @@ def parse_args(argv=None):
     )
     return parser.parse_args(argv)
 
+
 def main(argv=None):
     """Coordinate argument parsing and program execution."""
     args = parse_args(argv)
-    logging.basicConfig(level=args.log_level, format="[%(levelname)s] %(message)s")
+    logging.basicConfig(level=args.log_level,
+                        format="[%(levelname)s] %(message)s")
     if not args.file_in.is_file():
         logger.error(f"The given input file {args.file_in} was not found!")
         sys.exit(2)
