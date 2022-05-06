@@ -67,8 +67,12 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 // MODULES: Installed from modules/local
 //
 
-include { CREATE_INTERVALS_BED }   from '../modules/local/create_intervals_bed/main'
-include { BUILD_INTERVALS }        from '../modules/local/build_intervals/main'
+include { CREATE_INTERVALS_BED  } from '../modules/local/create_intervals_bed/main'
+include { BUILD_INTERVALS       } from '../modules/local/build_intervals/main'
+include { PLATYPUS_CALLVARIANTS } from '../modules/local/platypus/main'
+include { PLATYPUS_FILTER       } from '../modules/local/filter_platypus/main'
+include { PLATYPUS_ZIP          } from '../modules/local/zip_platypus/main'
+
 
 //
 // MODULE: Installed directly from nf-core/modules
@@ -78,6 +82,7 @@ include { GATK4_MUTECT2                   } from '../modules/nf-core/modules/gat
 include { GATK4_LEARNREADORIENTATIONMODEL } from '../modules/nf-core/modules/gatk4/learnreadorientationmodel/main'
 include { GATK4_MERGEMUTECTSTATS          } from '../modules/nf-core/modules/gatk4/mergemutectstats/main'
 include { CONCAT_VCF                      } from '../modules/nf-core/modules/concat_vcf/main'
+include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/nf-core/modules/concat_vcf/main'
 include { GATK4_GETPILEUPSUMMARIES        } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
 include { GATK4_GATHERPILEUPSUMMARIES     } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
 include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/modules/gatk4/calculatecontamination/main'
@@ -148,11 +153,11 @@ workflow MUTECT_PLATYPUS {
     mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
         [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
         }
-        .set{mutect_intervals}
+        .set{bam_intervals}
 
 
     GATK4_MUTECT2(
-        mutect_intervals,
+        bam_intervals,
         fasta,
         fasta_fai,
         dict,
@@ -216,6 +221,28 @@ workflow MUTECT_PLATYPUS {
     filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
 
     GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
+
+    platypus_input = GATK4_FILTERMUTECTCALLS.out.vcf.combine(bam_intervals, by:0)
+
+    PLATYPUS_CALLVARIANTS(  platypus_input,
+                            fasta,
+                            fasta_fai )
+
+    concat_platypus_input = PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
+    CONCAT_PLATYPUS (concat_platypus_input, fasta_fai, result_intervals )
+
+
+    filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
+                                .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
+                                [patient, vcf, which_norm]}
+
+    PLATYPUS_FILTER (
+        filter_platypus_input
+    )
+
+    PLATYPUS_ZIP (
+        PLATYPUS_FILTER.out.vcf
+    )
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')

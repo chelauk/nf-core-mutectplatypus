@@ -23,15 +23,15 @@ process CONCAT_VCF {
     def prefix = task.ext.prefix ?: "${patient}"
     options = params.intervals ? "-t ${target_bed}" : ""
 	"""
-	concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf ${options}
+	concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}_${args}_concatenated.vcf ${options}
     """
     stub:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${patient}"
     options = params.intervals ? "-t ${target_bed}" : ""
     """
-    echo -e "concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}.vcf ${options}"
-    touch ${prefix}_concatenated.vcf.gz
-    touch ${prefix}_concatenated.vcf.gz.tbi
+    echo -e "concatenateVCFs.sh -i ${fasta_fai} -c ${task.cpus} -o ${prefix}_${args}_concatenated.vcf ${options}"
+    touch ${prefix}_${args}_concatenated.vcf.gz
+    touch ${prefix}_${args}_concatenated.vcf.gz.tbi
     """
 }
