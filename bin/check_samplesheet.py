@@ -79,8 +79,7 @@ class RowChecker:
         self._validate_status(row)
         self._validate_bam(row)
         self._validate_bai(row)
-        self._seen.add(
-            (row[self._patient_col], row[self._sample_col], row[self._bam_col]))
+        self._seen.add((row[self._patient_col], row[self._sample_col], row[self._bam_col]))
         self.modified.append(row)
 
     def _validate_patient(self, row):
