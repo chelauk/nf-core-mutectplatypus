@@ -203,7 +203,7 @@ workflow MUTECTPLATYPUS {
 
 	result_intervals = Channel.empty()
     if (!params.intervals) {
-        result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai)) 
+        result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai))
 		} else {
         result_intervals = CREATE_INTERVALS_BED(file(params.intervals))
 		}
@@ -255,7 +255,7 @@ workflow MUTECTPLATYPUS {
 	)
     // split input to create tables for each tumour
     input_samples.branch{ tumour: it[0]["status"] == "tumour"
-                          normal: it[0]["status"] == "control"
+                          normal: it[0]["status"] == "normal"
                         }
                     .set{pileup}
 
