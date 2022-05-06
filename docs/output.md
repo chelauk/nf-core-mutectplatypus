@@ -1,4 +1,4 @@
-# nf-core/mytest: Output
+# nf-core/mutectplatypus: Output
 
 ## Introduction
 

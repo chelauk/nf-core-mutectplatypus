@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- prettier-ignore -->
-    <meta name="description" content="nf-core/mytest: test" />
-    <title>nf-core/mytest Pipeline Report</title>
+    <meta name="description" content="nf-core/mutectplatypus: test" />
+    <title>nf-core/mutectplatypus Pipeline Report</title>
   </head>
   <body>
     <div style="font-family: Helvetica, Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto">
       <img src="cid:nfcorepipelinelogo" />
 
-      <h1>nf-core/mytest v${version}</h1>
+      <h1>nf-core/mutectplatypus v${version}</h1>
       <h2>Run Name: $runName</h2>
 
       <% if (!success){ out << """
@@ -27,7 +27,7 @@
           border-radius: 4px;
         "
       >
-        <h4 style="margin-top: 0; color: inherit">nf-core/mytest execution completed unsuccessfully!</h4>
+        <h4 style="margin-top: 0; color: inherit">nf-core/mutectplatypus execution completed unsuccessfully!</h4>
         <p>The exit status of the task that caused the workflow execution to fail was: <code>$exitStatus</code>.</p>
         <p>The full error message was:</p>
         <pre style="white-space: pre-wrap; overflow: visible; margin-bottom: 0">${errorReport}</pre>
@@ -44,7 +44,7 @@
           border-radius: 4px;
         "
       >
-        nf-core/mytest execution completed successfully!
+        nf-core/mutectplatypus execution completed successfully!
       </div>
       """ } %>
 
@@ -104,8 +104,8 @@ $commandLine</pre
         </tbody>
       </table>
 
-      <p>nf-core/mytest</p>
-      <p><a href="https://github.com/nf-core/mytest">https://github.com/nf-core/mytest</a></p>
+      <p>nf-core/mutectplatypus</p>
+      <p><a href="https://github.com/nf-core/mutectplatypus">https://github.com/nf-core/mutectplatypus</a></p>
     </div>
   </body>
 </html>

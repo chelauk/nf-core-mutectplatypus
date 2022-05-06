@@ -1,4 +1,4 @@
-# nf-core/mytest: Citations
+# nf-core/mutectplatypus: Citations
 
 ## [nf-core](https://pubmed.ncbi.nlm.nih.gov/32055031/)
 

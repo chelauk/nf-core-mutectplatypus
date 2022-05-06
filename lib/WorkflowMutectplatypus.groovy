@@ -1,5 +1,5 @@
 //
-// This file holds several functions specific to the workflow/mytest.nf in the nf-core/mytest pipeline
+// This file holds several functions specific to the workflow/mutectplatypus.nf in the nf-core/mutectplatypus pipeline
 //
 
 class WorkflowMytest {

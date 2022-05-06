@@ -1,6 +1,6 @@
 {
-    "name": "nf-core/mytest",
-    "homePage": "https://github.com/nf-core/mytest",
+    "name": "nf-core/mutectplatypus",
+    "homePage": "https://github.com/nf-core/mutectplatypus",
     "repos": {
         "nf-core/modules": {
             "": {

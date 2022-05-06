@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    nf-core/mytest
+    nf-core/mutectplatypus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/nf-core/mytest
-    Website: https://nf-co.re/mytest
-    Slack  : https://nfcore.slack.com/channels/mytest
+    Github : https://github.com/nf-core/mutectplatypus
+    Website: https://nf-co.re/mutectplatypus
+    Slack  : https://nfcore.slack.com/channels/mutectplatypus
 ----------------------------------------------------------------------------------------
 */
 
@@ -45,7 +45,7 @@ WorkflowMain.initialise(workflow, params, log)
 include { MUTECT_PLATYPUS } from './workflows/mutect_platypus'
 
 //
-// WORKFLOW: Run main nf-core/mytest analysis pipeline
+// WORKFLOW: Run main nf-core/mutectplatypus analysis pipeline
 //
 workflow NFCORE_MUTECT_PLATYPUS {
     MUTECT_PLATYPUS ()
