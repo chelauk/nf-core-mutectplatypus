@@ -1,5 +1,5 @@
 process GATK4_CALCULATECONTAMINATION {
-    tag "id"
+    tag "$patient"
     label 'process_low'
 
     conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
@@ -8,11 +8,11 @@ process GATK4_CALCULATECONTAMINATION {
         'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
-    tuple val(patient), val(id), val(status), path(table)
+    tuple val(patient), val(samples), val(status), path(table)
 
     output:
-    tuple val(patient), val(id), val(status), path('*.contamination.table'), emit: contamination
-    tuple val(patient), val(id), val(status), path('*.segmentation.table') , emit: segmentation, optional:true
+    tuple val(patient), val(samples), val("${status[0]}"), path('*.contamination.table'), emit: contamination
+    tuple val(patient), val(samples), val("${status[0]}"), path('*.segmentation.table') , emit: segmentation, optional:true
     path "versions.yml"                           , emit: versions
 
     when:
@@ -20,7 +20,7 @@ process GATK4_CALCULATECONTAMINATION {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}"
+    def prefix = task.ext.prefix ?: "${patient}"
 
     def avail_mem = 3
     if (!task.memory) {
@@ -43,7 +43,7 @@ process GATK4_CALCULATECONTAMINATION {
     """
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}"
+    def prefix = task.ext.prefix ?: "${patient}"
 
     def avail_mem = 3
     if (!task.memory) {

@@ -187,27 +187,27 @@ workflow MUTECT_PLATYPUS {
             }
         .set{pileup}
 
-    pileup.tumour
-        .combine(result_intervals)
-        .map{ meta, files, intervals ->
-        [ meta.patient, meta.id, meta.id + "_" + intervals.baseName, meta.status, files[0], files[1], intervals ] }
-        .set{ pileup_tumour_intervals }
+//        .combine(result_intervals)
+//        .map{ meta, files, intervals ->
+//        [ meta.patient, meta.id, meta.id + "_" + intervals.baseName, meta.status, files[0], files[1], intervals ] }
+//        .set{ pileup_tumour_intervals }
 
     GATK4_GETPILEUPSUMMARIES (
-        pileup_tumour_intervals,
+        pileup.tumour,
         fasta,
         fasta_fai,
         dict,
         germline_resource,
-        germline_resource_idx
+        germline_resource_idx,
+        []
     )
+    gather_pileup_tumour_input = GATK4_GETPILEUPSUMMARIES.out.table
+        .map { meta, table -> [ meta.patient, meta.sample, meta.status, meta.id, table] }
+        .groupTuple()
 
-    gather_pileup_input = GATK4_GETPILEUPSUMMARIES.out.table
-        .groupTuple(by: 1)
-        .map { patient, id, id_intervals, status, pileup_tables -> [ patient.unique()[0], id, id_intervals, status.unique()[0], pileup_tables ] }
+    GATK4_GATHERPILEUPSUMMARIES ( gather_pileup_tumour_input, dict )
 
-    GATK4_GATHERPILEUPSUMMARIES ( gather_pileup_input, dict )
-
+    GATK4_GATHERPILEUPSUMMARIES.out.table.view()
     GATK4_CALCULATECONTAMINATION( GATK4_GATHERPILEUPSUMMARIES.out.table )
 
 
@@ -221,7 +221,7 @@ workflow MUTECT_PLATYPUS {
     filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
     filter_input = filter_input.join(for_filter)
     filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
-
+    filter_input.view()
     GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
 
     platypus_input = GATK4_FILTERMUTECTCALLS.out.vcf.combine(bam_intervals, by:0)

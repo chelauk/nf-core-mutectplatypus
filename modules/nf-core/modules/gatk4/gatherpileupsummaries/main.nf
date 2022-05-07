@@ -1,5 +1,5 @@
 process GATK4_GATHERPILEUPSUMMARIES {
-    tag "$id"
+    tag "$patient"
     label 'process_low'
 
     conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
@@ -9,11 +9,11 @@ process GATK4_GATHERPILEUPSUMMARIES {
 
 
     input:
-    tuple val(patient), val(id), val(index), val(status), path(pileup)
+    tuple val(patient), val(samples), val(statuses), val(ids), path(pileup)
     path  dict
 
     output:
-    tuple val(patient), val(id), val(status), path("*.pileupsummaries.table"), emit: table
+    tuple val(patient), val(samples), val(statuses), path("*.pileupsummaries.table"), emit: table
     path "versions.yml"                             , emit: versions
 
     when:
@@ -21,7 +21,7 @@ process GATK4_GATHERPILEUPSUMMARIES {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}"
+    def prefix = task.ext.prefix ?: "${patient}"
     def input_list = pileup.collect{ "--I $it" }.join(' ')
 
     def avail_mem = 3
@@ -45,7 +45,7 @@ process GATK4_GATHERPILEUPSUMMARIES {
     """
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}"
+    def prefix = task.ext.prefix ?: "${patient}"
     def input_list = pileup.collect{ "--I $it" }.join(' ')
 
     def avail_mem = 3
