@@ -36,6 +36,7 @@ dict                  = params.dict                  ? Channel.fromPath(params.d
 germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : ch_dummy_file
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : ch_dummy_file
 pon                   = params.pon                   ? Channel.fromPath(params.pon).collect()                   : []
+pon_idx               = params.pon_idx               ? Channel.fromPath(params.pon_idx).collect()               : []
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,6 +163,7 @@ workflow MUTECT_PLATYPUS {
         fasta_fai,
         dict,
         pon,
+        pon_idx,
         germline_resource,
         germline_resource_idx,
     )

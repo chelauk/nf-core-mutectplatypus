@@ -15,6 +15,7 @@ process GATK4_MUTECT2 {
     path fasta_fai
     path dict
     path pon
+    path pon_idx
     path germline_resource
     path germline_resource_idx
 
