@@ -51,12 +51,13 @@ process GATK4_MUTECT2 {
         ${normalsCommand} \\
         --germline-resource $germline_resource \\
         --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\ 
+        $args \\
         ${pon_command} \\
         -L $intervals \\
         -O ${prefix}.vcf \\
         --af-of-alleles-not-in-resource 0.0000025 \\
-        --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter \\
-        $args
+        --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter 
+    
     echo "GATK4.2.0" > versions.yml
     """
 
