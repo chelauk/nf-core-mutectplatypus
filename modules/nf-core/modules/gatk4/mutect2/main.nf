@@ -50,7 +50,7 @@ process GATK4_MUTECT2 {
         ${inputsCommand} \\
         ${normalsCommand} \\
         --germline-resource $germline_resource \\
-        --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\ 
+        --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\
         $args \\
         ${pon_command} \\
         -L $intervals \\
