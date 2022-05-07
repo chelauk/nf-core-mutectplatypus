@@ -187,27 +187,25 @@ workflow MUTECT_PLATYPUS {
             }
         .set{pileup}
 
-//        .combine(result_intervals)
-//        .map{ meta, files, intervals ->
-//        [ meta.patient, meta.id, meta.id + "_" + intervals.baseName, meta.status, files[0], files[1], intervals ] }
-//        .set{ pileup_tumour_intervals }
+    pileup.tumour.combine(result_intervals)
+                .map{ meta, files, intervals ->
+                [ meta.patient, meta.sample, meta.sample + "_" + intervals.baseName, files[0], files[1], intervals ] }
+                .set{ pileup_tumour_intervals }
 
     GATK4_GETPILEUPSUMMARIES (
-        pileup.tumour,
+        pileup_tumour_intervals,
         fasta,
         fasta_fai,
         dict,
         germline_resource,
-        germline_resource_idx,
-        []
+        germline_resource_idx
     )
     gather_pileup_tumour_input = GATK4_GETPILEUPSUMMARIES.out.table
-        .map { meta, table -> [ meta.patient, meta.sample, meta.status, meta.id, table] }
-        .groupTuple()
+                                    .groupTuple(by: [0,1])
+                                    .map{ patient, sample, ids, table -> [patient, sample, table]}
 
     GATK4_GATHERPILEUPSUMMARIES ( gather_pileup_tumour_input, dict )
 
-    GATK4_GATHERPILEUPSUMMARIES.out.table.view()
     GATK4_CALCULATECONTAMINATION( GATK4_GATHERPILEUPSUMMARIES.out.table )
 
 
@@ -215,13 +213,12 @@ workflow MUTECT_PLATYPUS {
     segmentation_input = GATK4_CALCULATECONTAMINATION.out.segmentation.groupTuple()
 
     for_filter = contamination_input.join(segmentation_input)
-                                    .map{ patient, ids1, status1, contamination, ids2, status2, segmentation ->
+                                    .map{ patient,samples1, contamination, samples2, segmentation ->
                                     [patient,contamination,segmentation] }
 
     filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
     filter_input = filter_input.join(for_filter)
     filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
-    filter_input.view()
     GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
 
     platypus_input = GATK4_FILTERMUTECTCALLS.out.vcf.combine(bam_intervals, by:0)

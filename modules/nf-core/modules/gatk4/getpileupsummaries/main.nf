@@ -1,6 +1,7 @@
 process GATK4_GETPILEUPSUMMARIES {
-    tag "$meta.id"
-    label 'process_medium'
+    
+    tag "$id"
+    label 'process_low'
 
     conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,16 +9,15 @@ process GATK4_GETPILEUPSUMMARIES {
         'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(patient), val(sample), val(id), path(bam), path(bai), path(intervals)
     path  fasta
     path  fai
     path  dict
     path  variants
     path  variants_tbi
-    path  intervals
 
     output:
-    tuple val(meta), path('*.pileups.table'), emit: table
+    tuple val(patient), val(sample), val(id), path('*.pileups.table'), emit: table
     path "versions.yml"                     , emit: versions
 
     when:
@@ -25,8 +25,8 @@ process GATK4_GETPILEUPSUMMARIES {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def interval_command = intervals ? "--intervals $intervals" : "--intervals $variants"
+    def prefix = task.ext.prefix ?: "${patient}_${id}"
+    def interval_command = intervals ? "--intervals $intervals" : ""
     def reference_command = fasta ? "--reference $fasta" : ''
 
     def avail_mem = 3
@@ -52,8 +52,8 @@ process GATK4_GETPILEUPSUMMARIES {
     """
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def interval_command = intervals ? "--intervals $intervals" : "--intervals $variants"
+    def prefix = task.ext.prefix ?: "${patient}_${id}"
+    def interval_command = intervals ? "--intervals $intervals" : ""
     def reference_command = fasta ? "--reference $fasta" : ''
 
     def avail_mem = 3

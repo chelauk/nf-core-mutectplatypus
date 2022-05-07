@@ -1,5 +1,5 @@
 process GATK4_GATHERPILEUPSUMMARIES {
-    tag "$patient"
+    tag "${patient}_${sample}"
     label 'process_low'
 
     conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
@@ -9,11 +9,11 @@ process GATK4_GATHERPILEUPSUMMARIES {
 
 
     input:
-    tuple val(patient), val(samples), val(statuses), val(ids), path(pileup)
+    tuple val(patient), val(sample), path(table)
     path  dict
 
     output:
-    tuple val(patient), val(samples), val(statuses), path("*.pileupsummaries.table"), emit: table
+    tuple val(patient), val(sample), path("*.pileupsummaries.table"), emit: table
     path "versions.yml"                             , emit: versions
 
     when:
@@ -21,8 +21,8 @@ process GATK4_GATHERPILEUPSUMMARIES {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${patient}"
-    def input_list = pileup.collect{ "--I $it" }.join(' ')
+    def prefix = task.ext.prefix ?: "${patient}_${sample}"
+    def input_list = table.collect{ "--I $it" }.join(' ')
 
     def avail_mem = 3
     if (!task.memory) {
@@ -45,8 +45,8 @@ process GATK4_GATHERPILEUPSUMMARIES {
     """
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${patient}"
-    def input_list = pileup.collect{ "--I $it" }.join(' ')
+    def prefix = task.ext.prefix ?: "${patient}_${sample}"
+    def input_list = table.collect{ "--I $it" }.join(' ')
 
     def avail_mem = 3
     if (!task.memory) {
