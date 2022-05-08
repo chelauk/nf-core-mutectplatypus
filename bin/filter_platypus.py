@@ -16,6 +16,7 @@
 ############################################################
 import sys
 import os
+import gzip
 
 #####################################################################
 # Filter list - the list of FILTER entries that are acceptable.
@@ -45,7 +46,7 @@ elif len(sys.argv) == 3:
 #####################################################################
 with open(platypus_file[0:-4]+"platypus_filtered.vcf", 'w') as platypus_pass:
     with open(platypus_file[0:-4]+"platypus_removed.vcf", 'w') as platypus_nopass:
-        with open(platypus_file, 'r') as platcalls:
+        with gzip.open(platypus_file, 'rb') as platcalls:
             # Copy the header of the platypus file.
             line = ''
             while line[0:6] != "#CHROM":
