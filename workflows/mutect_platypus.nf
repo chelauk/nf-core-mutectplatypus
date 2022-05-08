@@ -233,20 +233,34 @@ workflow MUTECT_PLATYPUS {
 
     GATHER_PS_NORM ( gather_pileup_normal_input, dict )
 
-    contamination_input = GATK4_GATHERPILEUPSUMMARIES.out.table.combine(GATHER_PS_NORM.out.table)
+
+    tumour_gatherpileup_input = GATK4_GATHERPILEUPSUMMARIES.out.table
+                                    .map{ meta, table ->
+                                    [ meta.patient, meta.sample, meta.status, meta.id, table ] }
+
+    normal_gatherpileup_input = GATHER_PS_NORM.out.table
+                                    .map{ meta, table ->
+                                    [ meta.patient, meta.sample, meta.status, meta.id, table ] }
+
+    contamination_input = tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
+                                    .map{ patient, sample1, status1, id1, table, sample2, status2, id2, table2 ->
+                                    [patient, sample1, table, table2] }
 
     GATK4_CALCULATECONTAMINATION( contamination_input )
 
     contamination_input = GATK4_CALCULATECONTAMINATION.out.contamination.groupTuple()
+
     segmentation_input = GATK4_CALCULATECONTAMINATION.out.segmentation.groupTuple()
 
-    for_filter = contamination_input.combine(segmentation_input)
-                                    .map{ meta, contamination, meta2, segmentation ->
-                                    [meta.patient,contamination[0],segmentation[0]] }
+    for_filter = contamination_input.join(segmentation_input)
+                                    .map{ patient, samples1, contamination, samples2, segmentation ->
+                                    [patient,contamination,segmentation] }
 
     filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
     filter_input = filter_input.join(for_filter)
     filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
+    filter_input.view()
+
     GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
 
     platypus_input = GATK4_FILTERMUTECTCALLS.out.vcf.combine(bam_intervals, by:0)

@@ -1,5 +1,5 @@
 process GATK4_CALCULATECONTAMINATION {
-    tag "$meta.id"
+    tag "${patient}_${sample}"
     label 'process_low'
 
     conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
@@ -8,11 +8,11 @@ process GATK4_CALCULATECONTAMINATION {
         'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
-    tuple val(meta), path(table), val(meta_normal), path(normal_table)
+    tuple val(patient), val(sample), path(tumour_table), path(normal_table)
 
     output:
-    tuple val(meta), path('*.contamination.table'), emit: contamination
-    tuple val(meta), path('*.segmentation.table') , emit: segmentation, optional:true
+    tuple val(patient), val(sample), path('*.contamination.table'), emit: contamination
+    tuple val(patient), val(sample), path('*.segmentation.table') , emit: segmentation, optional:true
     path "versions.yml"                           , emit: versions
 
     when:
@@ -20,7 +20,7 @@ process GATK4_CALCULATECONTAMINATION {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${patient}_${sample}"
     def matched_command = normal_table ? " -matched ${normal_table} " : ''
     def avail_mem = 3
     if (!task.memory) {
@@ -30,7 +30,7 @@ process GATK4_CALCULATECONTAMINATION {
     }
     """
     gatk --java-options "-Xmx${avail_mem}g" CalculateContamination \\
-        --input $table \\
+        --input $tumour_table \\
         $matched_command \\
         -segments ${prefix}.segmentation.table \\
         --output ${prefix}.contamination.table \\
@@ -44,7 +44,7 @@ process GATK4_CALCULATECONTAMINATION {
     """
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${patient}_${sample}"
     def matched_command = normal_table ? " -matched ${normal_table} " : ''
 
     def avail_mem = 3
@@ -55,7 +55,7 @@ process GATK4_CALCULATECONTAMINATION {
     }
     """
     echo -e "gatk --java-options "-Xmx${avail_mem}g" CalculateContamination \\
-        --input $table \\
+        --input $tumour_table \\
         $matched_command \\
         -segments ${prefix}.segmentation.table \\
         --output ${prefix}.contamination.table \\
