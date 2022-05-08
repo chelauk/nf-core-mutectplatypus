@@ -85,7 +85,9 @@ include { GATK4_MERGEMUTECTSTATS          } from '../modules/nf-core/modules/gat
 include { CONCAT_VCF                      } from '../modules/nf-core/modules/concat_vcf/main'
 include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/nf-core/modules/concat_vcf/main'
 include { GATK4_GETPILEUPSUMMARIES        } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
+include { GATK4_GETPILEUPSUMMARIES as GET_PS_NORM } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
 include { GATK4_GATHERPILEUPSUMMARIES     } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
+include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_NORM } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
 include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/modules/gatk4/calculatecontamination/main'
 include { GATK4_FILTERMUTECTCALLS         } from '../modules/nf-core/modules/gatk4/filtermutectcalls/main'
 include { MULTIQC                         } from '../modules/nf-core/modules/multiqc/main'
@@ -189,7 +191,7 @@ workflow MUTECT_PLATYPUS {
 
     pileup.tumour.combine(result_intervals)
                 .map{ meta, files, intervals ->
-                [ meta.patient, meta.sample, meta.sample + "_" + intervals.baseName, files[0], files[1], intervals ] }
+                [ meta, meta.id + "_" + intervals.baseName, files, intervals] }
                 .set{ pileup_tumour_intervals }
 
     GATK4_GETPILEUPSUMMARIES (
@@ -201,20 +203,40 @@ workflow MUTECT_PLATYPUS {
         germline_resource_idx
     )
     gather_pileup_tumour_input = GATK4_GETPILEUPSUMMARIES.out.table
-                                    .groupTuple(by: [0,1])
-                                    .map{ patient, sample, ids, table -> [patient, sample, table]}
+                                    .groupTuple()
+                                    .map{ meta, interval_ids, table -> [meta,table]}
 
     GATK4_GATHERPILEUPSUMMARIES ( gather_pileup_tumour_input, dict )
 
-    GATK4_CALCULATECONTAMINATION( GATK4_GATHERPILEUPSUMMARIES.out.table )
+    pileup.normal.combine(result_intervals)
+                .map{ meta, files, intervals ->
+                [ meta, meta.id + "_" + intervals.baseName, files, intervals] }
+                .set{ pileup_normal_intervals }
 
+    GET_PS_NORM (
+        pileup_normal_intervals,
+        fasta,
+        fasta_fai,
+        dict,
+        germline_resource,
+        germline_resource_idx
+    )
+    gather_pileup_normal_input = GET_PS_NORM.out.table
+                                    .groupTuple()
+                                    .map{ meta, interval_ids, table -> [meta,table]}
+
+    GATHER_PS_NORM ( gather_pileup_normal_input, dict )
+
+    contamination_input = GATK4_GATHERPILEUPSUMMARIES.out.table.combine(GATHER_PS_NORM.out.table)
+
+    GATK4_CALCULATECONTAMINATION( contamination_input )
 
     contamination_input = GATK4_CALCULATECONTAMINATION.out.contamination.groupTuple()
     segmentation_input = GATK4_CALCULATECONTAMINATION.out.segmentation.groupTuple()
 
-    for_filter = contamination_input.join(segmentation_input)
-                                    .map{ patient,samples1, contamination, samples2, segmentation ->
-                                    [patient,contamination,segmentation] }
+    for_filter = contamination_input.combine(segmentation_input)
+                                    .map{ meta, contamination, meta2, segmentation ->
+                                    [meta.patient,contamination[0],segmentation[0]] }
 
     filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
     filter_input = filter_input.join(for_filter)

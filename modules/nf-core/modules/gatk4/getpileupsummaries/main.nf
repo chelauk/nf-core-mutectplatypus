@@ -1,6 +1,5 @@
 process GATK4_GETPILEUPSUMMARIES {
-    
-    tag "$id"
+    tag "$meta.id"
     label 'process_low'
 
     conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
@@ -9,7 +8,7 @@ process GATK4_GETPILEUPSUMMARIES {
         'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
-    tuple val(patient), val(sample), val(id), path(bam), path(bai), path(intervals)
+    tuple val(meta), val(id_intervals), path(bams), path(intervals)
     path  fasta
     path  fai
     path  dict
@@ -17,7 +16,7 @@ process GATK4_GETPILEUPSUMMARIES {
     path  variants_tbi
 
     output:
-    tuple val(patient), val(sample), val(id), path('*.pileups.table'), emit: table
+    tuple val(meta), val(id_intervals), path('*.pileups.table'), emit: table
     path "versions.yml"                     , emit: versions
 
     when:
@@ -25,7 +24,7 @@ process GATK4_GETPILEUPSUMMARIES {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${patient}_${id}"
+    def prefix = task.ext.prefix ?: "${id_intervals}"
     def interval_command = intervals ? "--intervals $intervals" : ""
     def reference_command = fasta ? "--reference $fasta" : ''
 
@@ -37,7 +36,7 @@ process GATK4_GETPILEUPSUMMARIES {
     }
     """
     gatk --java-options "-Xmx${avail_mem}g" GetPileupSummaries \\
-        --input ${bam[0]} \\
+        --input ${bams[0]} \\
         --variant $variants \\
         --output ${prefix}.pileups.table \\
         $reference_command \\
@@ -52,7 +51,7 @@ process GATK4_GETPILEUPSUMMARIES {
     """
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${patient}_${id}"
+    def prefix = task.ext.prefix ?: "${id_intervals}"
     def interval_command = intervals ? "--intervals $intervals" : ""
     def reference_command = fasta ? "--reference $fasta" : ''
 
@@ -64,7 +63,7 @@ process GATK4_GETPILEUPSUMMARIES {
     }
     """
     echo -e "gatk --java-options "-Xmx${avail_mem}g" GetPileupSummaries \\
-        --input ${bam[0]} \\
+        --input ${bams[0]} \\
         --variant $variants \\
         --output ${prefix}.pileups.table \\
         $reference_command \\
