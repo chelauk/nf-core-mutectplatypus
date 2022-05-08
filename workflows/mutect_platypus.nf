@@ -37,7 +37,7 @@ germline_resource     = params.germline_resource     ? Channel.fromPath(params.g
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : ch_dummy_file
 pon                   = params.pon                   ? Channel.fromPath(params.pon).collect()                   : []
 pon_idx               = params.pon_idx               ? Channel.fromPath(params.pon_idx).collect()               : []
-
+intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -132,7 +132,7 @@ workflow MUTECT_PLATYPUS {
     if (!params.intervals) {
         result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai))
         } else {
-        result_intervals = CREATE_INTERVALS_BED(file(params.intervals))
+        result_intervals = CREATE_INTERVALS_BED(intervals_ch)
         }
 
     result_intervals = result_intervals.flatten()
@@ -174,9 +174,15 @@ workflow MUTECT_PLATYPUS {
 
     GATK4_LEARNREADORIENTATIONMODEL ( orientation_input )
 
+
     concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
 
-    CONCAT_VCF ( concat_input, fasta_fai, result_intervals )
+
+    if (!params.intervals) {
+        CONCAT_VCF ( concat_input, fasta_fai, [] )
+        } else {
+        CONCAT_VCF ( concat_input, fasta_fai, intervals_ch )
+        }
 
     merge_stats_input = GATK4_MUTECT2.out.stats.groupTuple()
 
@@ -250,10 +256,15 @@ workflow MUTECT_PLATYPUS {
                             fasta_fai )
 
     concat_platypus_input = PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
-    CONCAT_PLATYPUS (concat_platypus_input, fasta_fai, result_intervals )
 
 
-    filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
+    if (!params.intervals) {
+        CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, [] )
+        } else {
+        CONCAT_VCF ( concat_platypus_input, fasta_fai, intervals_ch )
+        }
+
+filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
                                 .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
                                 [patient, vcf, which_norm]}
 
