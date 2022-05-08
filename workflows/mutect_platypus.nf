@@ -259,7 +259,6 @@ workflow MUTECT_PLATYPUS {
     filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
     filter_input = filter_input.join(for_filter)
     filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
-    filter_input.view()
 
     GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
 
