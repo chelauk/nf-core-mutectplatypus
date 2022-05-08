@@ -44,10 +44,10 @@ elif len(sys.argv) == 3:
 #####################################################################
 # Filter the platypus file
 #####################################################################
-with open(platypus_file[0:-4]+"platypus_filtered.vcf", 'w') as platypus_pass:
-    with open(platypus_file[0:-4]+"platypus_removed.vcf", 'w') as platypus_nopass:
+with open(platypus_file[0:-4]+"_filtered.vcf", 'w') as platypus_pass:
+    with open(platypus_file[0:-4]+"_removed.vcf", 'w') as platypus_nopass:
         with gzip.open(platypus_file, 'rt') as platcalls:
-            # Copy the header of the platypus file.
+            # Copy the header of the platpus file.
             line = ''
             while line[0:6] != "#CHROM":
                 line = platcalls.readline()
