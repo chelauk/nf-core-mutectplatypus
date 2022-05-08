@@ -261,7 +261,7 @@ workflow MUTECT_PLATYPUS {
     if (!params.intervals) {
         CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, [] )
         } else {
-        CONCAT_VCF ( concat_platypus_input, fasta_fai, intervals_ch )
+        CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, intervals_ch )
         }
 
 filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
