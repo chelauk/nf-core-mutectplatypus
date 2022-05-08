@@ -33,10 +33,14 @@ process GATK4_GATHERPILEUPSUMMARIES {
     """
     gatk --java-options "-Xmx${avail_mem}g" GatherPileupSummaries \\
         $input_list \\
-        --O ${prefix}.pileupsummaries.table \\
+        --O ${prefix}.unsorted \\
         --sequence-dictionary $dict \\
         --tmp-dir . \\
         $args
+    
+    head -2 ${prefix}.unsorted > header
+    tail -n +3 ${prefix}.unsorted | sort -k1,1 -k2,2n > temporary_file
+    cat header temporary_file > ${prefix}.pileupsummaries.table
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
