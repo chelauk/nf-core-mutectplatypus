@@ -20,7 +20,7 @@ process PLATYPUS_FILTER {
 
     script:
     """
-    gunzip vcf
+    gunzip $vcf
     filter_platypus.py $vcf ${norm[0]}
     """
     stub:
