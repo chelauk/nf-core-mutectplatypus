@@ -21,7 +21,7 @@ process PLATYPUS_FILTER {
     script:
     """
     gunzip $vcf
-    filter_platypus.py \${vcf:0:\$vcf[#]-3} ${norm[0]}
+    filter_platypus.py \${vcf:0:\${#vcf}-3} ${norm[0]}
     """
     stub:
     """
