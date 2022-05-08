@@ -31,7 +31,7 @@ process GATK4_MERGEMUTECTSTATS {
     """
     gatk --java-options "-Xmx${avail_mem}g" MergeMutectStats \\
         $input_list \\
-        --output ${prefix}.vcf.gz.stats \\
+        --output ${prefix}_mutect2_concatenated.vcf.gz.stats \\
         --tmp-dir . \\
         $args
 
