@@ -21,7 +21,8 @@ process PLATYPUS_FILTER {
     script:
     """
     filter_platypus.py $vcf ${norm[0]}
-    """
+    touch versions.yml
+	"""
     stub:
     """
     echo "filter_platypus.py $vcf ${norm[0]}"
