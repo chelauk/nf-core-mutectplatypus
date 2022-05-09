@@ -13,12 +13,14 @@ process PLATYPUS_FILTER {
 
     output:
     tuple val(patient), path("*filtered.vcf"), emit: vcf
+    tuple val(patient), path("*removed.vcf"),  optional:true, emit: rejected
     path "*versions.yml",               emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
+    def prefix = "${patient}_platypus"
     """
     filter_platypus.py $vcf ${norm[0]}
     touch versions.yml
@@ -26,7 +28,7 @@ process PLATYPUS_FILTER {
     stub:
     """
     echo "filter_platypus.py $vcf ${norm[0]}"
-    touch "$patient"_filtered.vcf
+    touch "$patient"_platypus_filtered.vcf
     touch versions.yml
     """
 }

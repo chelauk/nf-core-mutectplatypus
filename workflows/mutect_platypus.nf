@@ -262,7 +262,8 @@ workflow MUTECT_PLATYPUS {
 
     GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
 
-    platypus_input = GATK4_FILTERMUTECTCALLS.out.vcf.combine(bam_intervals, by:0)
+    gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
+    platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
 
     PLATYPUS_CALLVARIANTS(  platypus_input,
                             fasta,

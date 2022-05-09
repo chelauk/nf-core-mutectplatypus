@@ -34,20 +34,21 @@ filterList = ['PASS', 'alleleBias', 'Q20', 'Q20;alleleBias', 'QD', 'Q20;QD', 'QD
 #####################################################################
 # Parse the arguments
 #####################################################################
-if len(sys.argv) != 3:
-    print("python filter_platypus.py <input> <normal_name>")
+if len(sys.argv) != 4:
+    print("python filter_platypus.py <input> <normal_name> <output_prefix>")
     exit()
-elif len(sys.argv) == 3:
+elif len(sys.argv) == 4:
     platypus_file = sys.argv[1]
     normal_name = sys.argv[2]
+    output_prefix = sys.argv[3]
 
 #####################################################################
 # Filter the platypus file
 #####################################################################
-with open(platypus_file[0:-4]+"_filtered.vcf", 'w') as platypus_pass:
-    with open(platypus_file[0:-4]+"_removed.vcf", 'w') as platypus_nopass:
+with open(output_prefix+"_filtered.vcf", 'w') as platypus_pass:
+    with open(output_prefix+"_removed.vcf", 'w') as platypus_nopass:
         with gzip.open(platypus_file, 'rt') as platcalls:
-            # Copy the header of the platpus file.
+            # Copy the header of the platypus file.
             line = ''
             while line[0:6] != "#CHROM":
                 line = platcalls.readline()
