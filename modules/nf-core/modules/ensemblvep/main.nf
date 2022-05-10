@@ -40,6 +40,7 @@ process ENSEMBLVEP {
         --dir_cache $dir_cache \\
         --fork $task.cpus \\
         --vcf \\
+        --offline \\
         --stats_file ${prefix}_${args}.summary.html
 
     rm -rf $prefix
