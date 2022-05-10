@@ -1,0 +1,20 @@
+name: filter_platypus
+description: Custom script to filter platypus output
+keywords:
+  - filter
+  - platypus
+
+input:
+  - vcf.gz:
+      type: vcf.gz file
+      description: compressed file containing variant calls
+      pattern: "*.vcf.gz"
+
+output:
+  - vcf:
+      type: file
+      description: filtered vcf file
+      pattern: "*vcf"
+
+authors:
+  - "@chelauk"

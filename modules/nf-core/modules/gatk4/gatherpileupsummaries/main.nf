@@ -1,54 +1,72 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options = [:]
-options        = initOptions(params.options)
-
 process GATK4_GATHERPILEUPSUMMARIES {
-    tag "$id"
+    tag "$meta.id"
     label 'process_low'
-    publishDir "${params.outdir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:meta, publish_by_meta:['id']) }
 
-    conda (params.enable_conda ? "bioconda::gatk4=4.2.0.0" : null)
-    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.0.0--0"
-    } else {
-        container "quay.io/biocontainers/gatk4:4.2.0.0--0"
-    }
+    conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/gatk4:4.2.5.0--hdfd78af_0' :
+        'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
+
 
     input:
-    tuple val(patient), val(id), val(id_intervals), val(status), path(pileup_tables)
-    path dict
+    tuple val(meta), path(table)
+    path  dict
 
     output:
-	tuple val(patient), val(id),  val(status), path('*.pileups_gathered.table'), emit: gathered_table
-    path "versions.yml"           , emit: versions
+    tuple val(meta), path("*.pileupsummaries.table"), emit: table
+    path "versions.yml"                             , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
-    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
-    def allPileups = pileup_tables.collect{ "-I ${it} " }.join(' ')
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def input_list = table.collect{ "--I $it" }.join(' ')
 
+    def avail_mem = 3
+    if (!task.memory) {
+        log.info '[GATK GatherPileupSummaries] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = task.memory.giga
+    }
     """
-    gatk GatherPileupSummaries \\
+    gatk --java-options "-Xmx${avail_mem}g" GatherPileupSummaries \\
+        $input_list \\
+        --O ${prefix}.unsorted \\
         --sequence-dictionary $dict \\
-        ${allPileups} \\
-		-O ${prefix}.pileups_gathered.table \\
-        $options.args
+        --tmp-dir . \\
+        $args
+    
+    head -2 ${prefix}.unsorted > header
+    tail -n +3 ${prefix}.unsorted | sort -k1,1 -k2,2n > temporary_file
+    cat header temporary_file > ${prefix}.pileupsummaries.table
 
-    echo "GATK4.2.0" > versions.yml
-	"""
-    stub:
-    def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${id}"
-    def allPileups = pileup_tables.collect{ "-I ${it} " }.join(' ')
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
+    END_VERSIONS
     """
-    echo -n "gatk GatherPileupSummaries \\
-        --sequence-dict $dict \\
-        ${allPileups} \\
-        -O ${prefix}.pileups_gathered.table \\
-        $options.args"
-		touch ${prefix}.pileups_gathered.table
-		touch versions.yml
-   """
+    stub:
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def input_list = table.collect{ "--I $it" }.join(' ')
+
+    def avail_mem = 3
+    if (!task.memory) {
+        log.info '[GATK GatherPileupSummaries] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = task.memory.giga
+    }
+    """
+    echo -e "gatk --java-options "-Xmx${avail_mem}g" GatherPileupSummaries \\
+        $input_list \\
+        --O ${prefix}.pileupsummaries.table \\
+        --sequence-dictionary $dict \\
+        --tmp-dir . \\
+        $args"
+    
+    touch ${prefix}.pileupsummaries.table 
+    touch versions.yml
+    """
 }

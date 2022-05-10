@@ -3,17 +3,38 @@
     "homePage": "https://github.com/nf-core/mutectplatypus",
     "repos": {
         "nf-core/modules": {
+            "": {
+                "git_sha": "6f787aea715d631c91fdd7f047fdae751692f69e"
+            },
+            "custom/dumpsoftwareversions": {
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+            },
             "fastqc": {
-                "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
             "gatk4/calculatecontamination": {
-                "git_sha": "aa32a8a72eab0c0fb4c748678916be57126a4f61"
+                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
+            },
+            "gatk4/filtermutectcalls": {
+                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
+            },
+            "gatk4/gatherpileupsummaries": {
+                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
             },
             "gatk4/getpileupsummaries": {
-                "git_sha": "49da8642876ae4d91128168cd0db4f1c858d7792"
+                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
+            },
+            "gatk4/learnreadorientationmodel": {
+                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
+            },
+            "gatk4/mergemutectstats": {
+                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
+            },
+            "gatk4/mutect2": {
+                "git_sha": "62c6123ec48e15b42bd60b344603a83b658054d8"
             },
             "multiqc": {
-                "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             }
         }
     }
