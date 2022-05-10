@@ -1,4 +1,4 @@
-process PLATYPUS_ZIP {
+process ZIP_VCF {
 
     tag "${patient}"
     label 'process_low'

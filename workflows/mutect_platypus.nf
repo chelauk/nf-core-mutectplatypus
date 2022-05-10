@@ -38,6 +38,13 @@ germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.g
 pon                   = params.pon                   ? Channel.fromPath(params.pon).collect()                   : []
 pon_idx               = params.pon_idx               ? Channel.fromPath(params.pon_idx).collect()               : []
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
+
+// Initialize value channels based on params, defined in the params.genomes[params.genome] scope
+vep_cache_version    = params.vep_cache_version     ?: Channel.empty()
+vep_genome           = params.vep_genome            ?: Channel.empty()
+vep_species          = params.vep_species           ?: Channel.empty()
+vep_cache            = params.vep_cache             ? Channel.fromPath(params.vep_cache).collect()               : ch_dummy_file
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -68,12 +75,12 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 // MODULES: Installed from modules/local
 //
 
-include { CREATE_INTERVALS_BED  } from '../modules/local/create_intervals_bed/main'
-include { BUILD_INTERVALS       } from '../modules/local/build_intervals/main'
-include { PLATYPUS_CALLVARIANTS } from '../modules/local/platypus/main'
-include { PLATYPUS_FILTER       } from '../modules/local/filter_platypus/main'
-include { PLATYPUS_ZIP          } from '../modules/local/zip_platypus/main'
-
+include { CREATE_INTERVALS_BED            } from '../modules/local/create_intervals_bed/main'
+include { BUILD_INTERVALS                 } from '../modules/local/build_intervals/main'
+include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
+include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
+include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
+include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
 
 //
 // MODULE: Installed directly from nf-core/modules
@@ -90,6 +97,8 @@ include { GATK4_GATHERPILEUPSUMMARIES     } from '../modules/nf-core/modules/gat
 include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_NORM } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
 include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/modules/gatk4/calculatecontamination/main'
 include { GATK4_FILTERMUTECTCALLS         } from '../modules/nf-core/modules/gatk4/filtermutectcalls/main'
+include { ENSEMBLVEP as PLAT_VEP          } from '../modules/nf-core/modules/ensemblvep/main'
+include { ENSEMBLVEP                      } from '../modules/nf-core/modules/ensemblvep/main'
 include { MULTIQC                         } from '../modules/nf-core/modules/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
 
@@ -262,6 +271,10 @@ workflow MUTECT_PLATYPUS {
 
     GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
 
+    ENSEMBLVEP ( GATK4_FILTERMUTECTCALLS.out.vcf, vep_genome, vep_species, vep_cache_version, vep_cache, [] )
+
+    ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
+
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
     platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
 
@@ -282,13 +295,11 @@ filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
                                 .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
                                 [patient, vcf, which_norm]}
 
-    PLATYPUS_FILTER (
-        filter_platypus_input
-    )
+    PLATYPUS_FILTER ( filter_platypus_input )
 
-    PLATYPUS_ZIP (
-        PLATYPUS_FILTER.out.vcf
-    )
+    PLAT_VEP ( PLATYPUS_FILTER.out.vcf, vep_genome, vep_species, vep_cache_version, vep_cache, [] )
+
+    ZIP_PLATYPUS_ANN_VCF ( PLAT_VEP.out.vcf )
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
