@@ -23,7 +23,10 @@ process PLATYPUS_FILTER {
     def prefix = "${patient}_platypus"
     """
     filter_platypus.py $vcf ${norm[0]} $prefix
-    touch versions.yml
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        1
+    END_VERSIONS
 	"""
     stub:
     """
