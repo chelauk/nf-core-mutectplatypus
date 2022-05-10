@@ -23,7 +23,7 @@ The pipeline takes matched normal and tumour bam files and runs mutect2 multisam
 
 The outputs are annotated with ensembl vep.
 
-check [`usage`](https://github/chelauk/nf-core-mutectplatypus/blob/master/docs/usage.md)
+check [`usage`](https://github.com/chelauk/nf-core-mutectplatypus/blob/master/docs/usage.md)
 
 ## Pipeline summary
 
