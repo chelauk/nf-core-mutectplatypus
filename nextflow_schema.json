@@ -80,6 +80,60 @@
                     "fa_icon": "fas fa-ban",
                     "hidden": true,
                     "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
+                },
+                "dbsnp": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "snp database file"
+                },
+                "dbsnp_tbi": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "index for snp database"
+                },
+                "dict": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "dict file for reference genome"
+                },
+                "fasta_fai": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "index for reference genome"
+                },
+                "germline_resource": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "aggregated database if snps"
+                },
+                "germline_resource_idx": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "index of germline_resource"
+                },
+                "intervals": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "intervals for calling variants"
+                },
+                "known_indels": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "database of known indels"
+                },
+                "known_indels_tbi": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "index of know_indels"
+                },
+                "genomes_base": {
+                    "type": "string",
+                    "default": "/data/scratch/DMP/UCEC/EVGENMOD/cjames/reference",
+                    "description": "Directory for genomes_base"
+                },
+                "nucleotides_per_second": {
+                    "type": "integer",
+                    "default": 1000
                 }
             }
         },
@@ -275,43 +329,5 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ],
-    "properties": {
-        "dbsnp": {
-            "type": "string",
-            "default": null
-        },
-        "dbsnp_tbi": {
-            "type": "string",
-            "default": null
-        },
-        "dict": {
-            "type": "string",
-            "default": null
-        },
-        "fasta_fai": {
-            "type": "string",
-            "default": null
-        },
-        "germline_resource": {
-            "type": "string",
-            "default": null
-        },
-        "germline_resource_idx": {
-            "type": "string",
-            "default": null
-        },
-        "intervals": {
-            "type": "string",
-            "default": null
-        },
-        "known_indels": {
-            "type": "string",
-            "default": null
-        },
-        "known_indels_tbi": {
-            "type": "string",
-            "default": null
-        }
-    }
+    ]
 }
