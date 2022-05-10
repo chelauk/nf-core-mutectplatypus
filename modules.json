@@ -6,9 +6,6 @@
             "": {
                 "git_sha": "6f787aea715d631c91fdd7f047fdae751692f69e"
             },
-            "bcftools/concat": {
-                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
-            },
             "custom/dumpsoftwareversions": {
                 "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
