@@ -271,7 +271,14 @@ workflow MUTECT_PLATYPUS {
 
     GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
 
-    ENSEMBLVEP ( GATK4_FILTERMUTECTCALLS.out.vcf, vep_genome, vep_species, vep_cache_version, vep_cache, [] )
+    ENSEMBLVEP (
+        GATK4_FILTERMUTECTCALLS.out.vcf,
+        vep_genome,
+        vep_species,
+        vep_cache_version,
+        vep_cache,
+        []
+    )
 
     ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
 
@@ -297,7 +304,14 @@ filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
 
     PLATYPUS_FILTER ( filter_platypus_input )
 
-    PLAT_VEP ( PLATYPUS_FILTER.out.vcf, vep_genome, vep_species, vep_cache_version, vep_cache, [] )
+    PLAT_VEP (
+        PLATYPUS_FILTER.out.vcf,
+        vep_genome,
+        vep_species,
+        vep_cache_version,
+        vep_cache,
+        []
+    )
 
     ZIP_PLATYPUS_ANN_VCF ( PLAT_VEP.out.vcf )
 
