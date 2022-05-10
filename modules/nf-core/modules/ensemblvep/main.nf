@@ -37,7 +37,7 @@ process ENSEMBLVEP {
         --species $species \\
         --cache \\
         --cache_version $cache_version \\
-        --dir_cache $dir_cache \\
+        --dir_cache $cache \\
         --fork $task.cpus \\
         --vcf \\
         --stats_file ${prefix}_${args}.summary.html
