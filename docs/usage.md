@@ -4,6 +4,16 @@
 
 This pipeline calls variants from tumour, control matched bam files with options to include a panel of normal vcfs
 
+
+```mermaid
+flowchart TD
+step1(matched tumour/normal bam files)
+step1 --> step2(GATK Mutect2)
+step2 --> step3(Platypus callvariants)
+step3 --> step4(Ensembl VEP)
+step2 --> step4
+```
+
 ## Samplesheet input
 
 You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row as shown in the examples below.
