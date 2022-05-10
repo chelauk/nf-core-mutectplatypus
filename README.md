@@ -1,5 +1,4 @@
 # ![nf-core/mutectplatypus](docs/images/nf-core/mutectplatypus_logo_light.png#gh-light-mode-only) ![nf-core/mutectplatypus](docs/images/nf-core/mutectplatypus_logo_dark.png#gh-dark-mode-only)
-
 [![GitHub Actions CI Status](https://github.com/nf-core/mutectplatypus/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/mutectplatypus/actions?query=workflow%3A%22nf-core+CI%22)
 [![GitHub Actions Linting Status](https://github.com/nf-core/mutectplatypus/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/mutectplatypus/actions?query=workflow%3A%22nf-core+linting%22)
 [![AWS CI](https://img.shields.io/badge/CI%20tests-full%20size-FF9900?labelColor=000000&logo=Amazon%20AWS)](https://nf-co.re/mutectplatypus/results)
@@ -24,9 +23,9 @@ The pipeline takes matched normal and tumour bam files and runs mutect2 multisam
 
 The outputs are annotated with ensembl vep.
 
-## Pipeline summary
+check [`usage`](https://github/chelauk/nf-core-mutectplatypus/blob/master/docs/usage.md)
 
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
+## Pipeline summary
 
 1. Run [`gatk mutect2`](http://https://gatk.broadinstitute.org/hc/en-us/articles/4418062771227-Mutect2) using matched normal(bam), tumour(bam) and (if available) panel of normal(vcf)
 2. Run [`platypus callvariants`](https://www.well.ox.ac.uk/research/research-groups/lunter-group/lunter-group/platypus-a-haplotype-based-variant-caller-for-next-generation-sequence-data) using normal(bam) and tumour(bam)
