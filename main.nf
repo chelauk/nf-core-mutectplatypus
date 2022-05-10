@@ -27,6 +27,10 @@ params.germline_resource_idx = WorkflowMain.getGenomeAttribute(params, 'germline
 params.intervals             = WorkflowMain.getGenomeAttribute(params, 'intervals')
 params.known_indels          = WorkflowMain.getGenomeAttribute(params, 'known_indels')
 params.known_indels_tbi      = WorkflowMain.getGenomeAttribute(params, 'known_indels_tbi')
+params.vep_cache_version     = WorkflowMain.getGenomeAttribute(params, 'vep_cache_version')
+params.vep_genome            = WorkflowMain.getGenomeAttribute(params, 'vep_genome')
+params.vep_species           = WorkflowMain.getGenomeAttribute(params, 'vep_species')
+params.vep_cache             = WorkflowMain.getGenomeAttribute(params, 'vep_cache')
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
