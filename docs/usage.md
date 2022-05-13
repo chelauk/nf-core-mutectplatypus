@@ -18,17 +18,20 @@ step2 --> step4
 
 You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row as shown in the examples below.
 
+The creation of the sample is routinely the concatenation of patient and sample but the `id` column allows you to manually 
+an id in circumstances where you need to.
+
 ```console
 --input '[path to samplesheet file]'
 ```
 
 ```console
-patient,sample,status,bam,bai
-patient1,pbmc,control,./data/patient1_sample1_control.bam,data/patient1_sample1_control.bam.bai
-patient1,sample1,tumor,./data/patient1_sample1_tumour.bam,data/patient1_sample1_tumour.bam.bai
-patient1,sample2,tumour,./data/patient1_sample2_tumour.bam,data/patient1_sample2_tumour.bam.bai
-patient2,pbmc,control,./data/patient2_sample1_control.bam,data/patient2_sample1_control.bam.bai
-patient2,sample1,tumour,./data/patient2_sample1_tumour.bam,data/patient2_sample1_tumour.bam.bai
+patient,sample,id,status,bam,bai
+patient1,pbmc,,control,./data/patient1_sample1_control.bam,data/patient1_sample1_control.bam.bai
+patient1,,strange_id,tumor,./data/patient1_sample1_tumour.bam,data/patient1_sample1_tumour.bam.bai
+patient1,sample2,,tumour,./data/patient1_sample2_tumour.bam,data/patient1_sample2_tumour.bam.bai
+patient2,pbmc,,control,./data/patient2_sample1_control.bam,data/patient2_sample1_control.bam.bai
+patient2,sample1,,tumour,./data/patient2_sample1_tumour.bam,data/patient2_sample1_tumour.bam.bai
 ```
 
 
@@ -36,7 +39,8 @@ patient2,sample1,tumour,./data/patient2_sample1_tumour.bam,data/patient2_sample1
 | Column    | Description                                                                                                                                                                            |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `patient`  | Custom patient name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `sample`  | Custom samplename. This will be unique for the sample, it will combine with the patient id for a unique id
+| `sample`  |  This will be unique for the sample, it will combine with the patient id for a unique id |
+| `id` | manually inserted id (must match the @RG SM: line of the bam file ) |
 | `status` | A string tumour/normal indicating the status of the sample |
 | `bam` | Full path to bam file. |
 | `bai` | Full path to bai file. |
