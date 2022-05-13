@@ -133,7 +133,7 @@ workflow MUTECT_PLATYPUS {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
-    mutect_input.view()
+
     //
     // create intervals to split jobs.
     //
