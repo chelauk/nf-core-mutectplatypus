@@ -27,7 +27,11 @@ def create_bam_channel(LinkedHashMap row) {
     meta.patient    = "${row.patient}"
     meta.sample     = "${row.sample}"
     meta.status     = "${row.status}"
-    meta.id         = "${row.patient}_${row.sample}".toString()
+    if ( "${row.id}" ) {
+        meta.id     = "${row.id}"
+    } else {
+        meta.id = "${row.patient}_${row.sample}".toString()
+    }
 
     // add path(s) of the fastq file(s) to the meta map
     def bam_meta = []

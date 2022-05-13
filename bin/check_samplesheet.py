@@ -35,6 +35,7 @@ class RowChecker:
         self,
         patient_col="patient",
         sample_col="sample",
+        id_col="id",
         status_col="status",
         bam_col="bam",
         bai_col="bai",
@@ -48,6 +49,8 @@ class RowChecker:
                 (default "patient").
             sample_col (str): The name of the column that contains the sample name
                 (default "sample").
+            id_col(str): The id of the column that contains the id
+                (default "id")
             status_col (str): The name of the column that contains the status of the file
                 (default "status")
             bam_col (str): The name of the column that contains the bam file
@@ -59,6 +62,7 @@ class RowChecker:
         super().__init__(**kwargs)
         self._patient_col = patient_col
         self._sample_col = sample_col
+        self._id_col = id_col
         self._status_col = status_col
         self._bam_col = bam_col
         self._bai_col = bai_col
@@ -79,24 +83,26 @@ class RowChecker:
         self._validate_status(row)
         self._validate_bam(row)
         self._validate_bai(row)
-        self._seen.add((row[self._patient_col], row[self._sample_col], row[self._bam_col]))
+        self._seen.add(
+            (row[self._patient_col], row[self._sample_col], row[self._bam_col]))
         self.modified.append(row)
 
     def _validate_patient(self, row):
         """Assert that the sample name exists and convert spaces to underscores."""
-        assert len(row[self._sample_col]) > 0, "Patient input is required."
+        assert len(row[self._patient_col]) > 0, "Patient input is required."
         # Sanitize samples slightly.
-        row[self._sample_col] = row[self._sample_col].replace(" ", "_")
+        row[self._patient_col] = row[self._patient_col].replace(" ", "_")
 
     def _validate_sample(self, row):
         """Assert that the sample name exists and convert spaces to underscores."""
-        assert len(row[self._sample_col]) > 0, "Sample input is required."
+        assert len(row[self._sample_col]) > 0 or len(
+            row[self._id_col]) > 0, "Sample or ID input is required."
         # Sanitize samples slightly.
         row[self._sample_col] = row[self._sample_col].replace(" ", "_")
 
     def _validate_status(self, row):
         """Assert that the sample name exists and convert spaces to underscores."""
-        assert len(row[self._sample_col]) > 0, "Status input is required."
+        assert len(row[self._status_col]) > 0, "Status input is required."
         self._validate_status_format(row)
 
     def _validate_bam(self, row):
