@@ -283,7 +283,9 @@ workflow MUTECT_PLATYPUS {
     ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
 
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
+
     platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
+    platypus_input.view()
 
     PLATYPUS_CALLVARIANTS(  platypus_input,
                             fasta,
