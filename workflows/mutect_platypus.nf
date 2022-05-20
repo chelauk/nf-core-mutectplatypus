@@ -333,7 +333,7 @@ workflow MUTECT_PLATYPUS {
     SEQUENZAUTILS_GCWIGGLE(fasta)
 
     // Gather built wig.gz file or get them from the params
-    wiggle = params.wiggle      ? params.wiggle ? Channel.fromPath(params.wiggle).collect()  : SEQUENZAUTILS_GCWIGGLE.out.wiggle  : []
+    wiggle = params.wiggle      ? params.wiggle ? Channel.fromPath(params.wiggle).collect()  : SEQUENZAUTILS_GCWIGGLE.out.wiggle
 
 
 // Function to split input channel into tumour and normal for sequenza
