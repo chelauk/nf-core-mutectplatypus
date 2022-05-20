@@ -333,7 +333,7 @@ workflow MUTECT_PLATYPUS {
     SEQUENZAUTILS_GCWIGGLE(fasta)
 
     // Gather built wig.gz file or get them from the params
-    if (fileExists(params.wiggle)) { wiggle = Channel.fromPath(params.wiggle).collect()
+    if (file(params.wiggle, exists)) { wiggle = Channel.fromPath(params.wiggle).collect()
     } else {
         wiggle = SEQUENZAUTILS_GCWIGGLE.out.wiggle
     }
