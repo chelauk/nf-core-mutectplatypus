@@ -329,14 +329,10 @@ workflow MUTECT_PLATYPUS {
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
-
     SEQUENZAUTILS_GCWIGGLE(fasta)
 
     // Gather built wig.gz file or get them from the params
-    if (file(params.wiggle, exists)) { wiggle = Channel.fromPath(params.wiggle).collect()
-    } else {
-        wiggle = SEQUENZAUTILS_GCWIGGLE.out.wiggle
-    }
+    wiggle = ? file(params.wiggle) : Channel.fromPath(params.wiggle).collect() : SEQUENZAUTILS_GCWIGGLE.out.wiggle
 
 // Function to split input channel into tumour and normal for sequenza
     INPUT_CHECK.out.bams
