@@ -9,7 +9,6 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowMutectplatypus.initialise(params, log)
 
-// TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
 def checkPathParamList = [
     params.input,
@@ -18,32 +17,39 @@ def checkPathParamList = [
     params.fasta_fai,
     params.dict,
     params.germline_resource,
-    params.germline_resource_idx
+    params.germline_resource_idx,
     ]
-for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
+
+for (param in checkPathParamList) if (param) file(param, checkIfExists: true)
 
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 
-// Setup channels
-
-ch_dummy_file = Channel.fromPath("$projectDir/assets/dummy_file.txt", checkIfExists: true).collect()
 // Initialize file channels based on params, defined in the params.genomes[params.genome] scope
 
-fasta                 = params.fasta                 ? Channel.fromPath(params.fasta).collect()                 : ch_dummy_file
-fasta_fai             = params.fasta_fai             ? Channel.fromPath(params.fasta_fai).collect()             : ch_dummy_file
-dict                  = params.dict                  ? Channel.fromPath(params.dict).collect()                  : ch_dummy_file
-germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : ch_dummy_file
-germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : ch_dummy_file
-pon                   = params.pon                   ? Channel.fromPath(params.pon).collect()                   : []
-pon_idx               = params.pon_idx               ? Channel.fromPath(params.pon_idx).collect()               : []
+fasta                 = params.fasta                 ? Channel.fromPath(params.fasta).collect()                 : Channel.empty()
+fasta_fai             = params.fasta_fai             ? Channel.fromPath(params.fasta_fai).collect()             : Channel.empty()
+dict                  = params.dict                  ? Channel.fromPath(params.dict).collect()                  : Channel.empty()
+germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : Channel.empty()
+germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : Channel.empty()
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 
 // Initialize value channels based on params, defined in the params.genomes[params.genome] scope
 vep_cache_version    = params.vep_cache_version     ?: Channel.empty()
 vep_genome           = params.vep_genome            ?: Channel.empty()
 vep_species          = params.vep_species           ?: Channel.empty()
-vep_cache            = params.vep_cache             ? Channel.fromPath(params.vep_cache).collect()               : ch_dummy_file
+vep_cache            = params.vep_cache             ? Channel.fromPath(params.vep_cache).collect()               : []
+
+// Initialise file channels based on params not defined in the params.genomes[params.genome]
+pon                   = params.pon                   ? Channel.fromPath(params.pon).collect()                    : []
+pon_idx               = params.pon_idx               ? Channel.fromPath(params.pon_idx).collect()                : []
+
+// Initialise value channels not defined in params.genomes[params.genome]
+
+seqz_het             = params.seqz_het               ?: Channel.empty()
+bin                  = params.bin                    ?: Channel.empty()
+gender               = params.gender                 ?: Channel.empty()
+ploidy               = params.ploidy                 ?: Channel.empty()
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,6 +105,12 @@ include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/modules/gat
 include { GATK4_FILTERMUTECTCALLS         } from '../modules/nf-core/modules/gatk4/filtermutectcalls/main'
 include { ENSEMBLVEP as PLAT_VEP          } from '../modules/nf-core/modules/ensemblvep/main'
 include { ENSEMBLVEP                      } from '../modules/nf-core/modules/ensemblvep/main'
+include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/modules/sequenzautils/gcwiggle/main'
+include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/modules/sequenzautils/bam2seqz/main'
+include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/nf-core/modules/sequenzautils/mergeseqz/main'
+include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
+include { SEQUENZAUTILS_BINNING           } from '../modules/nf-core/modules/sequenzautils/seqzbin/main'
+include { SEQUENZAUTILS_RSEQZ             } from '../modules/nf-core/modules/sequenzautils/seqz_R/main.nf'
 include { MULTIQC                         } from '../modules/nf-core/modules/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
 
@@ -108,7 +120,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/modules/cus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// Function to split input channel into tumour and normal for mutect
+// Function to split input channel into tumour and normal for mutect and collect samples from a single patient
 
 def make_mutect_input(input) {
     return input
@@ -167,7 +179,6 @@ workflow MUTECT_PLATYPUS {
         }
         .set{bam_intervals}
 
-
     GATK4_MUTECT2(
         bam_intervals,
         fasta,
@@ -183,9 +194,7 @@ workflow MUTECT_PLATYPUS {
 
     GATK4_LEARNREADORIENTATIONMODEL ( orientation_input )
 
-
     concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
-
 
     if (!params.intervals) {
         CONCAT_VCF ( concat_input, fasta_fai, [] )
@@ -299,7 +308,7 @@ workflow MUTECT_PLATYPUS {
         CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, intervals_ch )
         }
 
-filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
+    filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
                                 .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
                                 [patient, vcf, which_norm]}
 
@@ -319,6 +328,53 @@ filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
+
+
+    SEQUENZAUTILS_GCWIGGLE(fasta)
+
+    // Gather built wig.gz file or get them from the params
+    wiggle = params.wiggle      ? params.wiggle ? Channel.fromPath(params.wiggle).collect()  : SEQUENZAUTILS_GCWIGGLE.out.wiggle  : []
+
+
+// Function to split input channel into tumour and normal for sequenza
+    INPUT_CHECK.out.bams
+                    .map{ meta, files ->
+                    [meta.patient,meta.sample,meta.status,meta.id, files] }
+                    .branch {
+                        tumour: it[2] == "tumour"
+                        normal: it[2] == "normal"
+                    }
+                    .set{seq_split}
+
+    seq_split.tumour.combine(seq_split.normal, by:0)
+                    .set{seq_input_pair}
+
+    seqz_chr = fasta_fai
+        .splitCsv(sep: "\t")
+        .map{ chr -> chr[0][0] }
+        .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
+
+    seq_input_pair.combine(seqz_chr)
+                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2, chr ->
+                [ patient, id1, chr, files1, files2] }
+                .set{ seq_input_chr }
+
+    SEQUENZAUTILS_BAM2SEQZ(seq_input_chr,
+                            fasta,
+                            seqz_het,
+                            wiggle)
+
+    SEQUENZAUTILS_BAM2SEQZ.out.seqz
+                            .groupTuple(by:[0,1])
+                            .set{merge_seqz_input}
+
+    SEQUENZAUTILS_MERGESEQZ (merge_seqz_input)
+
+    SEQUENZAUTILS_HETSNPS(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz)
+
+    SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
+
+    SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy)
 
     //
     // MODULE: MultiQC
