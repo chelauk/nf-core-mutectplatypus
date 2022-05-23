@@ -25,7 +25,7 @@ process SEQUENZAUTILS_BINNING {
     sequenza-utils \\
         seqz_binning \\
         $args \\
-        -w $concat_seqz \\
+        --seqz $concat_seqz \\
         -o - |\\
         gzip > ${id}_bin${bin}.seqz.gz
 

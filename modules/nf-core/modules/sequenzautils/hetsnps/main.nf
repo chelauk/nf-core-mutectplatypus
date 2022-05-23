@@ -11,8 +11,8 @@ process SEQUENZAUTILS_HETSNPS {
     tuple val(patient), val(id), path(concat_seqz)
 
     output:
-    tuple val(patient), val(id), path("*het.seqz"), emit: het_seqz
-    path "versions.yml"          , emit: versions
+    tuple val(patient), val(id), path("*het.seqz.gz"), emit: het_seqz
+    path "versions.yml"                         , emit: versionsi
 
     when:
     task.ext.when == null || task.ext.when
@@ -21,16 +21,16 @@ process SEQUENZAUTILS_HETSNPS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
-    zcat $concat_seqz | grep -ae "chromo|het" > ${prefix}_het.seqz
-
+    zcat $concat_seqz | egrep 'chromo|het' > ${prefix}_het.seqz
+    gzip ${prefix}_het.seqz
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sequenzautils: \$(echo \$(sequenza-utils 2>&1) | sed 's/^.*is version //; s/ .*\$//')
     END_VERSIONS
     """
 
-    stub:
-    def args = task.ext.args ?: ''
+	stub:
+	def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
     cat << 'EOF' 

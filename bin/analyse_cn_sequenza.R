@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 # Load libs:
+Sys.setenv(VROOM_CONNECTION_SIZE=326214400)
 if (!require(sequenza)) stop("Package 'sequenza' missing\n.")
 
 args <- commandArgs(TRUE)
@@ -26,7 +27,7 @@ if (ploidy == 7) {
 } else if (ploidy == 6) {
     low_p <- 5.5
     up_p <- 6.5
-}
+weighted_mean = TRUE}
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
 params_list <- list("input" = input, "output_prefix" = output_prefix)
@@ -42,7 +43,7 @@ sequenzaAnalysis <- function(input,
                              min_reads_baf = 1,
                              max_mut_types = 1,
                              breaks = NULL,
-                             assembly = "hg38",
+                             assembly = "hg19",
                              weighted_mean = TRUE,
                              normalization_method = "mean",
                              is_female = TRUE,
@@ -103,12 +104,10 @@ sequenzaAnalysis <- function(input,
 
     # Export the data:
     cat("- Exporting results\n")
-    outName <- basename(output_prefix)
-    outDir <- dirname(output_prefix)
     sequenza.results(modDat,
         fit,
-        outName,
-        outDir,
+        output_prefix,
+        out.dir = output_prefix,
         female = is_female,
         CNt.max = CNt_max,
         ratio.priority = ratio_priority

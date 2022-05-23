@@ -22,9 +22,9 @@ process SEQUENZAUTILS_MERGESEQZ {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "$id"
     """
-    zcat $seqz | \
-    awk '{if (NR!=1 && \$1 != "chromosome") {print \$0}}' | bgzip > \
-    ${prefix}.seqz.gz
+    zcat ${seqz[0]} | head -n 1 > header || echo \${PIPESTATUS[@]}
+	cat header <( zcat $seqz | awk '{if (NR!=1 && \$1 != "chromosome") {print \$0}}' ) | bgzip > \
+    ${prefix}_concat.seqz.gz
     tabix -f -s 1 -b 2 -e 2 -S 1 ${prefix}_concat.seqz.gz
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
