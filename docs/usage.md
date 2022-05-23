@@ -9,6 +9,7 @@ This pipeline calls variants from tumour, control matched bam files with options
 flowchart TD
 step1(matched tumour/normal bam files)
 step1 --> step2(GATK Mutect2)
+step1 --> step5(sequenza)
 step2 --> step3(Platypus callvariants)
 step3 --> step4(Ensembl VEP)
 step2 --> step4
