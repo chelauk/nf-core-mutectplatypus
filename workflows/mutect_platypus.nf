@@ -108,7 +108,7 @@ include { ENSEMBLVEP                      } from '../modules/nf-core/modules/ens
 include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/modules/sequenzautils/gcwiggle/main'
 include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/modules/sequenzautils/bam2seqz/main'
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/nf-core/modules/sequenzautils/mergeseqz/main'
-include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
+//include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/nf-core/modules/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/nf-core/modules/sequenzautils/seqz_R/main.nf'
 include { MULTIQC                         } from '../modules/nf-core/modules/multiqc/main'
@@ -368,7 +368,7 @@ workflow MUTECT_PLATYPUS {
 
     SEQUENZAUTILS_MERGESEQZ (merge_seqz_input)
 
-    SEQUENZAUTILS_HETSNPS(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz)
+//    SEQUENZAUTILS_HETSNPS(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz)
 
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
 
