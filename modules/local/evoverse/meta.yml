@@ -1,0 +1,34 @@
+name: cnaqc
+description: Custom script to analyse CNA output from sequenza
+keywords:
+  - evoverse
+  - cnaqc
+
+input:
+  - vcf.gz:
+      type: vcf.gz file
+      description: compressed file containing variant calls
+      pattern: "*.vcf.gz"
+  - txt:
+      type: txt file
+      description: tab separated cna calls from sequenza
+      pattern: "txt"
+  - rds:
+      type: compressed R output format file
+      description: driver mutations taken from https://dcc.icgc.org/releases/PCAWG/driver_mutations
+      pattern: "rds"
+
+
+
+output:
+  - pdf:
+      type: file
+      description: QC of cna calls
+      pattern: "*pdf"
+  - rds:
+      type: R output format
+      description: tables of cnaqc output
+      pattern: "*rds"
+
+authors:
+  - "@chelauk"
