@@ -30,6 +30,8 @@ check [`usage`](https://github.com/chelauk/nf-core-mutectplatypus/blob/master/do
 1. Run [`gatk mutect2`](http://https://gatk.broadinstitute.org/hc/en-us/articles/4418062771227-Mutect2) using matched normal(bam), tumour(bam) and (if available) panel of normal(vcf)
 2. Run [`platypus callvariants`](https://www.well.ox.ac.uk/research/research-groups/lunter-group/lunter-group/platypus-a-haplotype-based-variant-caller-for-next-generation-sequence-data) using normal(bam) and tumour(bam)
 3. Run [`ensembl vep`](https://www.ensembl.org/info/docs/tools/vep/index.html) to annotate the output vcf
+4. Run [`sequenza`](https://cran.r-project.org/web/packages/sequenza/vignettes/sequenza.html) to call CNAs
+5. Run [`CNAqc`](https://caravagnalab.github.io/CNAqc/) to evaluate the CNA and SNV calls
 
 ## Quick Start
 
