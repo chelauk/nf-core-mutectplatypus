@@ -33,7 +33,7 @@ process SEQUENZAUTILS_RSEQZ {
     def prefix = task.ext.prefix ?: "${id}_${ploidy}"
     """
     echo "analyse_cn_sequenza.R ${seqz_bin} ${prefix} ${gender} ${ploidy}"
-    mkdir $id
+    mkdir ${id}_${ploidy}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sequenzautils: 3.0.0

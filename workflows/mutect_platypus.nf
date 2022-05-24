@@ -18,6 +18,7 @@ def checkPathParamList = [
     params.dict,
     params.germline_resource,
     params.germline_resource_idx,
+    params.drivers
     ]
 
 for (param in checkPathParamList) if (param) file(param, checkIfExists: true)
@@ -32,6 +33,7 @@ fasta_fai             = params.fasta_fai             ? Channel.fromPath(params.f
 dict                  = params.dict                  ? Channel.fromPath(params.dict).collect()                  : Channel.empty()
 germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : Channel.empty()
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : Channel.empty()
+drivers               = params.drivers               ? Channel.fromPath(params.drivers).collect()               : Channel.empty()
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 
 // Initialize value channels based on params, defined in the params.genomes[params.genome] scope
@@ -111,6 +113,7 @@ include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/nf-core/modules/seq
 //include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/nf-core/modules/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/nf-core/modules/sequenzautils/seqz_R/main.nf'
+include { EVOVERSE_CNAQC                  } from '../modules/local/evoverse/main'
 include { MULTIQC                         } from '../modules/nf-core/modules/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
 
@@ -373,6 +376,10 @@ workflow MUTECT_PLATYPUS {
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
 
     SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy)
+
+    //ZIP_MUTECT_ANN_VCF.out.vcf.view()
+    evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
+    EVOVERSE_CNAQC(evo_input, ploidy, drivers )
 
     //
     // MODULE: MultiQC
