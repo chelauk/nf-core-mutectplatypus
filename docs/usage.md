@@ -13,6 +13,8 @@ step1 --> step5(sequenza)
 step2 --> step3(Platypus callvariants)
 step3 --> step4(Ensembl VEP)
 step2 --> step4
+step5 --> step6(CNAqc)
+step4 --> step6
 ```
 
 ## Samplesheet input
