@@ -31,7 +31,11 @@ snv_marked <- full_join(snvs, snv_drivers, by = c("chr", "from", "to", "ref", "a
 cna_calls <- fit_cnas$segments
 purity <- fit_cnas$purity
 
+my_calls <- list(cna_calls, snv_marked)
+
 my_filename <- paste0(my_sample, "_", my_ploidy, ".pdf")
+my_rds <- paste0(my_sample, "_", my_ploidy, ".rds")
+saveRDS(my_calls, file = my_rds)
 
 fit <- pipeline_qc_copynumbercalls(
     mutations = snv_marked,

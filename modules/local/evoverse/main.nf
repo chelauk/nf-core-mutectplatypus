@@ -12,7 +12,7 @@ process EVOVERSE_CNAQC {
     path(drivers)
 
     output:
-    tuple val(patient), val(id), path("*pdf"), emit: evoverse_pdf
+    tuple val(patient), val(id), path("*pdf"), path("*rds"), emit: evoverse_pdf
     path "*versions.yml",               emit: versions
 
     when:
