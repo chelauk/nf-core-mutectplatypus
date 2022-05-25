@@ -6,11 +6,10 @@ library(evoverse)
 args <- commandArgs(TRUE)
 my_sample <- args[1]
 my_ploidy <- args[2]
-my_segments <- args[3]
-my_vcf <- args[4]
-my_drivers <- args[5]
+my_vcf <- args[3]
+my_drivers <- args[4]
 
-my_segments <- paste0(my_segments, "/", my_sample, my_ploidy)
+my_segments <- paste0(my_sample , "_", my_ploidy , "/",  my_sample , "_", my_ploidy)
 
 load(my_drivers)
 

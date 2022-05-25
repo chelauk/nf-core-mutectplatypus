@@ -4,10 +4,10 @@ process EVOVERSE_CNAQC {
     label 'process_low'
 
     conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
-    container 'r-sequenza.sif'
+    container 'r-evoverse.sif'
 
     input:
-    tuple val(patient), val(id), path(seqz), path(vcf), path(tbi)
+    tuple val(patient), val(id), path(segments), path(vcf), path(tbi)
     val(ploidy)
     path(drivers)
 
@@ -20,7 +20,7 @@ process EVOVERSE_CNAQC {
 
     script:
     """
-    evoverse $id $ploidy $seqz $vcf $drivers
+    evoverse.R $id $ploidy $vcf $drivers
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         1
@@ -28,7 +28,7 @@ process EVOVERSE_CNAQC {
 	"""
     stub:
     """
-    echo "evoverse $id $ploidy $seqz $vcf $drivers"
+    echo "evoverse $id $ploidy $segments $vcf $drivers"
     touch ${id}_${ploidy}.pdf
     touch versions.yml
     """
