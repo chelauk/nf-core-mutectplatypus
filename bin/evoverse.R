@@ -21,12 +21,12 @@ snvs <- mutect_calls[[my_sample]]$mutations %>%
 
 snv_drivers <- snvs %>%
     dplyr::mutate(effect = sapply(str_split(INFO, "\\|"), function(x) x[4])) %>%
-    dplyr::mutate(driver_label = sapply(str_split(INFO, "\\|"), function(x) x[5])) %>%
+    dplyr::mutate(driver_label = sapply(str_split(INFO, "\\|"), function(x) x[5])) %>% # nolint
     semi_join(PCAWG_TabS3_drivers, by = c("driver_label" = "gene")) %>%
     dplyr::mutate(is_driver = TRUE) %>%
     select(chr, from, to, ref, alt, driver_label, is_driver, effect) %>%
     dplyr::filter(effect %in% c("HIGH", "MODERATE"))
-snv_marked <- full_join(snvs, snv_drivers, by = c("chr", "from", "to", "ref", "alt"))
+snv_marked <- full_join(snvs, snv_drivers, by = c("chr", "from", "to", "ref", "alt")) # nolint
 
 cna_calls <- fit_cnas$segments
 purity <- fit_cnas$purity
@@ -43,9 +43,10 @@ fit <- pipeline_qc_copynumbercalls(
     purity = purity,
     smooth = TRUE,
     reference = "GRCh38",
-	description = my_sample,
-	ccf_method = "ROUGH",
+    description = my_sample,
+    ccf_method = "ROUGH",
     peak_method = "closest",
-	purity_error = 0.03)
+    purity_error = 0.03
+)
 plot(fit) %>%
-		ggsave(filename = my_filename, height = 17, width = 21)
+    ggsave(filename = my_filename, height = 17, width = 21)
