@@ -1,5 +1,5 @@
 process EVOVERSE_CNAQC {
-
+    errorStrategy 'ignore'
     tag "$patient"
     label 'process_low'
 

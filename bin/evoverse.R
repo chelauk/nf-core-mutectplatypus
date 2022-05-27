@@ -43,5 +43,9 @@ fit <- pipeline_qc_copynumbercalls(
     purity = purity,
     smooth = TRUE,
     reference = "GRCh38",
-    output = my_filename
-)
+	description = my_sample,
+	ccf_method = "ROUGH",
+    peak_method = "closest",
+	purity_error = 0.03)
+plot(fit) %>%
+		ggsave(filename = my_filename, height = 17, width = 21)
