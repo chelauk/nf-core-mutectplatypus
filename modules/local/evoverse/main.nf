@@ -30,6 +30,7 @@ process EVOVERSE_CNAQC {
     """
     echo "evoverse $id $ploidy $segments $vcf $drivers"
     touch ${id}_${ploidy}.pdf
+    touch ${id}_${ploidy}.rds
     touch versions.yml
     """
 }
