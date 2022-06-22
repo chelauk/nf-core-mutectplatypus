@@ -32,30 +32,30 @@ process GATK4_MUTECT2 {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${interval_patient}"
-    def inputsList = []
-    def normalsList = []
-    def panelsCommand = ''
-    def inputsCommand = ''
+    def inputs_list = []
+    def normals_list = []
+    def panel_of_normals_command = ''
+    def inputs_command = ''
 
-    bam.each() {a -> inputsList.add(" -I " + a ) }
-    inputsCommand = inputsList.join( ' ')
-    which_norm.each() {a -> normalsList.add(" -normal " + a ) }
-    normalsCommand = normalsList.join( ' ')
+    bam.each() {a -> inputs_list.add(" -I " + a ) }
+    inputs_command = inputs_list.join( ' ')
+    which_norm.each() {a -> normals_list.add(" -normal " + a ) }
+    normals_command = normals_list.join( ' ')
     if (pon) {
-        pon_command = "--panel-of-normals $pon"
+        panel_of_normals_command = "--panel-of-normals $pon"
         } else {
-		pon_command = ""
-		}
+            panel_of_normals_command = ""
+    }
 
     """
     gatk Mutect2 \\
         -R ${fasta} \\
-        ${inputsCommand} \\
-        ${normalsCommand} \\
+        ${inputs_command} \\
+        ${normals_command} \\
         --germline-resource $germline_resource \\
         --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\
         $args \\
-        ${pon_command} \\
+        ${panel_of_normals_command} \\
         -L $intervals \\
         -O ${prefix}.vcf \\
         --af-of-alleles-not-in-resource 0.0000025 \\
@@ -67,27 +67,29 @@ process GATK4_MUTECT2 {
     stub:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${interval_patient}"
-    def inputsList = []
-    def normalsList = []
-    def panelsCommand = ''
-    def inputsCommand = ''
+    def inputs_list = []
+    def normals_list = []
+    def panel_of_normals_command = ''
+    def inputs_command = ''
 
-    bam.each() {a -> inputsList.add(" -I " + a ) }
-    inputsCommand = inputsList.join( ' ')
-    which_norm.each() {a -> normalsList.add(" -normal " + a ) }
-    normalsCommand = normalsList.join( ' ')
+    bam.each() {a -> inputs_list.add(" -I " + a ) }
+    inputs_command = inputs_list.join( ' ')
+    which_norm.each() {a -> normals_list.add(" -normal " + a ) }
+    normals_command = normals_list.join( ' ')
     if (pon) {
-        pon_command = "--panel-of-normals $pon"
+        panel_of_normals_command = "--panel-of-normals $pon"
+        } else {
+            panel_of_normals_command = ""
         }
     """
     echo -e "gatk gatk Mutect2 \\
             -R ${fasta} \\
             -L ${intervals} \\
-            ${inputsCommand} \\
-            ${normalsCommand} \\
+            ${inputs_command} \\
+            ${normals_command} \\
             --germline-resource $germline_resource \\
             --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\
-            ${pon_command} \\
+            ${panel_of_normals_command} \\
             -O ${prefix}.vcf.gz \\
             $args        \n"
     touch ${prefix}.vcf
