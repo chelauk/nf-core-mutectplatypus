@@ -43,7 +43,9 @@ process GATK4_MUTECT2 {
     normalsCommand = normalsList.join( ' ')
     if (pon) {
         pon_command = "--panel-of-normals $pon"
-        }
+        } else {
+		pon_command = ""
+		}
 
     """
     gatk Mutect2 \\

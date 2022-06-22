@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # Load libs:
-Sys.setenv(VROOM_CONNECTION_SIZE=326214400)
+Sys.setenv(VROOM_CONNECTION_SIZE=652428800)
 if (!require(sequenza)) stop("Package 'sequenza' missing\n.")
 
 args <- commandArgs(TRUE)
