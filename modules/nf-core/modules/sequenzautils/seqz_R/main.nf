@@ -18,10 +18,12 @@ process SEQUENZAUTILS_RSEQZ {
     task.ext.when == null || task.ext.when
 
     script:
+    def seqz_in = "${seqz_bin.toString().minus(".gz")}"
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}_${ploidy}"
     """
-	analyse_cn_sequenza.R ${seqz_bin} ${prefix} ${gender} ${ploidy}
+    gunzip ${seqz_bin}
+    analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -29,10 +31,11 @@ process SEQUENZAUTILS_RSEQZ {
     END_VERSIONS
     """
     stub:
+    def seqz_in = "${seqz_bin.toString().minus(".gz")}"
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}_${ploidy}"
     """
-    echo "analyse_cn_sequenza.R ${seqz_bin} ${prefix} ${gender} ${ploidy}"
+    echo "analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy}"
     mkdir ${id}_${ploidy}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
