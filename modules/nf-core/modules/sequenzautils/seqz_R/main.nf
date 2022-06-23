@@ -22,7 +22,7 @@ process SEQUENZAUTILS_RSEQZ {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}_${ploidy}"
     """
-    gunzip ${seqz_bin}
+    zcat ${seqz_bin} > $seqz_in
     analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy}
 
     cat <<-END_VERSIONS > versions.yml
