@@ -8,6 +8,7 @@ input <- args[1]
 output_prefix <- args[2]
 gender <- args[3]
 ploidy <- args[4]
+ccf <- args[5]
 if (ploidy == 7) {
     low_p <- 1
     up_p <- 7
@@ -27,6 +28,13 @@ if (ploidy == 7) {
     low_p <- 5.5
     up_p <- 6.5
     weighted_mean <- TRUE
+}
+if (ccf == "PDO") {
+    low_cell <- 0.95
+    high_cell <- 0.99
+} else {
+    low_cell <- 0.1
+    high_cell <- 1
 }
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
@@ -50,8 +58,8 @@ sequenzaAnalysis <- function(input,
                              segment_filter = 3e6,
                              ratio_priority = FALSE,
                              method = "baf",
-                             low_cell = 0.1,
-                             up_cell = 1,
+                             low_cell = low_cell,
+                             up_cell = high_cell,
                              low_ploidy = low_p,
                              up_ploidy = up_p,
                              CNt_max = 20) {
