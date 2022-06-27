@@ -17,7 +17,8 @@ mutect_calls <- evoparse_mutect_mutations(my_vcf)
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
 snvs <- mutect_calls[[my_sample]]$mutations %>%
-    dplyr::filter(!is.na(VAF), VAF > 0)
+    dplyr::filter(!is.na(VAF), VAF > 0) %>%
+    dplyr::filter(FILTER == "PASS")
 
 snv_drivers <- snvs %>%
     dplyr::mutate(effect = sapply(str_split(INFO, "\\|"), function(x) x[4])) %>%
