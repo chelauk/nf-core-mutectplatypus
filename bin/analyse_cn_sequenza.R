@@ -30,8 +30,8 @@ if (ploidy == 7) {
     weighted_mean <- TRUE
 }
 if (ccf == "PDO") {
-    high_ccf <- 0.95
-    low_ccf <- 0.99
+    high_ccf <- 0.99
+    low_ccf <- 0.95
 } else {
     high_ccf <- 0.1
     low_ccf <- 1
