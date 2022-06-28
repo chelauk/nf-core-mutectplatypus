@@ -38,6 +38,8 @@ if (ccf == "PDO") {
 }
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
+print(paste0("up_cell type: ", typeof(up_cell), " ", up_cell))
+print(paste0("low_cell type: ", typeof(low_cell), " ", low_cell))
 params_list <- list("input" = input, "output_prefix" = output_prefix)
 # Function:
 sequenzaAnalysis <- function(input,
