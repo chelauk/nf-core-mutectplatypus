@@ -31,10 +31,10 @@ if (ploidy == 7) {
 }
 if (ccf == "PDO") {
     low_cell <- 0.95
-    high_cell <- 0.99
+    up_cell <- 0.99
 } else {
     low_cell <- 0.1
-    high_cell <- 1
+    up_cell <- 1
 }
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
