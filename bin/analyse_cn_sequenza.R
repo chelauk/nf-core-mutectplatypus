@@ -30,16 +30,16 @@ if (ploidy == 7) {
     weighted_mean <- TRUE
 }
 if (ccf == "PDO") {
-    low_cell <- 0.95
-    up_cell <- 0.99
+    high_ccf <- 0.95
+    low_ccf <- 0.99
 } else {
-    low_cell <- 0.1
-    up_cell <- 1
+    high_ccf <- 0.1
+    low_ccf <- 1
 }
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
-print(paste0("up_cell type: ", typeof(up_cell), " ", up_cell))
-print(paste0("low_cell type: ", typeof(low_cell), " ", low_cell))
+print(paste0("up_cell type: ", typeof(high_ccf), " ", high_ccf))
+print(paste0("low_cell type: ", typeof(low_ccf), " ", low_ccf))
 params_list <- list("input" = input, "output_prefix" = output_prefix)
 # Function:
 sequenzaAnalysis <- function(input,
@@ -60,8 +60,8 @@ sequenzaAnalysis <- function(input,
                              segment_filter = 3e6,
                              ratio_priority = FALSE,
                              method = "baf",
-                             low_cell = low_cell,
-                             up_cell = high_cell,
+                             low_cell = low_ccf,
+                             up_cell = high_ccf,
                              low_ploidy = low_p,
                              up_ploidy = up_p,
                              CNt_max = 20) {
