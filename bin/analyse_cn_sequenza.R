@@ -101,7 +101,7 @@ sequenzaAnalysis <- function(input,
 
     # Fit the model:
     cat("- Fitting the model\n")
-    cells <- seq(low_cell, up_cell, 0.01)
+    cells <- seq(low_ccf, high_ccf, 0.01)
     plo <- seq(low_p, up_p, 0.1)
     fit <- sequenza.fit(modDat,
         female = is_female,
