@@ -108,6 +108,7 @@ sequenzaAnalysis <- function(input,
         segment.filter = segment_filter,
         cellularity = cells,
         ploidy = plo,
+        XY = c(X = "chrX", Y = "chrY"),
         ratio.priority = ratio_priority,
         method = method
     )
@@ -120,6 +121,7 @@ sequenzaAnalysis <- function(input,
         out.dir = output_prefix,
         female = is_female,
         CNt.max = CNt_max,
+        XY = c(X = "chrX", Y = "chrY"),
         ratio.priority = ratio_priority
     )
 }
