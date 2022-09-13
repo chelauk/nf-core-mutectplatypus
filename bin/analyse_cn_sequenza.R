@@ -8,6 +8,7 @@ input <- args[1]
 output_prefix <- args[2]
 gender <- args[3]
 ploidy <- args[4]
+ccf <- args[5]
 if (ploidy == 7) {
     low_p <- 1
     up_p <- 7
@@ -28,8 +29,17 @@ if (ploidy == 7) {
     up_p <- 6.5
     weighted_mean <- TRUE
 }
+if (ccf == "PDO") {
+    high_ccf <- 0.99
+    low_ccf <- 0.95
+} else {
+    high_ccf <- 0.1
+    low_ccf <- 1
+}
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
+print(paste0("up_cell type: ", typeof(high_ccf), " ", high_ccf))
+print(paste0("low_cell type: ", typeof(low_ccf), " ", low_ccf))
 params_list <- list("input" = input, "output_prefix" = output_prefix)
 # Function:
 sequenzaAnalysis <- function(input,
@@ -50,8 +60,8 @@ sequenzaAnalysis <- function(input,
                              segment_filter = 3e6,
                              ratio_priority = FALSE,
                              method = "baf",
-                             low_cell = 0.1,
-                             up_cell = 1,
+                             low_cell = low_ccf,
+                             up_cell = high_ccf,
                              low_ploidy = low_p,
                              up_ploidy = up_p,
                              CNt_max = 20) {
@@ -91,13 +101,14 @@ sequenzaAnalysis <- function(input,
 
     # Fit the model:
     cat("- Fitting the model\n")
-    cells <- seq(low_cell, up_cell, 0.01)
+    cells <- seq(low_ccf, high_ccf, 0.01)
     plo <- seq(low_p, up_p, 0.1)
     fit <- sequenza.fit(modDat,
         female = is_female,
         segment.filter = segment_filter,
         cellularity = cells,
         ploidy = plo,
+        XY = c(X = "chrX", Y = "chrY"),
         ratio.priority = ratio_priority,
         method = method
     )
@@ -110,6 +121,7 @@ sequenzaAnalysis <- function(input,
         out.dir = output_prefix,
         female = is_female,
         CNt.max = CNt_max,
+        XY = c(X = "chrX", Y = "chrY"),
         ratio.priority = ratio_priority
     )
 }
