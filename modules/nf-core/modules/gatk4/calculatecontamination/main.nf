@@ -8,7 +8,7 @@ process GATK4_CALCULATECONTAMINATION {
         'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
-    tuple val(patient), val(sample), path(tumour_table), path(normal_table)
+    tuple val(patient), val(sample), val(id),  path(tumour_table), path(normal_table)
 
     output:
     tuple val(patient), val(sample), path('*.contamination.table'), emit: contamination
@@ -20,7 +20,7 @@ process GATK4_CALCULATECONTAMINATION {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${patient}_${sample}"
+    def prefix = task.ext.prefix ?: "${patient}_${sample}${id}"
     def matched_command = normal_table ? " -matched ${normal_table} " : ''
     def avail_mem = 3
     if (!task.memory) {
@@ -44,7 +44,7 @@ process GATK4_CALCULATECONTAMINATION {
     """
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${patient}_${sample}"
+    def prefix = task.ext.prefix ?: "${patient}_${sample}${id}"
     def matched_command = normal_table ? " -matched ${normal_table} " : ''
 
     def avail_mem = 3

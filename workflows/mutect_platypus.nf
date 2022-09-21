@@ -263,11 +263,11 @@ workflow MUTECT_PLATYPUS {
     normal_gatherpileup_input = GATHER_PS_NORM.out.table
                                     .map{ meta, table ->
                                     [ meta.patient, meta.sample, meta.status, meta.id, table ] }
-
+    //tumour_gatherpileup_input.view()
     contamination_input = tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
                                     .map{ patient, sample1, status1, id1, table, sample2, status2, id2, table2 ->
-                                    [patient, sample1, table, table2] }
-    contamination_input.view()
+                                    [patient, sample1, id1, table, table2] }
+    //contamination_input.view()
     GATK4_CALCULATECONTAMINATION( contamination_input )
 
     contamination_input = GATK4_CALCULATECONTAMINATION.out.contamination.groupTuple()
