@@ -367,7 +367,7 @@ workflow MUTECT_PLATYPUS {
                             wiggle)
 
     SEQUENZAUTILS_BAM2SEQZ.out.seqz
-                            //.groupTuple(by:[0,1])
+                            .groupTuple(by:[0,1])
                             .collect()
                             .set{merge_seqz_input}
 
