@@ -8,10 +8,12 @@ process SEQUENZAUTILS_BAM2SEQZ {
         'quay.io/biocontainers/sequenza-utils:3.0.0--py39h67e14b5_5' }"
 
     input:
-    tuple val(patient), val(id), val(chr), path(tumourbam), path(normalbam)
+    //tuple val(patient), val(id), val(chr), path(tumourbam), path(normalbam)
+    tuple val(patient), val(id), path(tumourbam), path(normalbam)
     path fasta
     val  het
     path wigfile
+    each chromosome
 
     output:
     tuple val(patient), val(id), path("*seqz.gz"), emit: seqz
@@ -21,8 +23,8 @@ process SEQUENZAUTILS_BAM2SEQZ {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: "-C ${chr}"
-    def prefix = task.ext.prefix ?: "${id}_${chr}"
+    def args = task.ext.args ?: "-C ${chromosome}"
+    def prefix = task.ext.prefix ?: "${id}_${chromosome}"
     """
     sequenza-utils \\
         bam2seqz \\
@@ -40,8 +42,8 @@ process SEQUENZAUTILS_BAM2SEQZ {
     END_VERSIONS
     """
     stub:
-    def args = task.ext.args ?: "-C ${chr}"
-    def prefix = task.ext.prefix ?: "${id}_${chr}"
+    def args = task.ext.args ?: "-C ${chromosome}"
+    def prefix = task.ext.prefix ?: "${id}_${chromosome}"
     """
     echo -e "sequenza-utils \\
         bam2seqz \\
