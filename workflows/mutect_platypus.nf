@@ -266,7 +266,7 @@ workflow MUTECT_PLATYPUS {
     //tumour_gatherpileup_input.view()
     contamination_input = tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
                                     .map{ patient, sample1, status1, id1, table, sample2, status2, id2, table2 ->
-                                    [patient, sample1, table, table2] }
+                                    [patient, sample1,id1, table, table2] }
 
     GATK4_CALCULATECONTAMINATION( contamination_input )
 
