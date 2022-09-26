@@ -44,10 +44,10 @@ params_list <- list("input" = input, "output_prefix" = output_prefix)
 # Function:
 sequenzaAnalysis <- function(input,
                              output_prefix,
-                             window = 1e6,
+                             window = 1e5,
                              overlap = 1,
-                             gamma = 80,
-                             kmin = 10,
+                             gamma = 280,
+                             kmin = 300,
                              min_reads = 40,
                              min_reads_normal = 10,
                              min_reads_baf = 1,

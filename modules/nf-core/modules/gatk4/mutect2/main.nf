@@ -54,7 +54,7 @@ process GATK4_MUTECT2 {
         ${normals_command} \\
         --germline-resource $germline_resource \\
         --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\
-        $args \\
+        $args $task.cpus \\
         ${panel_of_normals_command} \\
         -L $intervals \\
         -O ${prefix}.vcf \\
