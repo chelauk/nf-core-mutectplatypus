@@ -266,8 +266,8 @@ workflow MUTECT_PLATYPUS {
     //tumour_gatherpileup_input.view()
     contamination_input = tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
                                     .map{ patient, sample1, status1, id1, table, sample2, status2, id2, table2 ->
-                                    [patient, sample1, id1, table, table2] }
-    //contamination_input.view()
+                                    [patient, sample1, table, table2] }
+
     GATK4_CALCULATECONTAMINATION( contamination_input )
 
     contamination_input = GATK4_CALCULATECONTAMINATION.out.contamination.groupTuple()
@@ -356,19 +356,26 @@ workflow MUTECT_PLATYPUS {
         .map{ chr -> chr[0][0] }
         .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
 
-    seq_input_pair.combine(seqz_chr)
-                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2, chr ->
-                [ patient, id1, chr, files1, files2] }
-                .set{ seq_input_chr }
+    //seqz_chr.view()
 
-    SEQUENZAUTILS_BAM2SEQZ(seq_input_chr,
+//    seq_input_pair.combine(seqz_chr)
+//                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2, chr ->
+//                [ patient, id1, chr, files1, files2] }
+//                .set{ seq_input_chr }
+
+seq_input_pair = seq_input_pair
+                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2 ->
+                [ patient, id1, files1, files2] }
+//                .set{ seq_input_chr }
+
+    SEQUENZAUTILS_BAM2SEQZ(seq_input_pair,
                             fasta,
                             seqz_het,
-                            wiggle)
+                            wiggle,
+                            seqz_chr)
 
     SEQUENZAUTILS_BAM2SEQZ.out.seqz
                             .groupTuple(by:[0,1])
-                            .collect()
                             .set{merge_seqz_input}
 
     SEQUENZAUTILS_MERGESEQZ (merge_seqz_input)
@@ -381,7 +388,7 @@ workflow MUTECT_PLATYPUS {
     } else {
         SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
     }
-    //ZIP_MUTECT_ANN_VCF.out.vcf.view()
+
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
 
