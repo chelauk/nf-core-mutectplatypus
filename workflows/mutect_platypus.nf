@@ -355,8 +355,7 @@ workflow MUTECT_PLATYPUS {
         .splitCsv(sep: "\t")
         .map{ chr -> chr[0][0] }
         .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
-
-    //seqz_chr.view()
+        .collect()
 
 //    seq_input_pair.combine(seqz_chr)
 //                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2, chr ->
