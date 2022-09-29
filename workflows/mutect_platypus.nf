@@ -57,6 +57,8 @@ ccf                  = params.ccf                    ?: Channel.empty()
 // initialise sequenza gamma values
 
 switch (params.sequenza_gamma) {
+                                case 6 : seq_gam = 500
+                                break;
                                 case 5 : seq_gam = 450
                                 break;
                                 case 4 : seq_gam = 400
