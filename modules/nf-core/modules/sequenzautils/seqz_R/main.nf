@@ -22,7 +22,7 @@ process SEQUENZAUTILS_RSEQZ {
     script:
     def seqz_in = "${seqz_bin.toString().minus(".gz")}"
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}_${ploidy}"
+    def prefix = task.ext.prefix ?: "${patient}_${id}"
     """
     zcat ${seqz_bin} > $seqz_in
     analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf} ${seq_gam}
@@ -35,7 +35,7 @@ process SEQUENZAUTILS_RSEQZ {
     stub:
     def seqz_in = "${seqz_bin.toString().minus(".gz")}"
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}_${ploidy}"
+    def prefix = task.ext.prefix ?: "${patient}_${id}"
     """
     echo "analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf} ${seq_gam}"
     mkdir ${id}_${ploidy}
