@@ -54,6 +54,20 @@ gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
 ccf                  = params.ccf                    ?: Channel.empty()
 
+// initialise sequenza gamma values
+
+switch (params.sequenza_gamma) {
+                                case 5 : seq_gam = 280
+                                break;
+                                case 4 : seq_gam = 200
+                                break;
+                                case 3 : seq_gam = 150
+                                break;
+                                case 2 : seq_gam = 100
+                                break;
+                                case 1 : seq_gam = 50
+                                break;
+    }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -383,9 +397,9 @@ seq_input_pair = seq_input_pair
 
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
     if ( params.sequenza_change_ccf ) {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
+        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf, seq_gam)
     } else {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
+        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf, seq_gam)
     }
 
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )

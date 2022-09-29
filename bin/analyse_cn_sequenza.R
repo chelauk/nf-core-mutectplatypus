@@ -9,6 +9,7 @@ output_prefix <- args[2]
 gender <- args[3]
 ploidy <- args[4]
 ccf <- args[5]
+gam <- args[6]
 if (ploidy == 7) {
     low_p <- 1
     up_p <- 7
@@ -46,7 +47,7 @@ sequenzaAnalysis <- function(input,
                              output_prefix,
                              window = 1e5,
                              overlap = 1,
-                             gamma = 280,
+                             gamma = gam,
                              kmin = 300,
                              min_reads = 40,
                              min_reads_normal = 10,

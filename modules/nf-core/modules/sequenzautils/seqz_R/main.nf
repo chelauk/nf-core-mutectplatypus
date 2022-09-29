@@ -10,6 +10,7 @@ process SEQUENZAUTILS_RSEQZ {
     val  gender
     val  ploidy
     val  ccf
+    val  seq_gam
 
     output:
     tuple val(patient), val(id), path("${id}_${ploidy}"), emit: rseqz
@@ -24,7 +25,7 @@ process SEQUENZAUTILS_RSEQZ {
     def prefix = task.ext.prefix ?: "${id}_${ploidy}"
     """
     zcat ${seqz_bin} > $seqz_in
-    analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf}
+    analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf} ${seq_gam}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -36,7 +37,7 @@ process SEQUENZAUTILS_RSEQZ {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}_${ploidy}"
     """
-    echo "analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf}"
+    echo "analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf} ${seq_gam}"
     mkdir ${id}_${ploidy}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
