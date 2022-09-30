@@ -13,7 +13,7 @@ process SEQUENZAUTILS_RSEQZ {
     val  seq_gam
 
     output:
-    tuple val(patient), val(id), path("${id}_${ploidy}"), emit: rseqz
+    tuple val(patient), val(id), path("${patient}_${id}"), emit: rseqz
     path "versions.yml"          , emit: versions
 
     when:
