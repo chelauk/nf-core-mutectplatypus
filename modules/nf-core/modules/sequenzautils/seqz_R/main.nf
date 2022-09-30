@@ -1,5 +1,5 @@
 process SEQUENZAUTILS_RSEQZ {
-    tag "$id"
+    tag "${patient}_${id}"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::r-sequenza=3.0.0" : null)
