@@ -10,6 +10,7 @@ gender <- args[3]
 ploidy <- args[4]
 ccf <- args[5]
 gam <- args[6]
+gam <- as.integer(gam)
 if (ploidy == 7) {
     low_p <- 1
     up_p <- 7
