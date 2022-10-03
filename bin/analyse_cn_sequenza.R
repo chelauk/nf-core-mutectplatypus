@@ -112,7 +112,8 @@ sequenzaAnalysis <- function(input,
         ploidy = plo,
         XY = c(X = "chrX", Y = "chrY"),
         ratio.priority = ratio_priority,
-        method = method
+        method = method,
+        verbose = TRUE
     )
 
     # Export the data:
