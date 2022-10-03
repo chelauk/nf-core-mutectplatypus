@@ -19,16 +19,18 @@ process EVOVERSE_CNAQC {
     task.ext.when == null || task.ext.when
 
     script:
+    def prefix = task.ext.prefix ?: "${patient}_${id}"
     """
-    evoverse.R $id $ploidy $vcf $drivers
+    evoverse.R $prefix $vcf $drivers
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         1
     END_VERSIONS
 	"""
     stub:
+    def prefix = task.ext.prefix ?: "${patient}_${id}"
     """
-    echo "evoverse $id $ploidy $segments $vcf $drivers"
+    echo "evoverse $prefix $vcf $drivers"
     touch ${id}_${ploidy}.pdf
     touch ${id}_${ploidy}.rds
     touch versions.yml
