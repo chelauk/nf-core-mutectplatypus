@@ -35,6 +35,7 @@ process ENSEMBLVEP {
         -o ${prefix}_${args}.ann.vcf \\
         --assembly $genome \\
         --species $species \\
+        --most_severe \\
         --cache \\
         --cache_version $cache_version \\
         --dir_cache $dir_cache \\
