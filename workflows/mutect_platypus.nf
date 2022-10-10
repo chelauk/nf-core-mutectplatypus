@@ -18,7 +18,7 @@ def checkPathParamList = [
     params.dict,
     params.germline_resource,
     params.germline_resource_idx,
-    params.drivers
+    //params.drivers
     ]
 
 for (param in checkPathParamList) if (param) file(param, checkIfExists: true)
