@@ -177,158 +177,158 @@ workflow MUTECT_PLATYPUS {
         .flatten().collate(2)
         .map{duration, intervalFile -> intervalFile}
 
-
-    mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
-        [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
-        }
-        .set{bam_intervals}
-
-    GATK4_MUTECT2(
-        bam_intervals,
-        fasta,
-        fasta_fai,
-        dict,
-        pon,
-        pon_idx,
-        germline_resource,
-        germline_resource_idx,
-    )
-
-    orientation_input = GATK4_MUTECT2.out.f1r2.groupTuple()
-
-    GATK4_LEARNREADORIENTATIONMODEL ( orientation_input )
-
-    concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
-
-    if (!params.intervals) {
-        CONCAT_VCF ( concat_input, fasta_fai, [] )
-        } else {
-        CONCAT_VCF ( concat_input, fasta_fai, intervals_ch )
-        }
-
-    merge_stats_input = GATK4_MUTECT2.out.stats.groupTuple()
-
-    GATK4_MERGEMUTECTSTATS ( merge_stats_input )
-
-    // split input to create tables for each tumour
-    INPUT_CHECK.out.bams
-        .branch {   tumour: it[0]["status"] == "tumour"
-                    normal: it[0]["status"] == "normal"
+if (!params.no_mutect_platypus) {
+        mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
+            [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
             }
-        .set{pileup}
+            .set{bam_intervals}
 
-    pileup.tumour.combine(result_intervals)
-                .map{ meta, files, intervals ->
-                [ meta, meta.id + "_" + intervals.baseName, files, intervals] }
-                .set{ pileup_tumour_intervals }
+        GATK4_MUTECT2(
+            bam_intervals,
+            fasta,
+            fasta_fai,
+            dict,
+            pon,
+            pon_idx,
+            germline_resource,
+            germline_resource_idx,
+        )
 
-    GATK4_GETPILEUPSUMMARIES (
-        pileup_tumour_intervals,
-        fasta,
-        fasta_fai,
-        dict,
-        germline_resource,
-        germline_resource_idx
-    )
-    gather_pileup_tumour_input = GATK4_GETPILEUPSUMMARIES.out.table
-                                    .groupTuple()
-                                    .map{ meta, interval_ids, table -> [meta,table]}
+        orientation_input = GATK4_MUTECT2.out.f1r2.groupTuple()
 
-    GATK4_GATHERPILEUPSUMMARIES ( gather_pileup_tumour_input, dict )
+        GATK4_LEARNREADORIENTATIONMODEL ( orientation_input )
 
-    pileup.normal.combine(result_intervals)
-                .map{ meta, files, intervals ->
-                [ meta, meta.id + "_" + intervals.baseName, files, intervals] }
-                .set{ pileup_normal_intervals }
+        concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
 
-    GET_PS_NORM (
-        pileup_normal_intervals,
-        fasta,
-        fasta_fai,
-        dict,
-        germline_resource,
-        germline_resource_idx
-    )
-    gather_pileup_normal_input = GET_PS_NORM.out.table
-                                    .groupTuple()
-                                    .map{ meta, interval_ids, table -> [meta,table]}
+        if (!params.intervals) {
+            CONCAT_VCF ( concat_input, fasta_fai, [] )
+            } else {
+            CONCAT_VCF ( concat_input, fasta_fai, intervals_ch )
+            }
 
-    GATHER_PS_NORM ( gather_pileup_normal_input, dict )
+        merge_stats_input = GATK4_MUTECT2.out.stats.groupTuple()
 
+        GATK4_MERGEMUTECTSTATS ( merge_stats_input )
 
-    tumour_gatherpileup_input = GATK4_GATHERPILEUPSUMMARIES.out.table
-                                    .map{ meta, table ->
-                                    [ meta.patient, meta.sample, meta.status, meta.id, table ] }
+        // split input to create tables for each tumour
+        INPUT_CHECK.out.bams
+            .branch {   tumour: it[0]["status"] == "tumour"
+                        normal: it[0]["status"] == "normal"
+                }
+            .set{pileup}
 
-    normal_gatherpileup_input = GATHER_PS_NORM.out.table
-                                    .map{ meta, table ->
-                                    [ meta.patient, meta.sample, meta.status, meta.id, table ] }
-    //tumour_gatherpileup_input.view()
-    contamination_input = tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
-                                    .map{ patient, sample1, status1, id1, table, sample2, status2, id2, table2 ->
-                                    [patient, sample1,id1, table, table2] }
+        pileup.tumour.combine(result_intervals)
+                    .map{ meta, files, intervals ->
+                    [ meta, meta.id + "_" + intervals.baseName, files, intervals] }
+                    .set{ pileup_tumour_intervals }
 
-    GATK4_CALCULATECONTAMINATION( contamination_input )
+        GATK4_GETPILEUPSUMMARIES (
+            pileup_tumour_intervals,
+            fasta,
+            fasta_fai,
+            dict,
+            germline_resource,
+            germline_resource_idx
+        )
+        gather_pileup_tumour_input = GATK4_GETPILEUPSUMMARIES.out.table
+                                        .groupTuple()
+                                        .map{ meta, interval_ids, table -> [meta,table]}
 
-    contamination_input = GATK4_CALCULATECONTAMINATION.out.contamination.groupTuple()
+        GATK4_GATHERPILEUPSUMMARIES ( gather_pileup_tumour_input, dict )
 
-    segmentation_input = GATK4_CALCULATECONTAMINATION.out.segmentation.groupTuple()
+        pileup.normal.combine(result_intervals)
+                    .map{ meta, files, intervals ->
+                    [ meta, meta.id + "_" + intervals.baseName, files, intervals] }
+                    .set{ pileup_normal_intervals }
 
-    for_filter = contamination_input.join(segmentation_input)
-                                    .map{ patient, samples1, contamination, samples2, segmentation ->
-                                    [patient,contamination,segmentation] }
+        GET_PS_NORM (
+            pileup_normal_intervals,
+            fasta,
+            fasta_fai,
+            dict,
+            germline_resource,
+            germline_resource_idx
+        )
+        gather_pileup_normal_input = GET_PS_NORM.out.table
+                                        .groupTuple()
+                                        .map{ meta, interval_ids, table -> [meta,table]}
 
-    filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
-    filter_input = filter_input.join(for_filter)
-    filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
-
-    GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
-
-    ENSEMBLVEP (
-        GATK4_FILTERMUTECTCALLS.out.vcf,
-        vep_genome,
-        vep_species,
-        vep_cache_version,
-        vep_cache,
-        []
-    )
-
-    ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
-
-    gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
-
-    platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
-
-    PLATYPUS_CALLVARIANTS(  platypus_input,
-                            fasta,
-                            fasta_fai )
-
-    concat_platypus_input = PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
+        GATHER_PS_NORM ( gather_pileup_normal_input, dict )
 
 
-    if (!params.intervals) {
-        CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, [] )
-        } else {
-        CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, intervals_ch )
-        }
+        tumour_gatherpileup_input = GATK4_GATHERPILEUPSUMMARIES.out.table
+                                        .map{ meta, table ->
+                                        [ meta.patient, meta.sample, meta.status, meta.id, table ] }
 
-    filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
-                                .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
-                                [patient, vcf, which_norm]}
+        normal_gatherpileup_input = GATHER_PS_NORM.out.table
+                                        .map{ meta, table ->
+                                        [ meta.patient, meta.sample, meta.status, meta.id, table ] }
+        //tumour_gatherpileup_input.view()
+        contamination_input = tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
+                                        .map{ patient, sample1, status1, id1, table, sample2, status2, id2, table2 ->
+                                        [patient, sample1,id1, table, table2] }
 
-    PLATYPUS_FILTER ( filter_platypus_input )
+        GATK4_CALCULATECONTAMINATION( contamination_input )
 
-    PLAT_VEP (
-        PLATYPUS_FILTER.out.vcf,
-        vep_genome,
-        vep_species,
-        vep_cache_version,
-        vep_cache,
-        []
-    )
+        contamination_input = GATK4_CALCULATECONTAMINATION.out.contamination.groupTuple()
 
-    ZIP_PLATYPUS_ANN_VCF ( PLAT_VEP.out.vcf )
+        segmentation_input = GATK4_CALCULATECONTAMINATION.out.segmentation.groupTuple()
 
+        for_filter = contamination_input.join(segmentation_input)
+                                        .map{ patient, samples1, contamination, samples2, segmentation ->
+                                        [patient,contamination,segmentation] }
+
+        filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
+        filter_input = filter_input.join(for_filter)
+        filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
+
+        GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
+
+        ENSEMBLVEP (
+            GATK4_FILTERMUTECTCALLS.out.vcf,
+            vep_genome,
+            vep_species,
+            vep_cache_version,
+            vep_cache,
+            []
+        )
+
+        ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
+
+        gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
+
+        platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
+
+        PLATYPUS_CALLVARIANTS(  platypus_input,
+                                fasta,
+                                fasta_fai )
+
+        concat_platypus_input = PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
+
+
+        if (!params.intervals) {
+            CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, [] )
+            } else {
+            CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, intervals_ch )
+            }
+
+        filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
+                                    .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
+                                    [patient, vcf, which_norm]}
+
+        PLATYPUS_FILTER ( filter_platypus_input )
+
+        PLAT_VEP (
+            PLATYPUS_FILTER.out.vcf,
+            vep_genome,
+            vep_species,
+            vep_cache_version,
+            vep_cache,
+            []
+        )
+
+        ZIP_PLATYPUS_ANN_VCF ( PLAT_VEP.out.vcf )
+    }
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
@@ -388,8 +388,10 @@ seq_input_pair = seq_input_pair
         SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
     }
 
+if (!params.no_mutect_platypus) {
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
+}
 
     //
     // MODULE: MultiQC
