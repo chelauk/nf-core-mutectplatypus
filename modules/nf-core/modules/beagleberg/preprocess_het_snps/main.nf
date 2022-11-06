@@ -1,4 +1,4 @@
-process SEQUENZAUTILS_HETSNPS {
+process PREPROCESS_HETSNPS {
     tag "$id"
     label 'process_medium'
 
@@ -8,11 +8,12 @@ process SEQUENZAUTILS_HETSNPS {
         'quay.io/biocontainers/sequenza-utils:3.0.0--py39h67e14b5_5' }"
 
     input:
-    tuple val(patient), val(id), val(gender), path(concat_seqz)
+    tuple val(patient), val(id), val(gender), path(het_snps)
+    val(min_reads)
 
     output:
-    tuple val(patient), val(id), val(gender), path("*het.seqz"), emit: het_seqz
-    path "versions.yml"                         , emit: versionsi
+    tuple val(patient), val(id), val(gender), path("*BAF.rds"), path("*LRR.rds"), emit: baf_lrr
+    path "versions.yml"                                            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -21,11 +22,10 @@ process SEQUENZAUTILS_HETSNPS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
-    zcat $concat_seqz | egrep 'chromo|het' > ${prefix}_het.seqz
-    # gzip ${prefix}_het.seqz
+    Rscript preprocessingData_Sequenza.R ${patient} ${id} ${gender} ${min_reads}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        sequenzautils: \$(echo \$(sequenza-utils 2>&1) | sed 's/^.*is version //; s/ .*\$//')
+        preprocess_het_snps: 1.0.0
     END_VERSIONS
     """
 
@@ -33,13 +33,12 @@ process SEQUENZAUTILS_HETSNPS {
 	def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
-    cat << 'EOF' 
-    zcat $concat_seqz | grep -ae "chromo|het" > ${prefix}_het.seqz
-    EOF
-    touch ${prefix}_het.seqz
+    echo preprocessingData_Sequenza.R ${patient} ${id} ${gender} ${min_reads}
+    touch ${patient}_${id}.BAF.rds
+    touch ${patient}_${id}.LRR.rds
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        sequenzautils: 3.0.0
+        preprocess_het_snps: 3.0.0
     END_VERSIONS
     """
 }

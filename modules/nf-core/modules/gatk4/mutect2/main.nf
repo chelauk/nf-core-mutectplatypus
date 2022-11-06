@@ -10,7 +10,7 @@ process GATK4_MUTECT2 {
     }
 
     input:
-    tuple val(patient), val(interval_patient), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
+    tuple val(patient), val(interval_patient), val(gender), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
     path fasta
     path fasta_fai
     path dict

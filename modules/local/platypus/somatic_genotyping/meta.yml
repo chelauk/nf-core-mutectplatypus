@@ -1,0 +1,55 @@
+name: platypus_callvariants
+description: Call somatic SNVs and indels via local assembly of haplotypes.
+keywords:
+  - platypus
+  - haplotype
+  - somatic
+tools:
+  - platypus:
+      description: |
+        Developed in the Data Sciences Platform at the Broad Institute, the toolkit offers a wide variety of tools
+        with a primary focus on variant discovery and genotyping. Its powerful processing engine
+        and high-performance computing features make it capable of taking on projects of any size.
+      homepage: https://www.well.ox.ac.uk/research/research-groups/lunter-group/lunter-group/platypus-a-haplotype-based-variant-caller-for-next-generation-sequence-data
+      documentation: https://www.rdm.ox.ac.uk/research/lunter-group/lunter-group/platypus-documentation
+      doi: 10.1038/ng.3036
+
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test']
+  - input:
+      type: list
+      description: list of BAM files
+      pattern: "*.{bam}"
+  - input_index:
+      type: list
+      description: list of BAM file indexes
+      pattern: "*.{bam.bai}"
+  - intervals:
+      type: File/string
+      description: Specify region the tools is run on.
+      pattern: ".{bed,interval_list}/chrM"
+  - fasta:
+      type: file
+      description: The reference fasta file
+      pattern: "*.fasta"
+  - fai:
+      type: file
+      description: Index of reference fasta file
+      pattern: "*.fasta.fai"
+
+output:
+  - vcf:
+      type: file
+      description: vcf file
+      pattern: "*.vcf"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+
+authors:
+  - "@GCJMackenzie"

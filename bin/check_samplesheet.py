@@ -37,6 +37,7 @@ class RowChecker:
         sample_col="sample",
         id_col="id",
         status_col="status",
+        gender_col="gender",
         bam_col="bam",
         bai_col="bai",
         **kwargs,
@@ -64,6 +65,7 @@ class RowChecker:
         self._sample_col = sample_col
         self._id_col = id_col
         self._status_col = status_col
+        self._gender_col = gender_col
         self._bam_col = bam_col
         self._bai_col = bai_col
         self._seen = set()
@@ -81,6 +83,7 @@ class RowChecker:
         self._validate_patient(row)
         self._validate_sample(row)
         self._validate_status(row)
+        self._validate_gender(row)
         self._validate_bam(row)
         self._validate_bai(row)
         self._seen.add(
@@ -104,6 +107,10 @@ class RowChecker:
         """Assert that the sample name exists and convert spaces to underscores."""
         assert len(row[self._status_col]) > 0, "Status input is required."
         self._validate_status_format(row)
+
+    def _validate_gender(self, row):
+        """Assert that the gender exists and convert spaces to underscores."""
+        assert len(row[self._status_col]) > 0, "Gender input is required."
 
     def _validate_bam(self, row):
         """Assert that the BAM entry is non-empty and has the right format."""
@@ -187,7 +194,7 @@ def check_samplesheet(file_in, file_out):
         This function checks that the samplesheet follows the following structure,
         see also the `viral recon samplesheet`_::
 
-            patient,sample,status,bam,bai
+            patient,sample,status,gender,bam,bai
             PATIENT_1,SAMPLE_1,tumour,patient_1_sample_1.bam,patient_1_sample_1.bam.bai
             PATIENT_1,SAMPLE_2,tumour,patient_1_sample_2.bam,patient_1_sample_2.bam.bai
             PATIENT_1,SAMPLE_3,control,patient_1_sample_3.bam,patient_1_sample_3.bam.bai
@@ -199,7 +206,7 @@ def check_samplesheet(file_in, file_out):
         https://raw.githubusercontent.com/nf-core/test-datasets/viralrecon/samplesheet/samplesheet_test_illumina_amplicon.csv
 
     """
-    required_columns = {"patient", "sample", "status", "bam", "bai"}
+    required_columns = {"patient", "sample", "status", "gender", "bam", "bai"}
     # See https://docs.python.org/3.9/library/csv.html#id3 to read up on `newline=""`.
     with file_in.open(newline="") as in_handle:
         reader = csv.DictReader(in_handle, dialect=sniff_format(in_handle))

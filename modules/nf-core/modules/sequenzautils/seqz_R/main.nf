@@ -6,8 +6,7 @@ process SEQUENZAUTILS_RSEQZ {
     container 'r-sequenza.sif'
 
     input:
-    tuple val(patient), val(id), path(seqz_bin)
-    val  gender
+    tuple val(patient), val(id), val(gender), path(seqz_bin)
     val  ploidy
     val  ccf
 

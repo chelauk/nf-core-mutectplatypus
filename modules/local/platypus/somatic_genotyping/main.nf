@@ -1,4 +1,4 @@
-process PLATYPUS_CALLVARIANTS {
+process PLATYPUS_SOMATIC_GENOTYPING {
     tag "$patient"
     label 'process_medium'
 
@@ -8,7 +8,7 @@ process PLATYPUS_CALLVARIANTS {
         'quay.io/biocontainers/platypus-variant:0.8.1.2--py27hb763d49_0' }"
 
     input:
-    tuple val(patient), path(vcf), path(tbi), val(interval_patient), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
+    tuple val(patient), path(vcf), path(tbi), val(interval_patient), val(gender), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
     path fasta
     path fasta_fai
 

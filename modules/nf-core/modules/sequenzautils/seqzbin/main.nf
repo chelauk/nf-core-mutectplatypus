@@ -8,11 +8,11 @@ process SEQUENZAUTILS_BINNING {
         'quay.io/biocontainers/sequenza-utils:3.0.0--py39h67e14b5_5' }"
 
     input:
-    tuple val(patient), val(id), path(concat_seqz)
+    tuple val(patient), val(id), val(gender), path(concat_seqz)
     val(bin)
 
     output:
-    tuple val(patient), val(id), path("*bin${bin}.seqz.gz"), emit: seqz_bin
+    tuple val(patient), val(id), val(gender), path("*bin${bin}.seqz.gz"), emit: seqz_bin
     path "versions.yml"          , emit: versions
 
     when:

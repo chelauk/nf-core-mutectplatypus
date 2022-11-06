@@ -8,11 +8,11 @@ process SEQUENZAUTILS_MERGESEQZ {
         'quay.io/biocontainers/sequenza-utils:3.0.0--py39h67e14b5_5' }"
     
     input:
-    tuple val(patient), val(id), path(seqz)
+    tuple val(patient), val(id), val(gender), path(seqz)
 
     output:
-    tuple val(patient), val(id), path("*concat.seqz.gz"), emit: concat_seqz
-    tuple val(patient), val(id), path("*concat.seqz.gz.tbi"), emit: concat_seqz_tbi
+    tuple val(patient), val(id), val(gender), path("*concat.seqz.gz"), emit: concat_seqz
+    tuple val(patient), val(id), val(gender), path("*concat.seqz.gz.tbi"), emit: concat_seqz_tbi
     path "versions.yml"          , emit: versions
 
     when:

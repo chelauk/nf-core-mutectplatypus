@@ -27,6 +27,7 @@ def create_bam_channel(LinkedHashMap row) {
     meta.patient    = "${row.patient}"
     meta.sample     = "${row.sample}"
     meta.status     = "${row.status}"
+    meta.gender     = "${row.gender}"
     if ( "${row.id}" ) {
         meta.id     = "${row.id}"
     } else {

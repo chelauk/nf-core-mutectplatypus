@@ -15,10 +15,14 @@ def checkPathParamList = [
     params.multiqc_config,
     params.fasta,
     params.fasta_fai,
+    params.genotype_ref,
     params.dict,
     params.germline_resource,
     params.germline_resource_idx,
-    params.drivers
+    params.drivers,
+    params.chr_arm_bounds,
+    params.beagle_plink,
+    params.wiggle
     ]
 
 for (param in checkPathParamList) if (param) file(param, checkIfExists: true)
@@ -34,6 +38,10 @@ dict                  = params.dict                  ? Channel.fromPath(params.d
 germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : Channel.empty()
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : Channel.empty()
 drivers               = params.drivers               ? Channel.fromPath(params.drivers).collect()               : Channel.empty()
+chr_arm_bounds        = params.chr_arm_bounds        ? Channel.fromPath(params.chr_arm_bounds).collect()        : Channel.empty()
+wiggle                = params.wiggle                ? Channel.fromPath(params.wiggle).collect()                : Channel.empty()
+genotype_ref          = params.genotype_ref          ? Channel.fromPath(params.genotype_ref).collect()          : Channel.empty()
+beagle_plink          = params.beagle_plink          ? Channel.fromPath(params.beagle_plink).collect()          : Channel.empty()
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 
 // Initialize value channels based on params, defined in the params.genomes[params.genome] scope
@@ -53,6 +61,7 @@ bin                  = params.bin                    ?: Channel.empty()
 gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
 ccf                  = params.ccf                    ?: Channel.empty()
+min_reads            = params.min_reads              ?: Channel.empty()
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,7 +95,8 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 
 include { CREATE_INTERVALS_BED            } from '../modules/local/create_intervals_bed/main'
 include { BUILD_INTERVALS                 } from '../modules/local/build_intervals/main'
-include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
+include { PLATYPUS_SOMATIC_GENOTYPING     } from '../modules/local/platypus/somatic_genotyping/main'
+include { PLATYPUS_GERMLINE_GENOTYPING    } from '../modules/local/platypus/germline_genotyping/main'
 include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
@@ -111,9 +121,13 @@ include { ENSEMBLVEP                      } from '../modules/nf-core/modules/ens
 include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/modules/sequenzautils/gcwiggle/main'
 include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/modules/sequenzautils/bam2seqz/main'
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/nf-core/modules/sequenzautils/mergeseqz/main'
-//include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
+include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
+include { PREPROCESS_HETSNPS              } from '../modules/nf-core/modules/beagleberg/preprocess_het_snps/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/nf-core/modules/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/nf-core/modules/sequenzautils/seqz_R/main.nf'
+include { MIMMAL_BATTENBERG               } from '../modules/nf-core/modules/beagleberg/run_mimmal_battenberg/main'
+include { BEAGLE_PHASING                  } from '../modules/nf-core/modules/beagleberg/beagle_phasing/main'
+include { RUN_BEAGLEBERG                  } from '../modules/nf-core/modules/beagleberg/run_beagleberg/main'
 include { EVOVERSE_CNAQC                  } from '../modules/local/evoverse/main'
 include { MULTIQC                         } from '../modules/nf-core/modules/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
@@ -128,9 +142,9 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/modules/cus
 
 def make_mutect_input(input) {
     return input
-        .map { meta, files -> [ meta.patient, meta.id, meta.status, files[0],files[1]] }
+        .map { meta, files -> [ meta.patient, meta.id, meta.status, meta.gender, files[0],files[1]] }
         .groupTuple()
-        .map { patient, id, status, bam, bai -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /normal/ }], bam, bai ]}
+        .map { patient, id, status, gender, bam, bai -> [ patient, gender[0], id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /normal/ }], bam, bai ]}
 }
 
 // Info required for completion email and summary
@@ -149,6 +163,8 @@ workflow MUTECT_PLATYPUS {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
+
+//    mutect_input.view()
 
     //
     // create intervals to split jobs.
@@ -178,8 +194,8 @@ workflow MUTECT_PLATYPUS {
         .map{duration, intervalFile -> intervalFile}
 
 
-    mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
-        [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
+    mutect_input.combine(result_intervals).map{ patient, gender, which_tumour, which_norm, bam, bai, intervals ->
+        [patient, intervals.baseName + "_" + patient, gender, which_tumour, which_norm, bam, bai, intervals]
         }
         .set{bam_intervals}
 
@@ -299,11 +315,11 @@ workflow MUTECT_PLATYPUS {
 
     platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
 
-    PLATYPUS_CALLVARIANTS(  platypus_input,
-                            fasta,
-                            fasta_fai )
+    PLATYPUS_SOMATIC_GENOTYPING (platypus_input,
+                                fasta,
+                                fasta_fai )
 
-    concat_platypus_input = PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
+    concat_platypus_input = PLATYPUS_SOMATIC_GENOTYPING.out.vcf.groupTuple()
 
 
     if (!params.intervals) {
@@ -313,7 +329,7 @@ workflow MUTECT_PLATYPUS {
         }
 
     filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
-                                .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
+                                .map{patient,vcf,tbi,region,gender,which_tumour,which_norm,bam,bai,bed ->
                                 [patient, vcf, which_norm]}
 
     PLATYPUS_FILTER ( filter_platypus_input )
@@ -329,24 +345,24 @@ workflow MUTECT_PLATYPUS {
 
     ZIP_PLATYPUS_ANN_VCF ( PLAT_VEP.out.vcf )
 
-    CUSTOM_DUMPSOFTWAREVERSIONS (
-        ch_versions.unique().collectFile(name: 'collated_versions.yml')
-    )
-
-    SEQUENZAUTILS_GCWIGGLE(fasta)
-
     // Gather built wig.gz file or get them from the params
-    wiggle = file(params.wiggle).exists() ? Channel.fromPath(params.wiggle).collect() : SEQUENZAUTILS_GCWIGGLE.out.wiggle
+    if (file(params.wiggle).exists()) {
+        wiggle = Channel.fromPath(params.wiggle).collect()
+    } else {
+        SEQUENZAUTILS_GCWIGGLE(fasta)
+        wiggle = SEQUENZAUTILS_GCWIGGLE.out.wiggle
+    }
 
 // Function to split input channel into tumour and normal for sequenza
     INPUT_CHECK.out.bams
                     .map{ meta, files ->
-                    [meta.patient,meta.sample,meta.status,meta.id, files] }
+                    [meta.patient,meta.sample,meta.status,meta.id,meta.gender, files] }
                     .branch {
                         tumour: it[2] == "tumour"
                         normal: it[2] == "normal"
                     }
                     .set{seq_split}
+
 
     seq_split.tumour.combine(seq_split.normal, by:0)
                     .set{seq_input_pair}
@@ -357,15 +373,9 @@ workflow MUTECT_PLATYPUS {
         .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
         .collect()
 
-//    seq_input_pair.combine(seqz_chr)
-//                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2, chr ->
-//                [ patient, id1, chr, files1, files2] }
-//                .set{ seq_input_chr }
-
-seq_input_pair = seq_input_pair
-                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2 ->
-                [ patient, id1, files1, files2] }
-//                .set{ seq_input_chr }
+    seq_input_pair = seq_input_pair
+                    .map{ patient, sample1, status1, id1, gender1, files1, sample2, status2, gender2, id2, files2 ->
+                    [ patient, id1, gender1, files1, files2] }
 
     SEQUENZAUTILS_BAM2SEQZ(seq_input_pair,
                             fasta,
@@ -373,23 +383,69 @@ seq_input_pair = seq_input_pair
                             wiggle,
                             seqz_chr)
 
+
     SEQUENZAUTILS_BAM2SEQZ.out.seqz
-                            .groupTuple(by:[0,1])
+                            .groupTuple(by:[0,1,2])
                             .set{merge_seqz_input}
+
 
     SEQUENZAUTILS_MERGESEQZ (merge_seqz_input)
 
-//    SEQUENZAUTILS_HETSNPS(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz)
+    SEQUENZAUTILS_HETSNPS(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz)
+
+// #################################################################################
+//      NEW CODE!
+// #################################################################################
+
+    PREPROCESS_HETSNPS(SEQUENZAUTILS_HETSNPS.out.het_seqz,min_reads)
+
+    MIMMAL_BATTENBERG(PREPROCESS_HETSNPS.out.baf_lrr,chr_arm_bounds)
+
+    platypus_germ_input = seq_split.normal
+                                .map{ patient, sample, status, id, gender, files
+                                -> [patient, sample, status, id, gender, files[0], files[1]]}
+    chromosomes = Channel.from(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,'X')
+
+    PLATYPUS_GERMLINE_GENOTYPING(platypus_germ_input,genotype_ref,fasta,fasta_fai,chromosomes)
+
+    BEAGLE_PHASING(PLATYPUS_GERMLINE_GENOTYPING.out.gen_platypus,genotype_ref,beagle_plink)
+
+    PREPROCESS_HETSNPS.out.baf_lrr
+                            .map{patient,id,gender, baf_rds, lrr_rds -> [patient,id,lrr_rds]}
+                            .set{processed_het_lrr}
+
+    SEQUENZAUTILS_HETSNPS.out.het_seqz
+                            .map{patient, id, gender, het_seqz -> [patient, id, het_seqz]}
+                            .join(processed_het_lrr, by:[0,1])
+                            .set{het_lrr_seqz}
+
+    BEAGLE_PHASING.out.beagle_phase
+                            .map{patient,sample,status,id,gender,chr,file ->
+                            [patient,file]}
+                            .groupTuple()
+                            .combine(het_lrr_seqz,by :[0])
+                            .map{patient, phased_vcfs, id, het_seqz, lrr_rds ->
+                            [patient, id, het_seqz, lrr_rds, phased_vcfs]}
+                            .view()
+                            .set{beagleberg_input}
+
+
+    RUN_BEAGLEBERG(beagleberg_input,chr_arm_bounds)
 
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
     if ( params.sequenza_change_ccf ) {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
+        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, ploidy, ccf)
     } else {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
+        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, ploidy, ccf)
     }
 
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
+
+
+    CUSTOM_DUMPSOFTWAREVERSIONS (
+        ch_versions.unique().collectFile(name: 'collated_versions.yml')
+    )
 
     //
     // MODULE: MultiQC

@@ -9,14 +9,14 @@ process SEQUENZAUTILS_BAM2SEQZ {
 
     input:
     //tuple val(patient), val(id), val(chr), path(tumourbam), path(normalbam)
-    tuple val(patient), val(id), path(tumourbam), path(normalbam)
+    tuple val(patient), val(id), val(gender), path(tumourbam), path(normalbam)
     path fasta
     val  het
     path wigfile
     each chromosome
 
     output:
-    tuple val(patient), val(id), path("*seqz.gz"), emit: seqz
+    tuple val(patient), val(id), val(gender), path("*seqz.gz"), emit: seqz
     path "versions.yml"          , emit: versions
 
     when:
