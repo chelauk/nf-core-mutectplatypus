@@ -42,7 +42,8 @@ process PLATYPUS_GERMLINE_GENOTYPING {
     --minPosterior=0 \
     --getVariantsFromBAMs=0 \
     --nCPU=${task.cpus} \
-    --logFileName ${prefix}.log
+    --regions=chr${chr} \
+    --logFileName ${prefix}_${chr}.log
     grep \"^#\\|PASS\" > vcftemp ${id}.${chr}.genotype.vcf
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
