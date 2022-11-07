@@ -44,7 +44,7 @@ process PLATYPUS_GERMLINE_GENOTYPING {
     --nCPU=${task.cpus} \
     --regions=chr${chr} \
     --logFileName ${prefix}_${chr}.log
-    grep \"^#\\|PASS\" > vcftemp ${id}.${chr}.genotype.vcf
+    grep \"^#\\|PASS\" vcftemp > ${id}.${chr}.genotype.vcf
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
