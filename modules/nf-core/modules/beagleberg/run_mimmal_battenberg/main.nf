@@ -3,9 +3,7 @@ process MIMMAL_BATTENBERG {
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/sequenza-utils:3.0.0--py39h67e14b5_5' :
-        'quay.io/biocontainers/sequenza-utils:3.0.0--py39h67e14b5_5' }"
+    container 'beagleberg.img'
 
     input:
     tuple val(patient), val(id), val(gender), path(baf), path(lrr)

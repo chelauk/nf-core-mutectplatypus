@@ -4,8 +4,8 @@ process BEAGLE_PHASING {
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/sequenza-utils:3.0.0--py39h67e14b5_5' :
-        'quay.io/biocontainers/sequenza-utils:3.0.0--py39h67e14b5_5' }"
+        'https://depot.galaxyproject.org/singularity/beagle:4.1_21Jan17.6cc.jar--0' :
+        'quay.io/biocontainers/beagle:4.1_21Jan17.6cc.jar--0' }"
 
     input:
     tuple val(patient), val(sample), val(status), val(id), val(gender), val(chr), path(vcf)
