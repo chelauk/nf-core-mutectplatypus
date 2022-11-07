@@ -4,7 +4,7 @@ process BEAGLE_PHASING {
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/beagle:4.1_21Jan17.6cc.jar--0' :
+        'https://depot.galaxyproject.org/singularity/beagle:5.1_24Aug19.3e8--0'
         'quay.io/biocontainers/beagle:4.1_21Jan17.6cc.jar--0' }"
 
     input:
