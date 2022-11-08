@@ -13,7 +13,7 @@ process BEAGLE_PHASING {
     path beagle_plink
 
     output:
-    tuple val(patient), val(sample), val(status), val(id), val(gender), val(chr), path("*phased"), emit: beagle_phase
+    tuple val(patient), val(sample), val(status), val(id), val(gender), val(chr), path("*vcf.gz"), emit: beagle_phase
     path "versions.yml"                         , emit: versions
 
     when:
@@ -25,7 +25,7 @@ process BEAGLE_PHASING {
     """
     beagle ref=${genome_ref}/ALL.chr${chr}_GRCh38.genotypes.20170504_amended.vcf.gz \
         gt=${vcf} \
-        out=${id}.phased.${chr}.vcf.gz \
+        out=${id}.phased.${chr} \
         nthreads=${task.cpus} \
         map=${beagle_plink}/plink.chr${chr}.GRCh38_amended.map \
         impute=false \
