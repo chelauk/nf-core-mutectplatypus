@@ -53,7 +53,7 @@ process BEAGLE_PHASING {
         iterations=10000 \\
         seed=1 "
 
-    touch ${id}.chr${chr}.phased
+    touch ${id}.chr${chr}.phased.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -58,7 +58,6 @@ pon_idx               = params.pon_idx               ? Channel.fromPath(params.p
 
 seqz_het             = params.seqz_het               ?: Channel.empty()
 bin                  = params.bin                    ?: Channel.empty()
-gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
 ccf                  = params.ccf                    ?: Channel.empty()
 min_reads            = params.min_reads              ?: Channel.empty()
@@ -163,8 +162,6 @@ workflow MUTECT_PLATYPUS {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
-
-//    mutect_input.view()
 
     //
     // create intervals to split jobs.
@@ -404,7 +401,13 @@ workflow MUTECT_PLATYPUS {
     platypus_germ_input = seq_split.normal
                                 .map{ patient, sample, status, id, gender, files
                                 -> [patient, sample, status, id, gender, files[0], files[1]]}
-    chromosomes = Channel.from(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,'X')
+
+
+    if( platypus_germ_input.map{it[4] == "XX"}) {
+        chromosomes = Channel.from(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,'X')
+    } else {
+        chromosomes = Channel.from(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22)
+    }
 
     PLATYPUS_GERMLINE_GENOTYPING(platypus_germ_input,genotype_ref,fasta,fasta_fai,chromosomes)
 
@@ -426,7 +429,6 @@ workflow MUTECT_PLATYPUS {
                             .combine(het_lrr_seqz,by :[0])
                             .map{patient, phased_vcfs, id, het_seqz, lrr_rds ->
                             [patient, id, het_seqz, lrr_rds, phased_vcfs]}
-                            .view()
                             .set{beagleberg_input}
 
 
