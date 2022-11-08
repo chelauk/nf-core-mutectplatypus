@@ -403,7 +403,7 @@ workflow MUTECT_PLATYPUS {
                                 -> [patient, sample, status, id, gender, files[0], files[1]]}
 
 
-    if( platypus_germ_input.map{it[4] == "XX"}) {
+    if ( platypus_germ_input.view{it[4]} == "XX" ) {
         chromosomes = Channel.from(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,'X')
     } else {
         chromosomes = Channel.from(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22)
