@@ -1,4 +1,18 @@
 #!/usr/bin/env Rscript
+##################
+# load libraries #
+##################
+
+if (!require(ASCAT)) stop("Package 'ASCAT' missing\n.")
+if (!require(Battenberg)) stop("Package 'Battenberg' missing\n.")
+if (!require(CGHcall)) stop("Package 'CGHcall' missing\n.")
+if (!require(mixtools)) stop("Package 'mixtools' missing\n.") # Depends on version 1.0.4 or earlier
+if (!require(ggplot2)) stop("Package 'ggplot2' missing\n.")
+if (!require(cowplot)) stop("Package 'cowplot' missing\n.")
+if (!require(ComplexHeatmap)) stop("Package 'ComplexHeatmap' missing\n.")
+if (!require(circlize)) stop("Package 'circlize' missing\n.")
+if (!require(MiMMAl)) stop("Package 'MiMMAl' missing\n.")
+
 
 # functions
 ## 	Running Battenberg using MiMMAl source file
