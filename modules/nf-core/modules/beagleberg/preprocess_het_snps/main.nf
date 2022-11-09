@@ -3,7 +3,7 @@ process PREPROCESS_HETSNPS {
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
-    container 'beagleberg.img'
+    container 'beagleberg.sif'
 
     input:
     tuple val(patient), val(id), val(gender), path(het_snps)
