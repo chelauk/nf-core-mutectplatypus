@@ -1,4 +1,4 @@
-#!/usr/bin/env Rsript
+#!/usr/bin/env Rscript
 
 # Coded by George Cresswell; 2018-01-18
 
