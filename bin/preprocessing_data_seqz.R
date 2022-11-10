@@ -6,15 +6,16 @@
 if (!require(sequenza)) stop("Package 'sequenza' missing\n.")
 
 # Get sample information from command line
+args = commandArgs(trailingOnly=TRUE)
 patient <- args[0]
 sample <- args[1]
 is.female <- args[2]
 
 # Get min reads parameter
-min.norm.reads <- arg[3]
+min.norm.reads <- args[3]
 
 # Read in the file
-cn.data <- read.table(Sys.glob("*het_seqz"), header = TRUE, stringsAsFactors = FALSE)
+cn.data <- read.table(Sys.glob("*het.seqz"), header = TRUE, stringsAsFactors = FALSE)
 
 # Make chromosome numbers not contain text, i.e. just 1, not chr1
 cn.data$chromosome <- as.character(unlist(lapply(strsplit(as.character(cn.data$chromosome), "chr"), function(x) x[length(x)])))
