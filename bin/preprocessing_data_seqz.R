@@ -7,12 +7,12 @@ if (!require(sequenza)) stop("Package 'sequenza' missing\n.")
 
 # Get sample information from command line
 args = commandArgs(trailingOnly=TRUE)
-patient <- args[0]
-sample <- args[1]
-is.female <- args[2]
+patient <- args[1]
+id <- args[2]
+is.female <- args[3]
 
 # Get min reads parameter
-min.norm.reads <- args[3]
+min.norm.reads <- args[4]
 
 # Read in the file
 cn.data <- read.table(Sys.glob("*het.seqz"), header = TRUE, stringsAsFactors = FALSE)
@@ -55,7 +55,7 @@ cn.data$lrr <- log(cn.data$depth.ratio, base = 2) - median(log(cn.data$depth.rat
 chrs <- 1:22
 
 # Add X if female
-if (is.female) {
+if (is.female == "XX") {
     chrs <- c(chrs, "X")
 }
 
@@ -113,5 +113,5 @@ lrr <- data.frame(
 )
 
 # Write out the BAF and LRR
-saveRDS(baf, file = paste0(patient, "_", id, ".BAF.rds"))
-saveRDS(lrr, file = paste0(patient, "_", id, ".LRR.rds"))
+saveRDS(baf, file = paste0(id, ".BAF.rds"))
+saveRDS(lrr, file = paste0(id, ".LRR.rds"))

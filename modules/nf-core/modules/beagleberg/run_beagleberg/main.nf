@@ -3,7 +3,7 @@ process RUN_BEAGLEBERG {
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
-    container 'beagleberg.img'
+    container 'beagleberg.sif'
 
     input:
     tuple val(patient), val(id), path(het_seqz), path(lrr_rds), path(phased_vcfs)

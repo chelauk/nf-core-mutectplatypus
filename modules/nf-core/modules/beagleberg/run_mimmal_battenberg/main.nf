@@ -3,7 +3,7 @@ process MIMMAL_BATTENBERG {
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
-    container 'beagleberg.img'
+    container 'beagleberg.sif'
 
     input:
     tuple val(patient), val(id), val(gender), path(baf), path(lrr)
@@ -20,7 +20,7 @@ process MIMMAL_BATTENBERG {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
-    runBattenbergUsingMiMMAl.R ${patient} ${id} ${gender} ${baf} ${lrr} ${chr_arm_boundaries}
+    run_battenberg_using_mimmal.R ${patient} ${id} ${gender} ${baf} ${lrr} ${chr_arm_boundaries}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         preprocess_het_snps: 1.0.0
