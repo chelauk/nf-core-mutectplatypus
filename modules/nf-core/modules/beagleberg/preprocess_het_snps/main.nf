@@ -20,7 +20,7 @@ process PREPROCESS_HETSNPS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
-    Rscript preprocessing_data_seqz.R ${patient} ${id} ${gender} ${min_reads}
+    preprocessing_data_seqz.R ${patient} ${id} ${gender} ${min_reads}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         preprocess_het_snps: 1.0.0
