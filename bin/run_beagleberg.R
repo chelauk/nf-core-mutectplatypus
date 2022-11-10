@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 ## 	Running Battenberg using MiMMAl source file
 ##
 ## 	This source file was developed to accompany runBattenbergUsingMiMMAl.R
