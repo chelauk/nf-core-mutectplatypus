@@ -2,8 +2,10 @@ process PREPROCESS_HETSNPS {
     tag "$id"
     label 'process_medium'
 
-    conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
-    container 'beagleberg.sif'
+    conda (params.enable_conda ? "bioconda::sequenza-utils=2.1.0" : null)
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/r-sequenza:2.1.2--r351h6115d3f_2' :
+    'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
     tuple val(patient), val(id), val(gender), path(het_snps)
