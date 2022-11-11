@@ -1,227 +1,415 @@
 #!/usr/bin/env Rscript
 
-## 	Running Battenberg using MiMMAl source file
+##	Running Battenberg using MiMMAl source file
 ##
-## 	This source file was developed to accompany runBattenbergUsingMiMMAl.R
+##	This source file was developed to accompany runBattenbergUsingMiMMAl.R
 ##
 ##  Coded by: George Cresswell; 2018-02-27
 
-##################
-# load libraries #
-##################
-
-# We require these libraries
-if (!require(ASCAT)) stop("Package 'ASCAT' missing\n.")
-if (!require(Battenberg)) stop("Package 'Battenberg' missing\n.")
-if (!require(CGHcall)) stop("Package 'CGHcall' missing\n.")
-if (!require(mixtools)) stop("Package 'mixtools' missing\n.") # Depends on version 1.0.4 or earlier
-if (!require(ggplot2)) stop("Package 'ggplot2' missing\n.")
-if (!require(cowplot)) stop("Package 'cowplot' missing\n.")
-if (!require(ComplexHeatmap)) stop("Package 'ComplexHeatmap' missing\n.")
-if (!require(circlize)) stop("Package 'circlize' missing\n.")
-if (!require(MiMMAl)) stop("Package 'MiMMAl' missing\n.")
-if (!require(vcfR)) stop("Package 'vcfR' is missing\n.")
-
-# This is a function to plot LRRs
+#This is a function to plot LRRs
 plot_gw_LRR <- function(LRR, CHR, POS, NAM) {
-    CHR[which(CHR == "X")] <- 23
 
-    CHR <- as.numeric(CHR)
+  CHR[which(CHR=="X")] = 23
 
-    png(paste0(NAM, ".genome_wide_LRR.png"), height = 720, width = 1784)
-    par(mar = c(5, 6, 4, 2) + 0.1)
-    chr.total <- table(CHR)
-    chrs <- unique(CHR)
+  CHR = as.numeric(CHR)
 
-    plot(LRR,
-        pch = 20,
-        cex = 0.02,
-        ylim = c(-3, 3),
-        col = "red",
-        xaxt = "n",
-        xlab = "Chromosomes",
-        ylab = "LRR",
-        cex.axis = 2,
-        cex.lab = 2,
-        cex.main = 2,
-        main = NAM
-    )
+  png(paste0(NAM,".genome_wide_LRR.png"), height=720, width=1784)
+  par(mar=c(5, 6, 4, 2) + 0.1)
+  chr.total <- table(CHR)
+  chrs      <- unique(CHR)
 
-    prev.chr <- NULL
-    abline(v = 0, lty = "dotted")
+  plot(LRR,
+       pch=20,
+       cex=0.02,
+       ylim=c(-3,3),
+       col="red",
+       xaxt="n",
+       xlab="Chromosomes",
+       ylab="LRR",
+       cex.axis=2,
+       cex.lab=2,
+       cex.main=2,
+       main=NAM)
 
-    for (chr in min(chrs):max(chrs)) {
-        current.chr <- sum(prev.chr, chr.total[chr])
-        text.offset <- chr.total[chr] / 2
-        abline(v = current.chr, lty = "dotted")
-        text(current.chr - text.offset, -1, paste0(chr), cex = 1)
-        prev.chr <- current.chr
-    }
+  prev.chr <- NULL
+  abline(v=0, lty="dotted")
 
-    abline(h = 0, lty = "dotted")
+  for (chr in min(chrs):max(chrs)) {
 
-    dev.off()
+    current.chr <- sum(prev.chr, chr.total[chr])
+    text.offset <- chr.total[chr]/2
+    abline(v=current.chr, lty="dotted")
+    text(current.chr-text.offset, -1, paste0(chr), cex=1)
+    prev.chr <- current.chr
+
+  }
+
+  abline(h=0, lty="dotted")
+
+  dev.off()
+
 }
 
-# This is a function to plot BAFs
+#This is a function to plot BAFs
 plot_gw_BAF <- function(BAF, CHR, POS, NAM) {
-    CHR[which(CHR == "X")] <- 23
 
-    CHR <- as.numeric(CHR)
+  CHR[which(CHR=="X")] = 23
 
-    png(paste0(NAM, ".genome_wide_BAF.png"), height = 720, width = 1784)
-    par(mar = c(5, 6, 4, 2) + 0.1)
-    chr.total <- table(CHR)
-    chrs <- unique(CHR)
+  CHR = as.numeric(CHR)
 
-    plot(BAF,
-        pch = 20,
-        cex = 0.02,
-        ylim = c(0, 1),
-        col = "red",
-        xaxt = "n",
-        yaxt = "n",
-        xlab = "Chromosomes",
-        ylab = "B-allele Frequency",
-        cex.axis = 2,
-        cex.lab = 2,
-        cex.main = 2,
-        main = NAM
-    )
+  png(paste0(NAM,".genome_wide_BAF.png"), height=720, width=1784)
+  par(mar=c(5, 6, 4, 2) + 0.1)
+  chr.total <- table(CHR)
+  chrs      <- unique(CHR)
 
-    axis(side = 2, at = seq(0, 1, 0.5), cex.axis = 2)
+  plot(BAF,
+       pch=20,
+       cex=0.02,
+       ylim=c(0,1),
+       col="red",
+       xaxt="n",
+       yaxt="n",
+       xlab="Chromosomes",
+       ylab="B-allele Frequency",
+       cex.axis=2,
+       cex.lab=2,
+       cex.main=2,
+       main=NAM)
 
-    prev.chr <- NULL
-    abline(v = 0, lty = "dotted")
+  axis(side = 2, at = seq(0, 1, 0.5), cex.axis = 2)
 
-    for (chr in min(chrs):max(chrs)) {
-        current.chr <- sum(prev.chr, chr.total[chr])
-        text.offset <- chr.total[chr] / 2
-        abline(v = current.chr, lty = "dotted")
-        text(current.chr - text.offset, 0, paste0(chr), cex = 1)
-        prev.chr <- current.chr
-    }
+  prev.chr <- NULL
+  abline(v=0, lty="dotted")
 
-    abline(h = 0, lty = "dotted")
-    abline(h = 0.5, lty = "dotted")
-    abline(h = 1, lty = "dotted")
+  for (chr in min(chrs):max(chrs)) {
 
-    dev.off()
+    current.chr <- sum(prev.chr, chr.total[chr])
+    text.offset <- chr.total[chr]/2
+    abline(v=current.chr, lty="dotted")
+    text(current.chr-text.offset, 0, paste0(chr), cex=1)
+    prev.chr <- current.chr
+
+  }
+
+  abline(h=0, lty="dotted")
+  abline(h=0.5, lty="dotted")
+  abline(h=1, lty="dotted")
+
+  dev.off()
+
 }
 
 ##  A small wrapper for the selectFastPcf function that includes min segment length,
 ##    deals with duds (length==0) and only gives the mean segment value per snp
 ##
 ##  Coded by George Cresswell; 2017-01-05
-getBafSegMean <- function(Baf, Kmin, Gamma, minLen = 50) {
-    # Now we will segment the Baf
-    if (length(Baf) < minLen) {
-        # If the chromosome has less than minLen snps, just take the mean
-        BafSegm <- rep(mean(Baf), length(Baf))
+getBafSegMean = function(Baf, Kmin, Gamma, minLen=50) {
 
-        # If it has no snps make it NULL
-        if (length(Baf) == 0) {
-            BafSegm <- NULL
-        }
-    } else {
-        # If it has a normal amount of snps, do your magic!
-        BafSegm <- Battenberg:::selectFastPcf(Baf, Kmin, Gamma, T)$yhat
-    }
+  #Now we will segment the Baf
+  if(length(Baf)<minLen){
 
-    # Return the mean Bafs
-    return(BafSegm)
+    #If the chromosome has less than minLen snps, just take the mean
+    BafSegm = rep(mean(Baf),length(Baf))
+
+    #If it has no snps make it NULL
+    if(length(Baf)==0) {BafSegm = NULL}
+
+  } else {
+
+    #If it has a normal amount of snps, do your magic!
+    BafSegm = Battenberg:::selectFastPcf(Baf,Kmin,Gamma,T)$yhat
+
+  }
+
+  #Return the mean Bafs
+  return(BafSegm)
+
 }
 
 ##  A function to save for each sample the settings that were used to make it
 ##
 ##
 ##  Coded by George Cresswell; 2017-02-15
-makeSink <- function(perform = TRUE) {
-    if (perform == TRUE) {
-        # Save our settings
-        sink(file = paste0(SAMPLENAME, "_parameters.txt"))
-        cat(paste0("Time/date: ", Sys.time(), "\n"))
-        cat(paste0("Path to centromeres: ", CENTROMERES_PATH, "\n"))
-        cat(paste0("ASCAT gamma: ", ASCAT_GAMMA, "\n"))
-        cat(paste0("Segmentation gamma: ", SEGMENTATION_GAMMA, "\n"))
-        cat(paste0("Segmentation kmin: ", KMIN, "\n"))
-        cat(paste0("Clonal ASCAT distance metric: ", CLONALITY_DIST_METRIC, "\n"))
-        cat(paste0("Normal ASCAT distance metric: ", ASCAT_DIST_METRIC, "\n"))
-        cat(paste0("Minimum ploidy: ", MIN_PLOIDY, "\n"))
-        cat(paste0("Maximum ploidy: ", MAX_PLOIDY, "\n"))
-        cat(paste0("Minimum purity: ", MIN_RHO, "\n"))
-        cat(paste0("Minimum goodness of fit: ", MIN_GOODNESS_OF_FIT, "\n"))
-        cat(paste0("Distance metric imbalance threshold: ", BALANCED_THRESHOLD, "\n"))
-        cat(paste0("Did we preset the rho and psi? ", PRESET, "\n"))
-        cat(paste0("Preset purity: ", PRESET_RHO, "\n"))
-        cat(paste0("Preset ploidy: ", PRESET_PSI, "\n"))
-        cat(paste0("Significance level for clonality test: ", SIGLEVEL, "\n"))
-        cat(paste0("Maximum distance used in clonality test: ", MAXDIST, "\n"))
-        cat(paste0("CGHcall LRR normalisation performed? ", CGHCALL.NORMALISATION, "\n"))
-        cat(paste0("Set seed: ", seed, "\n"))
-        cat(paste0("Have we used the centromeres to aid segmentation? ", segmentArms, "\n"))
-        # cat(paste0("What is the max distance in segmentation fit before splitting is not accepted? ",minSplitSegDiff,"\n"))
-        cat(paste0("Standard deviation distance either side of EM sd: ", sd.width, "\n"))
-        sink()
+makeSink = function(perform = TRUE) {
+
+  if(perform == TRUE) {
+
+    #Save our settings
+    sink(file = paste0(SAMPLENAME,"_parameters.txt"))
+    cat(paste0("Time/date: ",Sys.time(),"\n"))
+    cat(paste0("Path to centromeres: ",CENTROMERES_PATH,"\n"))
+    cat(paste0("ASCAT gamma: ",ASCAT_GAMMA,"\n"))
+    cat(paste0("Segmentation gamma: ",SEGMENTATION_GAMMA,"\n"))
+    cat(paste0("Segmentation kmin: ",KMIN,"\n"))
+    cat(paste0("Clonal ASCAT distance metric: ",CLONALITY_DIST_METRIC,"\n"))
+    cat(paste0("Normal ASCAT distance metric: ",ASCAT_DIST_METRIC,"\n"))
+    cat(paste0("Minimum ploidy: ",MIN_PLOIDY,"\n"))
+    cat(paste0("Maximum ploidy: ",MAX_PLOIDY,"\n"))
+    cat(paste0("Minimum purity: ",MIN_RHO,"\n"))
+    cat(paste0("Minimum goodness of fit: ",MIN_GOODNESS_OF_FIT,"\n"))
+    cat(paste0("Distance metric imbalance threshold: ",BALANCED_THRESHOLD,"\n"))
+    cat(paste0("Did we preset the rho and psi? ",PRESET,"\n"))
+    cat(paste0("Preset purity: ",PRESET_RHO,"\n"))
+    cat(paste0("Preset ploidy: ",PRESET_PSI,"\n"))
+    cat(paste0("Significance level for clonality test: ",SIGLEVEL,"\n"))
+    cat(paste0("Maximum distance used in clonality test: ",MAXDIST,"\n"))
+    cat(paste0("CGHcall LRR normalisation performed? ",CGHCALL.NORMALISATION,"\n"))
+    cat(paste0("Set seed: ",seed,"\n"))
+    cat(paste0("Have we used the centromeres to aid segmentation? ",segmentArms,"\n"))
+    # cat(paste0("What is the max distance in segmentation fit before splitting is not accepted? ",minSplitSegDiff,"\n"))
+    cat(paste0("Standard deviation distance either side of EM sd: ",sd.width,"\n"))
+    sink()
+
+  }
+
+}
+
+#######################################################################################################
+# Due to shitty coding in ASCAT that they refuse to replace we have to overwrite the sunrise plotting #
+#######################################################################################################
+ascat.plotSunriseReplacement = function (d, psi_opt1, rho_opt1, minim = T)
+{
+    par(mar = c(5, 5, 0.5, 0.5), cex = 0.75, cex.lab = 2, cex.axis = 2)
+    if (minim) {
+        hmcol = rev(colorRampPalette(RColorBrewer::brewer.pal(10,
+            "RdBu"))(256))
+    }
+    else {
+        hmcol = colorRampPalette(RColorBrewer::brewer.pal(10,
+            "RdBu"))(256)
+    }
+    image(log(d), col = hmcol, axes = F, xlab = "Ploidy", ylab = "Aberrant cell fraction")
+    ploidy_min <- as.numeric(rownames(d)[1])
+    ploidy_max <- as.numeric(rownames(d)[nrow(d)])
+    purity_min <- as.numeric(colnames(d)[1])
+    purity_max <- as.numeric(colnames(d)[ncol(d)])
+    axis(1, at = seq(0, 1, by = 1/(ploidy_max-1)), labels = seq(ploidy_min, ploidy_max, by = 1))
+    axis(2, at = c(0,1), labels = c(purity_min, purity_max))
+    if (psi_opt1 > 0 && rho_opt1 > 0) {
+        points((psi_opt1 - ploidy_min)/(ploidy_max - 1), (rho_opt1 -
+            purity_min)/(1/purity_max), col = "green", pch = "X",
+            cex = 2)
     }
 }
-# !Rscript
+
+callSubclonesReplacement = function (sample.name, baf.segmented.file, logr.file, rho.psi.file,
+    output.file, output.figures.prefix, output.gw.figures.prefix,
+    chr_names, masking_output_file, max_allowed_state = 250,
+    sv_breakpoints_file = NULL, gamma = 1, segmentation.gamma = NA,
+    siglevel = 0.05, maxdist = 0.01, noperms = 1000, seed = as.integer(Sys.time()),
+    calc_seg_baf_option = 1)
+{
+    set.seed(seed)
+    res = Battenberg:::load.rho.psi.file(rho.psi.file)
+    rho = res$rho
+    psit = res$psit
+    psi = rho * psit + 2 * (1 - rho)
+    goodness = res$goodness
+    BAFvals = read.table(baf.segmented.file, sep = "\t", header = T,
+        stringsAsFactors = F)
+    if (colnames(BAFvals)[1] == "X") {
+        BAFvals = BAFvals[, -1]
+    }
+    BAF = BAFvals[, 3]
+    BAFphased = BAFvals[, 4]
+    BAFseg = BAFvals[, 5]
+    SNPpos = BAFvals[, c(1, 2)]
+    LogRvals = as.data.frame(read_table_generic(logr.file))
+    if (colnames(LogRvals)[1] == "X") {
+        LogRvals = LogRvals[, -1]
+    }
+    ctrans = c(1:length(chr_names))
+    names(ctrans) = chr_names
+    ctrans.logR = c(1:length(chr_names))
+    names(ctrans.logR) = chr_names
+    BAFpos = as.vector(ctrans[as.vector(BAFvals[, 1])] * 1e+09 +
+        BAFvals[, 2])
+    res = Battenberg:::determine_copynumber(BAFvals, LogRvals, rho, psi, gamma,
+        ctrans, ctrans.logR, maxdist, siglevel, noperms)
+    subcloneres = res$subcloneres
+    write.table(subcloneres, gsub(".txt", "_1.txt", output.file),
+        quote = F, col.names = T, row.names = F, sep = "\t")
+    # res = Battenberg:::merge_segments(subcloneres, BAFvals, LogRvals, rho,
+    #     psi, gamma, calc_seg_baf_option)
+    # BAFvals = res$bafsegmented
+    # res = Battenberg:::determine_copynumber(BAFvals, LogRvals, rho, psi, gamma,
+    #     ctrans, ctrans.logR, maxdist, siglevel, noperms)
+    # subcloneres = res$subcloneres
+    BAFpvals = res$BAFpvals
+    res = Battenberg:::mask_high_cn_segments(subcloneres, BAFvals, max_allowed_state)
+    subcloneres = res$subclones
+    BAFvals = res$bafsegmented
+    write.table(BAFvals, file = baf.segmented.file, sep = "\t",
+        row.names = F, col.names = T, quote = F)
+    masking_details = data.frame(samplename = sample.name, masked_count = 0,
+        masked_size = 0, max_allowed_state = max_allowed_state)
+    write.table(masking_details, file = masking_output_file,
+        quote = F, col.names = T, row.names = F, sep = "\t")
+    write.table(subcloneres, output.file, quote = F, col.names = T,
+        row.names = F, sep = "\t")
+    segment_breakpoints = Battenberg:::collapse_bafsegmented_to_segments(BAFvals)
+    if (!is.null(sv_breakpoints_file) & !ifelse(is.null(sv_breakpoints_file),
+        TRUE, sv_breakpoints_file == "NA") & !ifelse(is.null(sv_breakpoints_file),
+        TRUE, is.na(sv_breakpoints_file))) {
+        svs = read.table(sv_breakpoints_file, header = T, stringsAsFactors = F)
+    }
+    for (chr in chr_names) {
+        pos = SNPpos[SNPpos[, 1] == chr, 2]
+        if (length(pos) == 0) {
+            next
+        }
+        if (!is.null(sv_breakpoints_file) & !ifelse(is.null(sv_breakpoints_file),
+            TRUE, sv_breakpoints_file == "NA") & !ifelse(is.null(sv_breakpoints_file),
+            TRUE, is.na(sv_breakpoints_file))) {
+            svs_pos = svs[svs$chromosome == chr, ]$position/1e+06
+        }
+        else {
+            svs_pos = NULL
+        }
+        breakpoints_pos = segment_breakpoints[segment_breakpoints$chromosome ==
+            chr, ]
+        breakpoints_pos = sort(unique(c(breakpoints_pos$start,
+            breakpoints_pos$end)/1e+06))
+        png(filename = paste(output.figures.prefix, chr, ".png",
+            sep = ""), width = 2000, height = 2000, res = 200)
+        Battenberg:::create.subclonal.cn.plot(chrom = chr, chrom.position = pos/1e+06,
+            LogRposke = LogRvals[LogRvals[, 1] == chr, 2], LogRchr = LogRvals[LogRvals[,
+                1] == chr, 3], BAFchr = BAF[SNPpos[, 1] == chr],
+            BAFsegchr = BAFseg[SNPpos[, 1] == chr], BAFpvalschr = BAFpvals[SNPpos[,
+                1] == chr], subcloneres = subcloneres, breakpoints_pos = breakpoints_pos,
+            svs_pos = svs_pos, siglevel = siglevel, x.min = min(pos)/1e+06,
+            x.max = max(pos)/1e+06, title = paste(sample.name,
+                ", chromosome ", chr, sep = ""), xlab = "Position (Mb)",
+            ylab.logr = "LogR", ylab.baf = "BAF (phased)")
+        dev.off()
+    }
+    subclones = as.data.frame(subcloneres)
+    subclones[, 2:ncol(subclones)] = sapply(2:ncol(subclones),
+        function(x) {
+            as.numeric(as.character(subclones[, x]))
+        })
+    seg_length = floor((subclones$endpos - subclones$startpos)/1000)
+    is_subclonal_maj = abs(subclones$nMaj1_A - subclones$nMaj2_A) >
+        0
+    is_subclonal_min = abs(subclones$nMin1_A - subclones$nMin2_A) >
+        0
+    is_subclonal_maj[is.na(is_subclonal_maj)] = F
+    is_subclonal_min[is.na(is_subclonal_min)] = F
+    segment_states_min = subclones$nMin1_A * ifelse(is_subclonal_min,
+        subclones$frac1_A, 1) + ifelse(is_subclonal_min, subclones$nMin2_A,
+        0) * ifelse(is_subclonal_min, subclones$frac2_A, 0)
+    segment_states_maj = subclones$nMaj1_A * ifelse(is_subclonal_maj,
+        subclones$frac1_A, 1) + ifelse(is_subclonal_maj, subclones$nMaj2_A,
+        0) * ifelse(is_subclonal_maj, subclones$frac2_A, 0)
+    ploidy = sum((segment_states_min + segment_states_maj) *
+        seg_length, na.rm = T)/sum(seg_length, na.rm = T)
+    Battenberg:::plot.gw.subclonal.cn(subclones = subclones, BAFvals = BAFvals,
+        rho = rho, ploidy = ploidy, goodness = goodness, output.gw.figures.prefix = output.gw.figures.prefix,
+        chr.names = chr_names)
+    cellularity_ploidy_output = data.frame(cellularity = c(rho),
+        ploidy = c(ploidy), psi = c(psit))
+    cellularity_file = gsub("_subclones.txt", "_cellularity_ploidy.txt",
+        output.file)
+    write.table(cellularity_ploidy_output, cellularity_file,
+        quote = F, sep = "\t", row.names = F)
+}
+
+
+# Define some functions
+getPQ = function(df, arm_pos) {
+
+  chrs = unique(df[,1])
+
+  psnqs = unlist(lapply(chrs, function(c) {
+
+    cdf = df[df[,1]==c,]
+
+    b = arm_pos[which(arm_pos[,1] == c),2]
+
+    a = cdf[,2] < b
+
+    a = ifelse(a, "p", "q")
+
+    return(a)
+
+  }))
+
+  return(psnqs)
+
+}
 
 # Running Battenberg using Beagle and QC'ing with MiMMAl
 #
 # Coded by George Cresswell; 2019-09-24
 
-# File and directory informations
-LRR_PATH <- args[0]
+#We require these libraries
+if (!require(ASCAT)) stop("Package 'ASCAT' missing\n.")
+if (!require(Battenberg)) stop("Package 'Battenberg' missing\n.")
+if (!require(CGHcall)) stop("Package 'CGHcall' missing\n.")
+if (!require(mixtools)) stop("Package 'mixtools' missing\n.") #Depends on version 1.0.4 or earlier
+if (!require(ggplot2)) stop("Package 'ggplot2' missing\n.")
+if (!require(cowplot)) stop("Package 'cowplot' missing\n.")
+if (!require(ComplexHeatmap)) stop("Package 'ComplexHeatmap' missing\n.")
+if (!require(circlize)) stop("Package 'circlize' missing\n.")
+if (!require(MiMMAl)) stop("Package 'MiMMAl' missing\n.")
+if (!require(vcfR)) stop("Package 'vcfR' is missing\n.")
+if (!require(copynumber)) stop("Package 'copynumber' is missing\n.")
+
+#File and directory informations
+OUTPUT_DIR = "beagleberg"
 CENTROMERES_PATH <- args[1]
 CASENAME <- args[2]
 SAMPLENAME <- args[3]
 HET_SEQZ <- args[4]
 PHASED_VCF_PREFIX <- args[5]
 
-# Now to set a very large number of parameters!
-ASCAT_GAMMA <- 1 # Gamma is 1 is sequencing data
-SEGMENTATION_GAMMA <- 10 # Segmentation parameter of phased data
-KMIN <- 3 # Segments must be this number of SNPs minimum in phased data
-PHASING_GAMMA <- 3 # For detecting haplotype blocks this gamma is less than phased gamma
-PHASING_KMIN <- 1 # Minimum number of SNPs in a haplotype block
-CLONALITY_DIST_METRIC <- 0 # The distance metric that fit.copy.number uses
-ASCAT_DIST_METRIC <- 2 # The distance metric that ASCAT uses
-MIN_PLOIDY <- 1.6 # We don't want very low ploidy solutions
-MAX_PLOIDY <- 5.5 # We don't want hexaploid solutions
-MIN_RHO <- 0.05 # We don't want very impure solutions
-MIN_GOODNESS_OF_FIT <- 0.63 # We want good fits
-BALANCED_THRESHOLD <- 0.51 # Used by ASCAT for in the distance metric
-PRESET <- FALSE # We don't preset
-PRESET_RHO <- NA # We don't preset
-PRESET_PSI <- NA # We don't preset
-SIGLEVEL <- 0.05 # The significance level (p-value) used for clonality tests
-MAXDIST <- 0.01 # Max distance used in clonality tests
 
-# George's new Battenberg parameters
-CGHCALL.NORMALISATION <- TRUE # Use CGHcall's Log R Ratio normalisation technique
-seed <- 1 # Seeding for reproducibility
-segmentArms <- TRUE # Should we segment the individual chromosome arms to aid segmentation?
-sd.width <- 1 / 3 # Width either side of standard deviation determined by EM to explore in grid search
+#Now to set a very large number of parameters!
+ASCAT_GAMMA           = 1                        #Gamma is 1 is sequencing data
+SEGMENTATION_GAMMA    = 10                       #Segmentation parameter of phased data
+KMIN                  = 3                        #Segments must be this number of SNPs minimum in phased data
+PHASING_GAMMA		      = 3                 			 #For detecting haplotype blocks this gamma is less than phased gamma
+PHASING_KMIN          = 1	                       #Minimum number of SNPs in a haplotype block
+CLONALITY_DIST_METRIC = 0                        #The distance metric that fit.copy.number uses
+ASCAT_DIST_METRIC     = 2                        #The distance metric that ASCAT uses
+MIN_PLOIDY            = 1.6                      #We don't want very low ploidy solutions
+MAX_PLOIDY            = 5.5                      #We don't want hexaploid solutions
+MIN_RHO               = 0.95                     #This is organoid data so it is pure!
+MIN_GOODNESS_OF_FIT   = 0.63                     #We want good fits
+BALANCED_THRESHOLD    = 0.51                     #Used by ASCAT for in the distance metric
+PRESET                = FALSE                    #We don't preset
+PRESET_RHO            = NA                       #We don't preset
+PRESET_PSI            = NA                       #We don't preset
+SIGLEVEL              = 0.05                     #The significance level (p-value) used for clonality tests
+MAXDIST               = 0.01                     #Max distance used in clonality tests
 
-# Source the functions that need to be read in
+#George's new Battenberg parameters
+CGHCALL.NORMALISATION = TRUE                     #Use CGHcall's Log R Ratio normalisation technique
+seed                  = 1                        #Seeding for reproducibility
+segmentArms           = TRUE                     #Should we segment the individual chromosome arms to aid segmentation?
+sd.width              = 1/3                      #Width either side of standard deviation determined by EM to explore in grid search
+
+#Source the functions that need to be read in
 source(SRC_FILE_PATH)
 
-# Read in the arm boundary data
-armBoundary <- read.table(CENTROMERES_PATH,
-    sep = "\t",
-    header = TRUE,
-    stringsAsFactors = FALSE
-)
+# Replace this function because it's broken
+assignInNamespace("ascat.plotSunrise",ascat.plotSunriseReplacement,ns="ASCAT")
+assignInNamespace("callSubclones",callSubclonesReplacement,ns="Battenberg")
+
+#Read in the arm boundary data
+armBoundary = read.table(CENTROMERES_PATH,
+                         sep="\t",
+                         header=TRUE,
+                         stringsAsFactors = FALSE)
 
 # Edit the chromosome names so they have chr
-armBoundary$Chr <- paste0("chr", gsub("chr", "", armBoundary$Chr))
+armBoundary$Chr = paste0("chr", gsub("chr", "", armBoundary$Chr))
 
-# Right how long will this take?
-start.time <- Sys.time()
+#Right how long will this take?
+start.time = Sys.time()
 
 # Where are we?
-ORIGINAL_DIR <- getwd()
+ORIGINAL_DIR = getwd()
 
 
 
@@ -232,240 +420,241 @@ ORIGINAL_DIR <- getwd()
 
 
 # Read in the data
-het_snps_sample <- read.table(HET_SEQZ,
-    header = T, stringsAsFactors = F
-)
+het_snps_sample = read.table(HET_SEQZ,
+                             header = F, stringsAsFactors = F)
 
-# Read in the case data from rds files
-case.LRR <- readRDS(LRR_PATH)
-colnames(case.LRR)[4] <- SAMPLENAME
+# Add header manually
+colnames(het_snps_sample) = c("chromosome", "position", "base.ref", "depth.normal", "depth.tumor",
+  "depth.ratio", "Af", "Bf", "zygosity.normal", "GC.percent",
+  "good.reads", "AB.normal", "AB.tumor", "tumor.strand")
+
+#Read in the case data from rds files
+case.LRR = readRDS(LRR_PATH)
+colnames(case.LRR)[4] = SAMPLENAME
+
+#Chromosome names
+chroms = unique(case.LRR$Chr)
 
 # Make a MiMMAl output file
-mimmal_df <- NULL
+mimmal_df = NULL
 # Collect all the phased chromosome data
-phased_genome <- NULL
+phased_genome = NULL
 
-for (chr in paste0("chr", c(1:22, "X"))) {
-    # Get only chromosome
-    het_snps <- het_snps_sample[het_snps_sample$chromosome == chr, ]
+for(chr in paste0("chr",chroms)) {
 
-    # Read in the phased data
-    phased_snps <- read.vcfR(paste0(PHASED_VCF_PREFIX, ".phased.", chr, ".vcf.gz"))
+  # Get only chromosome
+  het_snps = het_snps_sample[het_snps_sample$chromosome==chr,]
 
-    # Immediately remove anything with an indel
-    phased_snps <- extract.indels(phased_snps, return.indels = F)
+  # Read in the phased data
+  phased_snps = read.vcfR(paste0(PHASED_VCF_PREFIX,".phased.",chr,".vcf.gz"))
 
-    # Subset the ones in the het snps file
-    phased_snps <- phased_snps[getPOS(phased_snps) %in% het_snps$position]
+  # Immediately remove anything with an indel
+  phased_snps = extract.indels(phased_snps, return.indels = F)
 
-    # Now remove het snps that aren't common in the population
-    het_snps <- het_snps[het_snps$position %in% getPOS(phased_snps), ]
+  # Subset the ones in the het snps file
+  phased_snps = phased_snps[getPOS(phased_snps) %in% het_snps$position]
 
-    # Now only use ones with LRR data
-    het_snps <- het_snps[paste0(het_snps$chromosome, "_", het_snps$position) %in% case.LRR$Name, ]
-    phased_snps <- phased_snps[paste0(chr, "_", getPOS(phased_snps)) %in% case.LRR$Name]
+  # Now remove het snps that aren't common in the population
+  het_snps = het_snps[het_snps$position %in% getPOS(phased_snps),]
 
-    # Make a dataframe of the ref and alt(s) and the phased genotype
-    phased_data <- data.frame(
-        ref = getREF(phased_snps),
-        alt = getALT(phased_snps),
-        gt = extract.gt(phased_snps, element = "GT"),
-        stringsAsFactors = F
-    )
+  # Now only use ones with LRR data
+  het_snps    = het_snps[paste0(het_snps$chromosome,"_",het_snps$position) %in% case.LRR$Name,]
+  phased_snps = phased_snps[paste0(chr,"_",getPOS(phased_snps)) %in% case.LRR$Name]
 
-    # Rename columns
-    colnames(phased_data) <- c("ref", "alt", "gt")
+  # Make a dataframe of the ref and alt(s) and the phased genotype
+  phased_data = data.frame(ref = getREF(phased_snps),
+                           alt = getALT(phased_snps),
+                           gt  = extract.gt(phased_snps, element = "GT"),
+                           stringsAsFactors = F)
 
-    # Split out genotypes
-    split_gt <- strsplit(phased_data$gt, split = "|")
+  # Rename columns
+  colnames(phased_data) = c("ref", "alt", "gt")
 
-    # Make chromosome A and B
-    phased_data$chromosome_a <- as.numeric(unlist(lapply(split_gt, function(i) i[1])))
-    phased_data$chromosome_b <- as.numeric(unlist(lapply(split_gt, function(i) i[3])))
+  # Split out genotypes
+  split_gt = strsplit(phased_data$gt, split = "|")
 
-    # Convert numbers to bases
-    chromosome_a_bases <- lapply(1:nrow(phased_data), function(i) {
-        # What is the number?
-        n <- phased_data$chromosome_a[i]
+  # Make chromosome A and B
+  phased_data$chromosome_a = as.numeric(unlist(lapply(split_gt, function(i) i[1])))
+  phased_data$chromosome_b = as.numeric(unlist(lapply(split_gt, function(i) i[3])))
 
-        # If it is zero it is the reference
-        if (n == 0) {
-            base <- phased_data$ref[i]
-        } else {
-            # OK, so it is the alternative and it could be multiple things, so we split them out
-            alt_bases <- unlist(strsplit(phased_data$alt[i], split = ","))
+  # Convert numbers to bases
+  chromosome_a_bases = lapply(1:nrow(phased_data), function(i) {
 
-            # But which alt base is it?
-            base <- alt_bases[n]
-        }
+    # What is the number?
+    n = phased_data$chromosome_a[i]
 
-        # Return the base
-        return(base)
-    })
+    # If it is zero it is the reference
+    if(n==0) {
 
-    # Convert numbers to bases
-    chromosome_b_bases <- lapply(1:nrow(phased_data), function(i) {
-        # What is the number?
-        n <- phased_data$chromosome_b[i]
+      base = phased_data$ref[i]
 
-        # If it is zero it is the reference
-        if (n == 0) {
-            base <- phased_data$ref[i]
-        } else {
-            # OK, so it is the alternative and it could be multiple things, so we split them out
-            alt_bases <- unlist(strsplit(phased_data$alt[i], split = ","))
-
-            # But which alt base is it?
-            base <- alt_bases[n]
-        }
-
-        # Return the base
-        return(base)
-    })
-
-    # Add to data frame
-    phased_data$chromosome_a_base <- unlist(chromosome_a_bases)
-    phased_data$chromosome_b_base <- unlist(chromosome_b_bases)
-
-    # Get the BAF for the chromosome
-    chromosome_a_baf <- lapply(1:nrow(phased_data), function(i) {
-        # What is the base on the chromosome?
-        base <- phased_data$chromosome_a_base[i]
-
-        # Split out the two bases in the het.seqz file
-        split_seqz_bases <- unlist(strsplit(het_snps[i, "AB.normal"], split = ""))
-
-        # Is it the a allele or b allele by sequenza
-        a_b_seqz <- which(split_seqz_bases %in% base)
-
-        # Is it empty and therefore an NA?
-        if (length(a_b_seqz) != 1) {
-            af <- NA
-        } else {
-            af <- het_snps[i, a_b_seqz + 6]
-        }
-
-        return(af)
-    })
-
-    # Get the BAF for the chromosome
-    chromosome_b_baf <- lapply(1:nrow(phased_data), function(i) {
-        # What is the base on the chromosome?
-        base <- phased_data$chromosome_b_base[i]
-
-        # Split out the two bases in the het.seqz file
-        split_seqz_bases <- unlist(strsplit(het_snps[i, "AB.normal"], split = ""))
-
-        # Is it the a allele or b allele by sequenza
-        a_b_seqz <- which(split_seqz_bases %in% base)
-
-        # Is it empty and therefore an NA?
-        if (length(a_b_seqz) != 1) {
-            af <- NA
-        } else {
-            af <- het_snps[i, a_b_seqz + 6]
-        }
-
-        return(af)
-    })
-
-    # Make a dataframe
-    phased_chromosome <- data.frame(
-        chr = chr,
-        pos = het_snps$position,
-        chromosome_a = unlist(chromosome_a_baf),
-        chromosome_b = unlist(chromosome_b_baf)
-    )
-
-    # Remove the NA
-    phased_chromosome <- na.omit(phased_chromosome)
-
-    # For segmentation we need to calculate this sdev value that Battenberg uses to adjust gamma
-    sdev <- Battenberg:::getMad(ifelse(phased_chromosome$chromosome_a < 0.5, phased_chromosome$chromosome_a, 1 - phased_chromosome$chromosome_a), k = 25)
-
-    # Have bottom cap at 10,000X
-    if (sdev < 0.002) {
-        sdev <- 0.002
-    }
-
-    print(paste0("sdev: ", sdev, " chr: ", chr))
-
-    # Seg'em
-    phased_chromosome$hap_segs <- Battenberg:::selectFastPcf(phased_chromosome$chromosome_a, kmin = PHASING_KMIN, gamma = PHASING_GAMMA * sdev, yest = T)$yhat
-
-    # Flip them
-    phased_chromosome$phased <- ifelse(phased_chromosome$hap_segs < 0.5, 1 - phased_chromosome$chromosome_a, phased_chromosome$chromosome_a)
-
-    # Take the phased BAF for the p arm
-    majBAFp <- phased_chromosome$phased[which(phased_chromosome$pos <= armBoundary[armBoundary$Chr == chr, "Boundary"])]
-
-    # Take the phased BAF for the p arm
-    majBAFq <- phased_chromosome$phased[which(phased_chromosome$pos > armBoundary[armBoundary$Chr == chr, "Boundary"])]
-
-    # If we are segmenting the arms separately, apply it here, but don't bother if there isn't enough snps in one arm (>=KMIN)
-    if (segmentArms & length(majBAFp) >= KMIN & length(majBAFq) >= KMIN) {
-        # Now we will segment this arm phased BAF
-        majBAFpsegm <- getBafSegMean(majBAFp, KMIN, SEGMENTATION_GAMMA * sdev)
-
-        # Now we will segment this arm phased BAF
-        majBAFqsegm <- getBafSegMean(majBAFq, KMIN, SEGMENTATION_GAMMA * sdev)
-
-        # Combine them to get the whole chromosome and call it the broken version
-        majBAFsegmBroken <- c(majBAFpsegm, majBAFqsegm)
-
-        # The result is split via the centromere
-        phase_segs <- majBAFsegmBroken
     } else {
-        # Now we will segment this phased BAF
-        phase_segs <- getBafSegMean(phased_chromosome$phased, KMIN, SEGMENTATION_GAMMA * sdev)
+
+      # OK, so it is the alternative and it could be multiple things, so we split them out
+      alt_bases = unlist(strsplit(phased_data$alt[i], split = ","))
+
+      # But which alt base is it?
+      base = alt_bases[n]
+
     }
 
-    # Compress segments
-    compressed_segs <- rle(phase_segs)
+    # Return the base
+    return(base)
 
-    # Segment matrix
-    seg_mat <- cbind(
-        c(1, (cumsum(compressed_segs$lengths) + 1)[-length(compressed_segs$lengths)]),
-        cumsum(compressed_segs$lengths)
-    )
 
-    # Segment medians
-    seg_meds <- unlist(lapply(1:nrow(seg_mat), function(r) {
-        median(phased_chromosome$phased[seg_mat[r, 1]:seg_mat[r, 2]])
-    }))
+  })
 
-    # Make into a continuous set of segment values
-    segment <- rep(seg_meds, compressed_segs$lengths)
+  # Convert numbers to bases
+  chromosome_b_bases = lapply(1:nrow(phased_data), function(i) {
 
-    # Add segmentation of phasing
-    phased_chromosome$phase_segs <- segment
+    # What is the number?
+    n = phased_data$chromosome_b[i]
 
-    # Make a dataframe for MiMMAl input
-    mimmal_df_chr <- data.frame(chr = chr, pos = phased_chromosome$pos, BAF = phased_chromosome$chromosome_a, BAFseg = phased_chromosome$phase_segs)
+    # If it is zero it is the reference
+    if(n==0) {
 
-    # Collate
-    mimmal_df <- rbind(mimmal_df, mimmal_df_chr)
+      base = phased_data$ref[i]
 
-    # Collect the phased data per chromosome too
-    phased_genome <- rbind(phased_genome, phased_chromosome)
+    } else {
+
+      # OK, so it is the alternative and it could be multiple things, so we split them out
+      alt_bases = unlist(strsplit(phased_data$alt[i], split = ","))
+
+      # But which alt base is it?
+      base = alt_bases[n]
+
+    }
+
+    # Return the base
+    return(base)
+
+
+  })
+
+  # Add to data frame
+  phased_data$chromosome_a_base = unlist(chromosome_a_bases)
+  phased_data$chromosome_b_base = unlist(chromosome_b_bases)
+
+  # Get the BAF for the chromosome
+  chromosome_a_baf = lapply(1:nrow(phased_data), function(i) {
+
+    # What is the base on the chromosome?
+    base = phased_data$chromosome_a_base[i]
+
+    # Split out the two bases in the het.seqz file
+    split_seqz_bases = unlist(strsplit(het_snps[i,"AB.normal"], split = ""))
+
+    # Is it the a allele or b allele by sequenza
+    a_b_seqz = which(split_seqz_bases %in% base)
+
+    # Is it empty and therefore an NA?
+    if(length(a_b_seqz)!=1) {
+
+      af = NA
+
+    } else {af = het_snps[i,a_b_seqz+6]}
+
+    return(af)
+
+  })
+
+  # Get the BAF for the chromosome
+  chromosome_b_baf = lapply(1:nrow(phased_data), function(i) {
+
+    # What is the base on the chromosome?
+    base = phased_data$chromosome_b_base[i]
+
+    # Split out the two bases in the het.seqz file
+    split_seqz_bases = unlist(strsplit(het_snps[i,"AB.normal"], split = ""))
+
+    # Is it the a allele or b allele by sequenza
+    a_b_seqz = which(split_seqz_bases %in% base)
+
+    # Is it empty and therefore an NA?
+    if(length(a_b_seqz)!=1) {
+
+      af = NA
+
+    } else {af = het_snps[i,a_b_seqz+6]}
+
+    return(af)
+
+  })
+
+  # Make a dataframe
+  phased_chromosome = data.frame(chr = chr,
+                                 pos = het_snps$position,
+                                 chromosome_a = unlist(chromosome_a_baf),
+                                 chromosome_b = unlist(chromosome_b_baf))
+
+  # Remove the NA
+  phased_chromosome = na.omit(phased_chromosome)
+
+  # For segmentation we need to calculate this sdev value that Battenberg uses to adjust gamma
+  sdev = Battenberg:::getMad(ifelse(phased_chromosome$chromosome_a<0.5,phased_chromosome$chromosome_a,1-phased_chromosome$chromosome_a), k=25)
+
+  # Have bottom cap at 10,000X
+  if(sdev<0.002){
+    sdev = 0.002
+  }
+
+  print(paste0("sdev: ",sdev," chr: ",chr))
+
+  # Seg'em
+  phased_chromosome$hap_segs = Battenberg:::selectFastPcf(phased_chromosome$chromosome_a, kmin = PHASING_KMIN, gamma = PHASING_GAMMA * sdev, yest = T)$yhat
+
+  # Flip them
+  phased_chromosome$phased    = ifelse(phased_chromosome$hap_segs < 0.5, 1 - phased_chromosome$chromosome_a, phased_chromosome$chromosome_a)
+
+
+  ####### New addition ######
+  chr.LRR = case.LRR[case.LRR$Chr==gsub("chr","",chr),]
+  chr.LRR = chr.LRR[chr.LRR$Position %in% phased_chromosome$pos,]
+  seg_input = cbind(phased_chromosome[,c("chr","pos","phased")], chr.LRR[,4])
+  pq = getPQ(df=seg_input[,1:2], armBoundary)
+  colnames(seg_input)[3:4] = c("BAF", "LRR")
+  seg_input$chr = gsub("chr", "", seg_input$chr)
+  msseg = multipcf(seg_input, arms=pq, gamma=SEGMENTATION_GAMMA*1, fast=T, digits=8, normalize = F)
+  segment = rep(msseg$BAF, times=msseg$n.probes)
+  print(table(segment < 0.45)/length(segment))
+  pass = segment >= 0.45
+  seg_input = seg_input[pass,]
+  pq = pq[pass]
+  phased_chromosome = phased_chromosome[pass,]
+  msseg = multipcf(seg_input, arms=pq, gamma=SEGMENTATION_GAMMA*2, fast=T, digits=8, normalize = F)
+  segment = rep(msseg$BAF, times=msseg$n.probes)
+  ####### Fin addition ######
+
+  # Add segmentation of phasing
+  phased_chromosome$phase_segs = segment
+
+  # Make a dataframe for MiMMAl input
+  mimmal_df_chr = data.frame(chr = chr, pos = phased_chromosome$pos, BAF = phased_chromosome$chromosome_a, BAFseg = phased_chromosome$phase_segs)
+
+  # Collate
+  mimmal_df = rbind(mimmal_df, mimmal_df_chr)
+
+  # Collect the phased data per chromosome too
+  phased_genome = rbind(phased_genome, phased_chromosome)
+
 }
 
 # Make a plot
-p <- ggplot(phased_genome, aes(pos, phased)) +
-    geom_point(cex = 0.1) +
-    geom_step(aes(y = phase_segs, col = "#e50000")) +
-    ylim(0, 1) +
-    ylab("Phased BAF") +
-    xlab("Position") +
-    ggtitle(paste0(CASENAME, " ", SAMPLENAME)) +
-    geom_hline(yintercept = c(0.5), linetype = "dashed", color = "black") +
-    geom_hline(yintercept = c(0, 1), color = "black") +
-    theme_cowplot() +
-    theme(plot.title = element_text(hjust = 0.5))
+p = ggplot(phased_genome, aes(pos, phased)) +
+  geom_point(cex = 0.1) +
+  geom_step(aes(y=phase_segs, col = "#e50000")) +
+  ylim(0,1) +
+  ylab("Phased BAF") +
+  xlab("Position") +
+  ggtitle(paste0(CASENAME," ",SAMPLENAME)) +
+  geom_hline(yintercept=c(0.5), linetype="dashed", color = "black") +
+  geom_hline(yintercept=c(0,1), color = "black") +
+  theme_cowplot() +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Facet them into chromosomes
-p + facet_grid(chr ~ .) + theme(legend.position = "none")
-ggsave(paste0(OUTPUT_DIR, "/", CASENAME, "_", SAMPLENAME, "_phased_chromosomes.png"), width = 10, height = 40)
+p + facet_grid(chr ~ .) + theme(legend.position="none")
+ggsave(paste0(OUTPUT_DIR,"/",CASENAME,"_",SAMPLENAME,"_phased_chromosomes.png"), width = 10, height = 40)
 
 
 
@@ -475,73 +664,68 @@ ggsave(paste0(OUTPUT_DIR, "/", CASENAME, "_", SAMPLENAME, "_phased_chromosomes.p
 
 
 
-# Chromosome names
-chroms <- unique(case.LRR$Chr)
-
-# Remove the NAs that are produced
-case.LRR <- na.omit(case.LRR)
+#Remove the NAs that are produced
+case.LRR = na.omit(case.LRR)
 
 # Match them up
-case.LRR <- case.LRR[case.LRR$Name %in% paste0(phased_genome$chr, "_", phased_genome$pos), ]
+case.LRR = case.LRR[case.LRR$Name %in% paste0(phased_genome$chr,"_",phased_genome$pos),]
 
 # Do something about the rownames
-rownames(case.LRR) <- NULL
+rownames(case.LRR) = NULL
 
-# Do we do CGHcall normalisation?
-if (CGHCALL.NORMALISATION) {
-    # Subset what we need for CGHcall
-    case.LRR <- case.LRR[, c(1:3, 3, 4:ncol(case.LRR))]
+#Do we do CGHcall normalisation?
+if(CGHCALL.NORMALISATION) {
 
-    # Use the make_cghRaw function which converts to CGHcall format
-    case.LRR <- make_cghRaw(case.LRR)
+  #Subset what we need for CGHcall
+  case.LRR = case.LRR[,c(1:3,3,4:ncol(case.LRR))]
 
-    # Normalise the data, smoothing outlier and normalising to median
-    case.LRR <- normalize(case.LRR,
-        method = "median",
-        smoothOutliers = TRUE
-    )
+  #Use the make_cghRaw function which converts to CGHcall format
+  case.LRR = make_cghRaw(case.LRR)
 
-    # If female, reconvert the X chromosome from 23
-    lrr.chrs <- chromosomes(case.LRR)
+  #Normalise the data, smoothing outlier and normalising to median
+  case.LRR = normalize(case.LRR,
+                       method="median",
+                       smoothOutliers=TRUE)
 
-    # Make 23s, X
-    lrr.chrs[which(lrr.chrs == 23)] <- "X"
+  #If female, reconvert the X chromosome from 23
+  lrr.chrs = chromosomes(case.LRR)
 
-    # Recreate the original dataframe
-    case.LRR <- data.frame(featureNames(case.LRR),
-        lrr.chrs,
-        bpstart(case.LRR),
-        copynumber(case.LRR),
-        stringsAsFactors = FALSE
-    )
+  #Make 23s, X
+  lrr.chrs[which(lrr.chrs==23)] = "X"
 
-    # Recreate the original dataframe
-    colnames(case.LRR)[1:4] <- c("Name", "Chr", "Position", SAMPLENAME)
+  #Recreate the original dataframe
+  case.LRR = data.frame(featureNames(case.LRR),
+                        lrr.chrs,
+                        bpstart(case.LRR),
+                        copynumber(case.LRR), stringsAsFactors = FALSE)
 
-    # Recreate the original dataframe
-    rownames(case.LRR) <- NULL
+  #Recreate the original dataframe
+  colnames(case.LRR)[1:4] = c("Name", "Chr", "Position", SAMPLENAME)
+
+  #Recreate the original dataframe
+  rownames(case.LRR)      = NULL
+
 }
 
-# What's happening?
-print(paste0("Analysing case : ", CASENAME, ", sample : ", SAMPLENAME))
+#What's happening?
+print(paste0("Analysing case : ",CASENAME,", sample : ",SAMPLENAME))
 
-# Move to our output dir
+#Move to our output dir
 setwd(OUTPUT_DIR)
 
-# Record the parameters now that we are aware of them all
+#Record the parameters now that we are aware of them all
 makeSink(TRUE)
 
-# Let's do a plot of the LRR and BAF
-plot_gw_LRR(LRR = case.LRR[, SAMPLENAME], CHR = case.LRR$Chr, POS = case.LRR$Position, NAM = SAMPLENAME)
+#Let's do a plot of the LRR and BAF
+plot_gw_LRR(LRR = case.LRR[,SAMPLENAME], CHR = case.LRR$Chr, POS = case.LRR$Position, NAM = SAMPLENAME)
 
-# Let's write out the file for the sample we want to analysis
-write.table(case.LRR[, c("Chr", "Position", SAMPLENAME)],
-    file = paste0(SAMPLENAME, ".mutantLogR.tab"),
-    sep = "\t",
-    quote = FALSE,
-    row.names = FALSE,
-    col.names = c("Chromosome", "Position", SAMPLENAME)
-)
+#Let's write out the file for the sample we want to analysis
+write.table(case.LRR[,c("Chr","Position",SAMPLENAME)],
+            file = paste0(SAMPLENAME, ".mutantLogR.tab"),
+            sep="\t",
+            quote=FALSE,
+            row.names = FALSE,
+            col.names = c("Chromosome", "Position", SAMPLENAME))
 
 
 
@@ -552,51 +736,45 @@ write.table(case.LRR[, c("Chr", "Position", SAMPLENAME)],
 
 
 # Write it out
-write.table(mimmal_df,
-    file = paste0(CASENAME, "_", SAMPLENAME, "_mimmal_input.txt"),
-    sep = "\t", quote = F, row.names = F
-)
+write.table(mimmal_df, file = paste0(CASENAME,"_",SAMPLENAME,"_mimmal_input.txt"),
+            sep = "\t", quote = F, row.names = F)
 
 # Run MiMMAl
-runMiMMAl(
-    samplename = paste0(SAMPLENAME, "_mimmal"), inputfile = paste0(CASENAME, "_", SAMPLENAME, "_mimmal_input.txt"),
-    plot.sd.den = F, plot.lit.plot = F, plot.star.plot = F, plot.transformed = F
-)
+runMiMMAl(samplename = paste0(SAMPLENAME,"_mimmal"), inputfile = paste0(CASENAME,"_",SAMPLENAME,"_mimmal_input.txt"),
+          plot.sd.den = F, plot.lit.plot = F, plot.star.plot = F, plot.transformed = F)
 
 # Get the results
-mimmal <- read.table(paste0(SAMPLENAME, "_mimmal.BAFphased.txt"), sep = "\t", header = T)
+mimmal = read.table(paste0(SAMPLENAME,"_mimmal.BAFphased.txt"), sep = "\t", header = T)
 
 # Collapse segments
-seg_collapse <- rle(phased_genome$phase_segs)
+seg_collapse = rle(phased_genome$phase_segs)
 
 # Segment indices
-segment_compare <- data.frame(
-    index1 = c(1, c(cumsum(seg_collapse$lengths) + 1)[-length(seg_collapse$lengths)]),
-    index2 = cumsum(seg_collapse$lengths),
-    phasing_median = seg_collapse$value
-)
+segment_compare = data.frame(index1 = c(1, c(cumsum(seg_collapse$lengths)+1)[-length(seg_collapse$lengths)]),
+                             index2 = cumsum(seg_collapse$lengths),
+                             phasing_median = seg_collapse$value)
 
 # Add on the MiMMAl result
-segment_compare$mimmal_median <- mimmal$BAFseg[segment_compare$index1]
+segment_compare$mimmal_median = mimmal$BAFseg[segment_compare$index1]
 
 # How long are segments?
-segment_compare$seg_length <- segment_compare$index2 - segment_compare$index1 + 1
+segment_compare$seg_length = segment_compare$index2 - segment_compare$index1 + 1
 
 # Make a plot of that
 ggplot(segment_compare, aes(x = mimmal_median, y = phasing_median, size = seg_length)) +
-    geom_point() +
-    ylab("Phasing") +
-    xlab("Mixture Model") +
-    ggtitle(paste0(SAMPLENAME, " - MiMMAl QC")) +
-    theme_bw() +
-    geom_abline(intercept = 0, slope = 1) +
-    geom_hline(yintercept = 0.5, lty = "dotted") +
-    geom_vline(xintercept = 0.5, lty = "dotted") +
-    xlim(0, 1) +
-    ylim(0, 1) +
-    theme_cowplot() +
-    theme(plot.title = element_text(hjust = 0.5))
-ggsave(paste0(SAMPLENAME, "_MiMMAl_QC.pdf"), width = 8, height = 7)
+  geom_point() +
+  ylab("Phasing") +
+  xlab("Mixture Model") +
+  ggtitle(paste0(SAMPLENAME," - MiMMAl QC")) +
+  theme_bw() +
+  geom_abline(intercept = 0, slope = 1) +
+  geom_hline(yintercept = 0.5, lty = "dotted") +
+  geom_vline(xintercept = 0.5, lty = "dotted") +
+  xlim(0,1) +
+  ylim(0,1) +
+  theme_cowplot() +
+  theme(plot.title = element_text(hjust = 0.5))
+ggsave(paste0(SAMPLENAME,"_MiMMAl_QC.pdf"), width = 8, height = 7)
 
 
 
@@ -607,72 +785,62 @@ ggsave(paste0(SAMPLENAME, "_MiMMAl_QC.pdf"), width = 8, height = 7)
 
 
 # Make Battenberg input
-battenberg_input <- data.frame(
-    Chromosome = gsub("chr", "", phased_genome$chr),
-    Position = phased_genome$pos,
-    BAF = phased_genome$chromosome_a,
-    BAFphased = phased_genome$phased,
-    BAFseg = phased_genome$phase_segs
-)
+battenberg_input = data.frame(Chromosome = gsub("chr", "", phased_genome$chr),
+                              Position = phased_genome$pos,
+                              BAF = phased_genome$chromosome_a,
+                              BAFphased = phased_genome$phased,
+                              BAFseg = phased_genome$phase_segs)
 
 # Write it out
-write.table(battenberg_input,
-    file = paste0(SAMPLENAME, ".BAFphased.txt"),
-    sep = "\t", quote = F, row.names = F
-)
+write.table(battenberg_input, file = paste0(SAMPLENAME,".BAFphased.txt"),
+            sep = "\t", quote = F, row.names = F)
 
 # Make a BAF file
-case.BAF <- data.frame(
-    Chr = gsub("chr", "", phased_genome$chr),
-    Position = phased_genome$pos,
-    SAMPLENAME = phased_genome$chromosome_a
-)
+case.BAF = data.frame(Chr = gsub("chr", "", phased_genome$chr),
+                      Position = phased_genome$pos,
+                      SAMPLENAME = phased_genome$chromosome_a)
 
-# Let's write out the file for the sample we want to analysis
+#Let's write out the file for the sample we want to analysis
 write.table(case.BAF,
-    file = paste0(SAMPLENAME, ".mutantBAF.tab"),
-    sep = "\t",
-    quote = FALSE,
-    row.names = FALSE,
-    col.names = c("Chromosome", "Position", SAMPLENAME)
-)
+            file = paste0(SAMPLENAME,".mutantBAF.tab"),
+            sep="\t",
+            quote=FALSE,
+            row.names = FALSE,
+            col.names = c("Chromosome", "Position", SAMPLENAME))
 
 # Run ASCAT
-fit.copy.number(
-    samplename = SAMPLENAME,
-    outputfile.prefix = paste(SAMPLENAME, "_", sep = ""),
-    inputfile.baf.segmented = paste(SAMPLENAME, ".BAFphased.txt", sep = ""),
-    inputfile.baf = paste(SAMPLENAME, ".mutantBAF.tab", sep = ""),
-    inputfile.logr = paste(SAMPLENAME, ".mutantLogR.tab", sep = ""),
-    dist_choice = CLONALITY_DIST_METRIC,
-    ascat_dist_choice = ASCAT_DIST_METRIC,
-    min.ploidy = MIN_PLOIDY,
-    max.ploidy = MAX_PLOIDY,
-    min.rho = MIN_RHO,
-    min.goodness = MIN_GOODNESS_OF_FIT,
-    uninformative_BAF_threshold = BALANCED_THRESHOLD,
-    gamma_param = ASCAT_GAMMA,
-    use_preset_rho_psi = PRESET,
-    preset_rho = PRESET_RHO,
-    preset_psi = PRESET_PSI
-)
+fit.copy.number(samplename = SAMPLENAME,
+                outputfile.prefix = paste(SAMPLENAME, "_", sep=""),
+                inputfile.baf.segmented = paste(SAMPLENAME,".BAFphased.txt", sep=""),
+                inputfile.baf = paste(SAMPLENAME,".mutantBAF.tab", sep=""),
+                inputfile.logr = paste(SAMPLENAME,".mutantLogR.tab", sep=""),
+                dist_choice = CLONALITY_DIST_METRIC,
+                ascat_dist_choice = ASCAT_DIST_METRIC,
+                min.ploidy = MIN_PLOIDY,
+                max.ploidy = MAX_PLOIDY,
+                min.rho = MIN_RHO,
+                min.goodness = MIN_GOODNESS_OF_FIT,
+                uninformative_BAF_threshold = BALANCED_THRESHOLD,
+                gamma_param = ASCAT_GAMMA,
+                use_preset_rho_psi = PRESET,
+                preset_rho = PRESET_RHO,
+                preset_psi = PRESET_PSI)
 
 # Go over all segments, determine which segments are a mixture of two states and fit a second CN state
-callSubclones(
-    sample.name = SAMPLENAME,
-    baf.segmented.file = paste(SAMPLENAME, ".BAFphased.txt", sep = ""),
-    logr.file = paste(SAMPLENAME, ".mutantLogR.tab", sep = ""),
-    rho.psi.file = paste(SAMPLENAME, "_rho_and_psi.txt", sep = ""),
-    output.file = paste(SAMPLENAME, "_subclones.txt", sep = ""),
-    output.figures.prefix = paste(SAMPLENAME, "_subclones_chr", sep = ""),
-    output.gw.figures.prefix = paste(SAMPLENAME, "_BattenbergProfile", sep = ""),
-    masking_output_file = paste(SAMPLENAME, "_segment_masking_details.txt", sep = ""), # May need commenting out
-    chr_names = chroms,
-    gamma = ASCAT_GAMMA,
-    segmentation.gamma = NA,
-    siglevel = SIGLEVEL,
-    maxdist = MAXDIST,
-    noperms = 1000,
-    seed = seed, # May need commenting out
-    sv_breakpoints_file = "NA" # May need commenting out
-)
+callSubclonesReplacement(sample.name=SAMPLENAME,
+              baf.segmented.file=paste(SAMPLENAME,".BAFphased.txt", sep=""),
+              logr.file=paste(SAMPLENAME,".mutantLogR.tab", sep=""),
+              rho.psi.file=paste(SAMPLENAME, "_rho_and_psi.txt",sep=""),
+              output.file=paste(SAMPLENAME,"_subclones.txt", sep=""),
+              output.figures.prefix=paste(SAMPLENAME,"_subclones_chr", sep=""),
+              output.gw.figures.prefix=paste(SAMPLENAME,"_BattenbergProfile", sep=""),
+              masking_output_file=paste(SAMPLENAME,"_segment_masking_details.txt", sep=""), # May need commenting out
+              chr_names=chroms,
+              gamma=ASCAT_GAMMA,
+              segmentation.gamma=NA,
+              siglevel=SIGLEVEL,
+              maxdist=MAXDIST,
+              noperms=1000,
+              seed = seed, # May need commenting out
+              sv_breakpoints_file = "NA", # May need commenting out
+              calc_seg_baf_option = 1)
