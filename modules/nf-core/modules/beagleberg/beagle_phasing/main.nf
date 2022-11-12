@@ -25,7 +25,7 @@ process BEAGLE_PHASING {
     """
     beagle ref=${genome_ref}/ALL.chr${chr}_GRCh38.genotypes.20170504_amended.vcf.gz \
         gt=${vcf} \
-        out=${id}.phased.${chr} \
+        out=${id}.phased.chr${chr} \
         nthreads=${task.cpus} \
         map=${beagle_plink}/plink.chr${chr}.GRCh38_amended.map \
         impute=false \
