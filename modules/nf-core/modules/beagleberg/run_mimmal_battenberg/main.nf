@@ -20,8 +20,13 @@ process MIMMAL_BATTENBERG {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
-    run_battenberg_using_mimmal.R ${patient} ${id} ${gender} ${baf} ${lrr} ${chr_arm_boundaries}
-    cat <<-END_VERSIONS > versions.yml
+    run_battenberg_using_mimmal.R \
+	${baseDir}/bin/run_battenberg_using_mimmal_src.R mimmal_battenberg  \
+	${baf} \
+	${lrr} \
+	${chr_arm_boundaries}
+    
+	cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         preprocess_het_snps: 1.0.0
     END_VERSIONS

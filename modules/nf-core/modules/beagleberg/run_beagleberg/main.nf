@@ -19,7 +19,14 @@ process RUN_BEAGLEBERG {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
-    run_beagleberg.R
+    run_beagleberg.R \
+	${baseDir}/bin/run_battenberg_using_mimmal_src.R \
+	beagleberg \
+    ${lrr_rds} \
+	${chr_arm_boundaries} \
+	${id} \
+	${het_seqz} \
+	${control_id}
     """
 
 	stub:
