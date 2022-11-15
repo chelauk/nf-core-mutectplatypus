@@ -39,6 +39,14 @@ process RUN_BEAGLEBERG {
     def prefix = task.ext.prefix ?: "${id}"
     """
     echo "run_beagleberg.R  ${id} ${chr_arm_boundaries}"
+    mkdir beagleberg
+    cd beagleberg
+    for i in {1..22}
+        do
+        touch ${id}_subclones_chr"\$i".png
+        done
+
+    cd ..
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         preprocess_het_snps: 3.0.0

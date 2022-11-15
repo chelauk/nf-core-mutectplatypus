@@ -9,7 +9,7 @@ process MIMMAL_BATTENBERG {
     path(chr_arm_boundaries)
 
     output:
-    path ("./mimmal_battenberg/*")                    , emit: mimmal_out
+    path "mimmal_battenberg/*"                  , emit: mimmal_out
     path "versions.yml"                         , emit: versions
 
     when:
@@ -28,7 +28,7 @@ process MIMMAL_BATTENBERG {
     
 	cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-      beagleberg: 1.0.0
+        beagleberg: 1.0.0
     END_VERSIONS
     """
 
@@ -38,9 +38,16 @@ process MIMMAL_BATTENBERG {
     """
     echo runBattenbergUsingMiMMAl.R ${patient} ${id} ${gender} ${baf} ${lrr} ${chr_arm_boundaries}
     mkdir mimmal_battenberg
+    cd mimmal_battenberg
+    for i in {1..22}
+        do
+            touch ${id}_BAFphased_chr"\$i".png
+            touch ${id}_subclones_chr"\$i".png
+        done
+    cd ..
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        preprocess_het_snps: 3.0.0
+        beagleberg: 1.0.0
     END_VERSIONS
     """
 }
