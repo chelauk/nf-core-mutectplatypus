@@ -2,7 +2,6 @@ process MIMMAL_BATTENBERG {
     tag "$id"
     label 'process_medium'
 
-    conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
     container 'beagleberg.sif'
 
     input:
@@ -10,7 +9,7 @@ process MIMMAL_BATTENBERG {
     path(chr_arm_boundaries)
 
     output:
-    path("mimmal_battenberg")                   , emit: mimmal_out
+    path ("./mimmal_battenberg/*")                    , emit: mimmal_out
     path "versions.yml"                         , emit: versions
 
     when:
@@ -24,11 +23,12 @@ process MIMMAL_BATTENBERG {
 	${baseDir}/bin/run_battenberg_using_mimmal_src.R mimmal_battenberg  \
 	${baf} \
 	${lrr} \
-	${chr_arm_boundaries}
+	${chr_arm_boundaries} \
+	${id}
     
 	cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        preprocess_het_snps: 1.0.0
+      beagleberg: 1.0.0
     END_VERSIONS
     """
 

@@ -69,6 +69,7 @@ case.LRR = readRDS(LRR_PATH)
 case.BAF = readRDS(BAF_PATH)
 
 #Rename the columns to these names in the LRR/BAF file just for simplicity
+print(paste("sample name:", SAMPLENAME))
 colnames(case.BAF)[4] = SAMPLENAME
 colnames(case.LRR)[4] = SAMPLENAME
 
@@ -84,7 +85,7 @@ if(CGHCALL.NORMALISATION) {
   
   #Subset what we need for CGHcall
   case.LRR = case.LRR[,c(1:3,3,4:ncol(case.LRR))]
-  
+  print(head(case.LRR)) 
   #Use the make_cghRaw function which converts to CGHcall format
   case.LRR = make_cghRaw(case.LRR)
   
@@ -277,8 +278,7 @@ callSubclones(sample.name=SAMPLENAME,
               siglevel=SIGLEVEL,
               maxdist=MAXDIST,
               noperms=1000,
-              seed = seed,
-              sv_breakpoints_file = "NA")
+              seed = seed)
 
 #OK, now we've done
 end.time   = Sys.time()

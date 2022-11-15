@@ -21,9 +21,13 @@ process SEQUENZAUTILS_HETSNPS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${id}"
     """
-    zcat $concat_seqz | egrep 'chromo|het' > ${prefix}_het.seqz
-    # gzip ${prefix}_het.seqz
-    cat <<-END_VERSIONS > versions.yml
+	zcat ${concat_seqz} > temp
+    head -1 temp > header 
+	sed -n '/het/p' temp > temp2
+	cat header temp2 > ${prefix}_het.seqz
+    rm temp*
+
+	cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sequenzautils: \$(echo \$(sequenza-utils 2>&1) | sed 's/^.*is version //; s/ .*\$//')
     END_VERSIONS

@@ -10,6 +10,7 @@ process RUN_BEAGLEBERG {
     path(chr_arm_boundaries)
 
     output:
+	path "beagleberg/*"                         , emit: beagleberg_out
     path "versions.yml"                         , emit: versions
 
     when:
@@ -25,8 +26,12 @@ process RUN_BEAGLEBERG {
     ${lrr_rds} \
 	${chr_arm_boundaries} \
 	${id} \
-	${het_seqz} \
-	${control_id}
+	${het_seqz} 
+    
+	cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        beagleberg: 1.0.0
+    END_VERSIONS
     """
 
 	stub:

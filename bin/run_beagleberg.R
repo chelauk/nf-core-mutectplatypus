@@ -115,7 +115,7 @@ for (chr in paste0("chr", chroms)) {
     het_snps <- het_snps_sample[het_snps_sample$chromosome == chr, ]
 
     # Read in the phased data
-    phased_snps <- read.vcfR(Sys.glob("*", "phased.", chr, ".vcf.gz"))
+	phased_snps <- read.vcfR(Sys.glob(file.path(paste0("*",chr,".vcf.gz"))))
 
     # Immediately remove anything with an indel
     phased_snps <- extract.indels(phased_snps, return.indels = F)
@@ -399,9 +399,18 @@ write.table(mimmal_df,
     sep = "\t", quote = F, row.names = F
 )
 
+# remove seg all 0 or all 1 segs
+adj_mimmal_df <- mimmal_df[!(mimmal_df$BAFseg == 0 | mimmal_df$BAFseg == 1),]
+
+# Write it out
+write.table(adj_mimmal_df,
+    file = paste0(SAMPLENAME, "_adj_mimmal_input.txt"),
+    sep = "\t", quote = F, row.names = F
+)
+
 # Run MiMMAl
 runMiMMAl(
-    samplename = paste0(SAMPLENAME, "_mimmal"), inputfile = paste0(SAMPLENAME, "_mimmal_input.txt"),
+    samplename = paste0(SAMPLENAME, "_mimmal"), inputfile = paste0(SAMPLENAME, "_adj_mimmal_input.txt"),
     plot.sd.den = F, plot.lit.plot = F, plot.star.plot = F, plot.transformed = F
 )
 
