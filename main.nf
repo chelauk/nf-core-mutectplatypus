@@ -33,6 +33,7 @@ params.vep_species           = WorkflowMain.getGenomeAttribute(params, 'vep_spec
 params.vep_cache             = WorkflowMain.getGenomeAttribute(params, 'vep_cache')
 params.wiggle                = WorkflowMain.getGenomeAttribute(params, 'wiggle' )
 params.drivers               = WorkflowMain.getGenomeAttribute(params, 'drivers' )
+params.mappability_bw        = WorkflowMain.getGenomeAttribute(params, 'mappability_bw' )
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
