@@ -1,6 +1,3 @@
-#!/usr/bin/env RScript
-
-
 library(vcfR)
 
 # get commandline args
@@ -14,6 +11,8 @@ map_output <- paste0(args[1], "mappability.out")
 # Read vcf file
 vcf <- args[2]
 
+
+cat(args, sep = "\n")
 # What is the chromosome and position
 chrs <- getCHROM(vcf)
 pos <- getPOS(vcf)
