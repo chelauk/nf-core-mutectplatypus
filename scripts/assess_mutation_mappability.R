@@ -6,13 +6,12 @@ args <- commandArgs(trailingOnly = TRUE)
 pan_sides <- args[4]
 map_ref <- args[3]
 map_input <- "intermediate_file"
-map_output <- paste0(args[1], "mappability.out")
+map_output <- paste0(args[1], "_mappability.out")
 
 # Read vcf file
-vcf <- args[2]
+vcf <- read.vcfR(args[2])
+vcf <- vcf[vcf@fix[,7] == "PASS",]
 
-
-cat(args, sep = "\n")
 # What is the chromosome and position
 chrs <- getCHROM(vcf)
 pos <- getPOS(vcf)
