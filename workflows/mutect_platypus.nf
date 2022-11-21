@@ -55,6 +55,7 @@ gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
 ccf                  = params.ccf                    ?: Channel.empty()
 pan                  = params.pan                    ?: Channel.empty()
+tef                  = params.tef                    ?: Channel.empty()
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -319,7 +320,7 @@ workflow MUTECT_PLATYPUS {
                                 .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
                                 [patient, vcf, which_norm]}
 
-    PLATYPUS_FILTER ( filter_platypus_input )
+    PLATYPUS_FILTER ( filter_platypus_input, tef )
 
     PLAT_VEP (
         PLATYPUS_FILTER.out.vcf,
