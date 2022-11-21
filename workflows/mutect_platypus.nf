@@ -53,7 +53,7 @@ seqz_het             = params.seqz_het               ?: Channel.empty()
 bin                  = params.bin                    ?: Channel.empty()
 gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
-ccf                  = params.ccf                    ?: Channel.empty()
+cellurarity                  = params.cellurarity                    ?: Channel.empty()
 pan                  = params.pan                    ?: Channel.empty()
 tef                  = params.tef                    ?: Channel.empty()
 
@@ -387,9 +387,9 @@ seq_input_pair = seq_input_pair
 
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
     if ( params.sequenza_change_ccf ) {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
+        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, cellurarity)
     } else {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
+        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, cellurarity)
     }
 
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
