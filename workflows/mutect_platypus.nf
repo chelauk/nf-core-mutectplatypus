@@ -34,6 +34,7 @@ dict                  = params.dict                  ? Channel.fromPath(params.d
 germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : Channel.empty()
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : Channel.empty()
 drivers               = params.drivers               ? Channel.fromPath(params.drivers).collect()               : Channel.empty()
+mappability_bw        = params.mappability_bw        ? Channel.fromPath(params.mappability_bw).collect()           : Channel.empty()
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 
 // Initialize value channels based on params, defined in the params.genomes[params.genome] scope
@@ -52,7 +53,9 @@ seqz_het             = params.seqz_het               ?: Channel.empty()
 bin                  = params.bin                    ?: Channel.empty()
 gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
-ccf                  = params.ccf                    ?: Channel.empty()
+cellurarity                  = params.cellurarity                    ?: Channel.empty()
+pan                  = params.pan                    ?: Channel.empty()
+tef                  = params.tef                    ?: Channel.empty()
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,6 +117,7 @@ include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/nf-core/modules/seq
 //include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/nf-core/modules/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/nf-core/modules/sequenzautils/seqz_R/main.nf'
+include { MAPPABILITY                     } from '../modules/local/mappability/main'
 include { EVOVERSE_CNAQC                  } from '../modules/local/evoverse/main'
 include { MULTIQC                         } from '../modules/nf-core/modules/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
@@ -316,7 +320,7 @@ workflow MUTECT_PLATYPUS {
                                 .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
                                 [patient, vcf, which_norm]}
 
-    PLATYPUS_FILTER ( filter_platypus_input )
+    PLATYPUS_FILTER ( filter_platypus_input, tef )
 
     PLAT_VEP (
         PLATYPUS_FILTER.out.vcf,
@@ -383,17 +387,21 @@ seq_input_pair = seq_input_pair
 
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
     if ( params.sequenza_change_ccf ) {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
+        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, cellurarity)
     } else {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf)
+        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, cellurarity)
     }
 
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
 
+    ZIP_MUTECT_ANN_VCF.out.vcf.view()
+    MAPPABILITY(ZIP_MUTECT_ANN_VCF.out.vcf, mappability_bw, pan)
+
     //
     // MODULE: MultiQC
     //
+
     workflow_summary    = WorkflowMytest.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 

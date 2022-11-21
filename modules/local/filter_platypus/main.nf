@@ -5,11 +5,12 @@ process PLATYPUS_FILTER {
 
     conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/python:3.8.3' :
-        'quay.io/biocontainers/python:3.8.3' }"
+        'https://depot.galaxyproject.org/singularity/pandas:1.4.3' :
+        'quay.io/biocontainers/pandas:1.4.3' }"
 
     input:
     tuple val(patient), path(vcf), val(norm)
+    val (tef)
 
     output:
     tuple val(patient), path("*filtered.vcf"), emit: vcf
@@ -21,8 +22,10 @@ process PLATYPUS_FILTER {
 
     script:
     def prefix = "${patient}_platypus"
+    def my_vcf = "${vcf.toString().minus(".gz")}"
     """
-    filter_platypus.py $vcf ${norm[0]} $prefix
+    gunzip $vcf
+    filter_platypus.py $my_vcf ${norm[0]} $tef
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         1
@@ -30,7 +33,7 @@ process PLATYPUS_FILTER {
 	"""
     stub:
     """
-    echo "filter_platypus.py $vcf ${norm[0]}"
+    echo "filter_platypus.py $vcf ${norm[0]} $tef"
     touch "$patient"_platypus_filtered.vcf
     touch versions.yml
     """
