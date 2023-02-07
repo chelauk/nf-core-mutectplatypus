@@ -101,7 +101,7 @@ include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
 include { GATK4_MUTECT2                   } from '../modules/nf-core/modules/gatk4/mutect2/main'
 include { GATK4_LEARNREADORIENTATIONMODEL } from '../modules/nf-core/modules/gatk4/learnreadorientationmodel/main'
 include { GATK4_MERGEMUTECTSTATS          } from '../modules/nf-core/modules/gatk4/mergemutectstats/main'
-include { CONCAT_VCF                      } from '../modules/nf-core/modules/concat_vcf/main'
+include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/nf-core/modules/concat_vcf/main'
 include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/nf-core/modules/concat_vcf/main'
 include { GATK4_GETPILEUPSUMMARIES        } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
 include { GATK4_GETPILEUPSUMMARIES as GET_PS_NORM } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
@@ -205,9 +205,9 @@ workflow MUTECT_PLATYPUS {
     concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
 
     if (!params.intervals) {
-        CONCAT_VCF ( concat_input, fasta_fai, [] )
+        CONCAT_MUTECT ( concat_input, fasta_fai, [] )
         } else {
-        CONCAT_VCF ( concat_input, fasta_fai, intervals_ch )
+        CONCAT_MUTECT ( concat_input, fasta_fai, intervals_ch )
         }
 
     merge_stats_input = GATK4_MUTECT2.out.stats.groupTuple()
@@ -282,7 +282,7 @@ workflow MUTECT_PLATYPUS {
                                     .map{ patient, samples1, contamination, samples2, segmentation ->
                                     [patient,contamination,segmentation] }
 
-    filter_input = CONCAT_VCF.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
+    filter_input = CONCAT_MUTECT.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
     filter_input = filter_input.join(for_filter)
     filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
 
