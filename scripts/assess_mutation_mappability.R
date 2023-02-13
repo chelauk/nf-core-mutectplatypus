@@ -1,5 +1,8 @@
 library(vcfR)
 
+# switch off scientific notation which would interfere with bigWigAverageOverBed
+options(scipen=999)
+
 # get commandline args
 args <- commandArgs(trailingOnly = TRUE)
 
