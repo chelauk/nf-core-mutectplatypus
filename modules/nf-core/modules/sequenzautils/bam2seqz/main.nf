@@ -42,7 +42,7 @@ process SEQUENZAUTILS_BAM2SEQZ {
     file_size=\$(zcat ${prefix}.seqz.gz | head | wc -l )
     if [ \$file_size -eq 1 ]
     then
-        exit 1
+        exit 104
     fi
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
