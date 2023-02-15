@@ -1,3 +1,6 @@
+// bam2seqz exits with code 0 even if it fails
+// so I include if statement to check the size of the output file
+
 process SEQUENZAUTILS_BAM2SEQZ {
     tag "$id"
     label 'process_medium'
@@ -35,7 +38,12 @@ process SEQUENZAUTILS_BAM2SEQZ {
         --het $het \\
         -gc $wigfile \\
         -o ${prefix}.seqz.gz
-
+    
+    file_size=\$(zcat ${prefix}.seqz.gz | head | wc -l )
+    if [ \$file_size -eq 1 ]
+    then
+        exit 1
+    fi
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sequenzautils: \$(echo \$(sequenza-utils 2>&1) | sed 's/^.*is version //; s/ .*\$//')
