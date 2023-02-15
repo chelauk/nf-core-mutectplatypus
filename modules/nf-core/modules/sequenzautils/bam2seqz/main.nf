@@ -39,7 +39,8 @@ process SEQUENZAUTILS_BAM2SEQZ {
         -gc $wigfile \\
         -o ${prefix}.seqz.gz
     
-    file_size=\$(zcat -q ${prefix}.seqz.gz | head | wc -l )
+    file_size=\$(head -n 10 < <(${prefix}.seqz.gz))
+
     if [ \$file_size -eq 1 ]
     then
         exit 104
