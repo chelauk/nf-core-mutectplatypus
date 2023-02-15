@@ -39,7 +39,7 @@ process SEQUENZAUTILS_BAM2SEQZ {
         -gc $wigfile \\
         -o ${prefix}.seqz.gz
     
-    file_size=\$(head -n 10 < <( zcat ${prefix}.seqz.gz ))
+    file_size=\$(head -n 10 < <( zcat ${prefix}.seqz.gz ) | wc -l )
 
     if [ \$file_size -eq 1 ]
     then
