@@ -373,6 +373,7 @@ seq_input_pair = seq_input_pair
 
     SEQUENZAUTILS_BAM2SEQZ(seq_input_pair,
                             fasta,
+                            fasta_fai,
                             seqz_het,
                             wiggle,
                             seqz_chr)

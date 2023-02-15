@@ -14,6 +14,7 @@ process SEQUENZAUTILS_BAM2SEQZ {
     //tuple val(patient), val(id), val(chr), path(tumourbam), path(normalbam)
     tuple val(patient), val(id), path(tumourbam), path(normalbam)
     path fasta
+    path fasta_fai
     val  het
     path wigfile
     each chromosome
