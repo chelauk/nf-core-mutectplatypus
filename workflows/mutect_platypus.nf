@@ -53,7 +53,7 @@ seqz_het             = params.seqz_het               ?: Channel.empty()
 bin                  = params.bin                    ?: Channel.empty()
 gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
-cellurarity                  = params.cellurarity                    ?: Channel.empty()
+ccf                  = params.ccf                    ?: Channel.empty()
 pan                  = params.pan                    ?: Channel.empty()
 tef                  = params.tef                    ?: Channel.empty()
 
