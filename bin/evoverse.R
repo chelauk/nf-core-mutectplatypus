@@ -4,12 +4,10 @@
 library(evoverse)
 
 args <- commandArgs(TRUE)
-my_sample <- args[1]
-my_ploidy <- args[2]
+my_segments <- paste0(args[1], "/", args[1])
+my_sample <- args[2]
 my_vcf <- args[3]
 my_drivers <- args[4]
-
-my_segments <- paste0(my_sample, "_", my_ploidy, "/", my_sample, "_", my_ploidy)
 
 load(my_drivers)
 
@@ -34,8 +32,8 @@ purity <- fit_cnas$purity
 
 my_calls <- list(cna_calls, snv_marked)
 
-my_filename <- paste0(my_sample, "_", my_ploidy, ".pdf")
-my_rds <- paste0(my_sample, "_", my_ploidy, ".rds")
+my_filename <- paste0(my_sample, ".pdf")
+my_rds <- paste0(my_sample, ".rds")
 saveRDS(my_calls, file = my_rds)
 
 fit <- pipeline_qc_copynumbercalls(

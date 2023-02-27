@@ -1,5 +1,5 @@
 process SEQUENZAUTILS_RSEQZ {
-    tag "$id"
+    tag "${patient}_${id}"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::r-sequenza=3.0.0" : null)
@@ -9,10 +9,11 @@ process SEQUENZAUTILS_RSEQZ {
     tuple val(patient), val(id), path(seqz_bin)
     val  gender
     val  ploidy
-    val  cellurarity
+    val  ccf
+    val  seq_gam
 
     output:
-    tuple val(patient), val(id), path("${id}_${ploidy}"), emit: rseqz
+    tuple val(patient), val(id), path("${patient}_${id}"), emit: rseqz
     path "versions.yml"          , emit: versions
 
     when:
@@ -21,10 +22,10 @@ process SEQUENZAUTILS_RSEQZ {
     script:
     def seqz_in = "${seqz_bin.toString().minus(".gz")}"
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}_${ploidy}"
+    def prefix = task.ext.prefix ?: "${patient}_${id}"
     """
     zcat ${seqz_bin} > $seqz_in
-    analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${cellurarity}
+    analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf} ${seq_gam}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -34,9 +35,9 @@ process SEQUENZAUTILS_RSEQZ {
     stub:
     def seqz_in = "${seqz_bin.toString().minus(".gz")}"
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}_${ploidy}"
+    def prefix = task.ext.prefix ?: "${patient}_${id}"
     """
-    echo "analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${cellurarity}"
+    echo "analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf} ${seq_gam}"
     mkdir ${id}_${ploidy}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
