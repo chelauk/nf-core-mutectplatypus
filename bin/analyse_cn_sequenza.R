@@ -31,7 +31,7 @@ if (ploidy == 7) {
     up_p <- 6.5
     weighted_mean <- TRUE
 }
-if (cellurarity == "PDO") {
+if (ccf == "PDO") {
     high_ccf <- 0.99
     low_ccf <- 0.95
 } else {
