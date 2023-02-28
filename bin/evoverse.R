@@ -16,7 +16,7 @@ load(my_drivers)
 mutect_calls <- evoparse_mutect_mutations(my_vcf)
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
-snvs <- mutect_calls$A4164_1046_BLPD0$mutations %>% 
+snvs <- mutect_calls[[my_sample]]mutations %>% 
 dplyr::filter(FILTER == "PASS") %>%
 dplyr::filter(!is.na(VAF), VAF > 0) %>%
 dplyr::filter(str_count(gt_F1R2,",")==1) %>% 
