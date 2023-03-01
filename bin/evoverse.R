@@ -30,7 +30,7 @@ snvs <- mutect_calls[[my_sample]]$mutations %>%
 my_colnames <- colnames(snvs)[4:28]
 my_colnames <- c(paste0(my_colnames, ".x"))
 
-snvs <- left_join(snvs,mutect_calls[[normal]]$mutations,
+snvs <- left_join(snvs, mutect_calls[[normal]]$mutations,
     by = c("chr", "from", "to")) %>%
 dplyr::filter(DP.x >= 5, DP.y >= 5) %>%
     select("chr", "from", "to", all_of(my_colnames))
