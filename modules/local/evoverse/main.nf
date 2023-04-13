@@ -21,7 +21,8 @@ process EVOVERSE_CNAQC {
     script:
     def prefix = task.ext.prefix ?: "${patient}_${id}"
     """
-    evoverse.R $prefix $id $vcf $drivers
+    zgrep -P "^#|PASS" $vcf | gzip > temp.vcf.gz
+    evoverse.R $prefix $id temp.vcf.gz $drivers
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         1
