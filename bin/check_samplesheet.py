@@ -144,32 +144,6 @@ class RowChecker:
             self.modified), "The pair of patient and sample name must be unique."
 
 
-def sniff_format(handle):
-    """
-    Detect the tabular format.
-
-    Args:
-        handle (text file): A handle to a `text file`_ object. The read position is
-        expected to be at the beginning (index 0).
-
-    Returns:
-        csv.Dialect: The detected tabular format.
-
-    .. _text file:
-        https://docs.python.org/3/glossary.html#term-text-file
-
-    """
-    peek = handle.read(30)
-    sniffer = csv.Sniffer()
-    if not sniffer.has_header(peek):
-        logger.critical(
-            f"The given sample sheet does not appear to contain a header.")
-        sys.exit(1)
-    dialect = sniffer.sniff(peek)
-    handle.seek(0)
-    return dialect
-
-
 def check_samplesheet(file_in, file_out):
     """
     Check that the tabular samplesheet has the structure expected by nf-core pipelines.
@@ -202,7 +176,7 @@ def check_samplesheet(file_in, file_out):
     required_columns = {"patient", "sample", "status", "bam", "bai"}
     # See https://docs.python.org/3.9/library/csv.html#id3 to read up on `newline=""`.
     with file_in.open(newline="") as in_handle:
-        reader = csv.DictReader(in_handle, dialect=sniff_format(in_handle))
+        reader = csv.DictReader(in_handle)
         # Validate the existence of the expected header columns.
         if not required_columns.issubset(reader.fieldnames):
             logger.critical(
