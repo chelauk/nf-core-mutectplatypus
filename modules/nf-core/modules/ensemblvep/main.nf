@@ -33,6 +33,7 @@ process ENSEMBLVEP {
     vep \\
         -i $vcf \\
         -o ${prefix}_${args}.ann.vcf \\
+        --force_overwrite \\
         --assembly $genome \\
         --species $species \\
         --cache \\
