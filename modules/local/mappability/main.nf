@@ -1,9 +1,9 @@
 process MAPPABILITY {
-
+    errorStrategy 'ignore'
     tag "$patient"
 
     label 'process_low'
-    
+
     container 'mappability.sif'
 
     input:
