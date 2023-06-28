@@ -2,48 +2,83 @@
     "name": "nf-core/mutectplatypus",
     "homePage": "https://github.com/nf-core/mutectplatypus",
     "repos": {
-        "nf-core/modules": {
-            "": {
-                "git_sha": "6f787aea715d631c91fdd7f047fdae751692f69e"
+        "https://github.com/nf-core/modules.git": {
+            "modules": {
+                "nf-core": {
+                    "custom/dumpsoftwareversions": {
+                        "branch": "master",
+                        "git_sha": "82501fe6d0d12614db67751d30af98d16e63dc59",
+                        "installed_by": ["modules"]
+                    },
+                    "ensemblvep": {
+                        "branch": "master",
+                        "git_sha": "1b5ffd7aa6e3c21b702957c808cbd1c351dd1809",
+                        "installed_by": ["modules"]
+                    },
+                    "fastqc": {
+                        "branch": "master",
+                        "git_sha": "49b18b1639f4f7104187058866a8fab33332bdfe",
+                        "installed_by": ["modules"]
+                    },
+                    "gatk4/calculatecontamination": {
+                        "branch": "master",
+                        "git_sha": "169b2b96c1167f89ab07127b7057c1d90a6996c7",
+                        "installed_by": ["modules"]
+                    },
+                    "gatk4/filtermutectcalls": {
+                        "branch": "master",
+                        "git_sha": "f434d0c671fe908552aa2064a8ae576059cfc39b",
+                        "installed_by": ["modules"]
+                    },
+                    "gatk4/gatherpileupsummaries": {
+                        "branch": "master",
+                        "git_sha": "169b2b96c1167f89ab07127b7057c1d90a6996c7",
+                        "installed_by": ["modules"]
+                    },
+                    "gatk4/getpileupsummaries": {
+                        "branch": "master",
+                        "git_sha": "1ac223ad436c1410e9c16a5966274b7ca1f8d855",
+                        "installed_by": ["modules"]
+                    },
+                    "gatk4/learnreadorientationmodel": {
+                        "branch": "master",
+                        "git_sha": "169b2b96c1167f89ab07127b7057c1d90a6996c7",
+                        "installed_by": ["modules"]
+                    },
+                    "gatk4/mergemutectstats": {
+                        "branch": "master",
+                        "git_sha": "169b2b96c1167f89ab07127b7057c1d90a6996c7",
+                        "installed_by": ["modules"]
+                    },
+                    "gatk4/mutect2": {
+                        "branch": "master",
+                        "git_sha": "169b2b96c1167f89ab07127b7057c1d90a6996c7",
+                        "installed_by": ["modules"]
+                    },
+                    "multiqc": {
+                        "branch": "master",
+                        "git_sha": "90aef30f432332bdf0ce9f4b9004aa5d5c4960bb",
+                        "installed_by": ["modules"]
+                    },
+                    "picard/crosscheckfingerprints": {
+                        "branch": "master",
+                        "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "installed_by": ["modules"]
+                    },
+                    "sequenzautils/bam2seqz": {
+                        "branch": "master",
+                        "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d",
+                        "installed_by": ["modules"]
+                    },
+                    "sequenzautils/gcwiggle": {
+                        "branch": "master",
+                        "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d",
+                        "installed_by": ["modules"]
+                    }
+                }
             },
-            "custom/dumpsoftwareversions": {
-                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
-            },
-            "ensemblvep": {
-                "git_sha": "40dd662fd26c3eb3160b7c8cbbe9bff80bbe2c30"
-            },
-            "fastqc": {
-                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
-            },
-            "gatk4/calculatecontamination": {
-                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
-            },
-            "gatk4/filtermutectcalls": {
-                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
-            },
-            "gatk4/gatherpileupsummaries": {
-                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
-            },
-            "gatk4/getpileupsummaries": {
-                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
-            },
-            "gatk4/learnreadorientationmodel": {
-                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
-            },
-            "gatk4/mergemutectstats": {
-                "git_sha": "409af2f27cbe45109acc7fee70718d2bf20aa449"
-            },
-            "gatk4/mutect2": {
-                "git_sha": "62c6123ec48e15b42bd60b344603a83b658054d8"
-            },
-            "multiqc": {
-                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
-            },
-            "sequenzautils/bam2seqz": {
-                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
-            },
-            "sequenzautils/gcwiggle": {
-                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+            "subworkflows": {
+                "nf-core": {}
             }
         }
     }
