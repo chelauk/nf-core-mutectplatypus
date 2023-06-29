@@ -23,7 +23,7 @@ process PICARD_CROSSCHECKFINGERPRINTS {
     def avail_mem = 3072
     def inputs_list = []
     bam.each() {a -> inputs_list.add("--INPUT " + a ) }
-    inputs_command = inputs_list.join( ' \\\n' )
+    inputs_command = inputs_list.join( ' \\\n        ' )
     if (!task.memory) {
         log.info '[Picard CrosscheckFingerprints] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
     } else {
@@ -34,6 +34,7 @@ process PICARD_CROSSCHECKFINGERPRINTS {
         -Xmx${avail_mem}M \\
         CrosscheckFingerprints \\
         $args \\
+        --EXIT_CODE_WHEN_MISMATCH 0 \\
         --NUM_THREADS ${task.cpus} \\
         $inputs_command \\
         --HAPLOTYPE_MAP ${haplotype_map} \\
