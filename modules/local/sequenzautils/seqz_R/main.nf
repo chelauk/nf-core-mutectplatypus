@@ -3,7 +3,9 @@ process SEQUENZAUTILS_RSEQZ {
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::r-sequenza=3.0.0" : null)
-    container 'r-sequenza.sif'
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/r-sequenza%3A3.0.0--r42h3342da4_5' :
+        'biocontainers/r-sequenza%3A3.0.0--r42h3342da4_5' }"
 
     input:
     tuple val(patient), val(id), path(seqz_bin)
