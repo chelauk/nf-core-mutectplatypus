@@ -216,7 +216,6 @@ workflow MUTECT_PLATYPUS {
         [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
         }
         .set{bam_intervals}
-    mutect_input.view()
 
     PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
 
