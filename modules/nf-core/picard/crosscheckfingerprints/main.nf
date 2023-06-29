@@ -8,7 +8,7 @@ process PICARD_CROSSCHECKFINGERPRINTS {
         'biocontainers/picard:3.0.0--hdfd78af_1' }"
 
     input:
-    tuple val(patient), path(control_bam), path(control_bai), val(sample_tumour), path(tumour_bam), path(tumour_bai)
+    tuple val(patient), val(sample_tumour), val(sample_normal), path(bam), path(bais)
     path haplotype_map
 
     output:
@@ -21,6 +21,9 @@ process PICARD_CROSSCHECKFINGERPRINTS {
     script:
     def args = task.ext.args ?: ''
     def avail_mem = 3072
+    def inputs_list = []
+    bam.each() {a -> inputs_list.add("--INPUT " + a ) }
+    inputs_command = inputs_list.join( ' \\\n' )
     if (!task.memory) {
         log.info '[Picard CrosscheckFingerprints] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
     } else {
@@ -32,8 +35,7 @@ process PICARD_CROSSCHECKFINGERPRINTS {
         CrosscheckFingerprints \\
         $args \\
         --NUM_THREADS ${task.cpus} \\
-        --INPUT ${control_bam} \\
-        --SECOND_INPUT ${tumour_bam} \\
+        $inputs_command \\
         --HAPLOTYPE_MAP ${haplotype_map} \\
         --OUTPUT ${sample_tumour}_vs_control.crosscheck_metrics.txt
 
@@ -45,6 +47,9 @@ process PICARD_CROSSCHECKFINGERPRINTS {
     stub:
     def args = task.ext.args ?: ''
     def avail_mem = 3072
+    def inputs_list = []
+    bam.each() {a -> inputs_list.add("--INPUT " + a ) }
+    inputs_command = inputs_list.join( ' \\\n' )
     if (!task.memory) {
         log.info '[Picard CrosscheckFingerprints] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
     } else {
@@ -56,8 +61,7 @@ process PICARD_CROSSCHECKFINGERPRINTS {
         CrosscheckFingerprints \\
         $args \\
         --NUM_THREADS ${task.cpus} \\
-        --INPUT ${control_bam} \\
-        --SECOND_INPUT ${tumour_bam} \\
+        $inputs_command \\
         --HAPLOTYPE_MAP ${haplotype_map} \\
         --OUTPUT ${sample_tumour}_vs_control.crosscheck_metrics.txt
 

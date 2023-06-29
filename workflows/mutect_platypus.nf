@@ -154,6 +154,7 @@ def make_mutect_input(input) {
         .map { patient, id, status, bam, bai -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /normal/ }], bam, bai ]}
 }
 
+/*
 def make_crosscheck_imput(input) {
     return input
         .map { meta, files -> [ meta.patient, meta.id, meta.status, files[0],files[1]] }
@@ -162,7 +163,7 @@ def make_crosscheck_imput(input) {
                   
         }
 }
-
+*/
 // Info required for completion email and summary
 def multiqc_report = []
 
@@ -179,8 +180,8 @@ workflow MUTECT_PLATYPUS {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
-    crosscheck_input = make_crosscheck_imput(INPUT_CHECK.out.bams)
-    pair_input = crosscheck_input.control.combine(crosscheck_input.tumour, by:0)
+    //crosscheck_input = make_crosscheck_imput(INPUT_CHECK.out.bams)
+    //pair_input = crosscheck_input.control.combine(crosscheck_input.tumour, by:0)
     
     
     //
@@ -215,13 +216,9 @@ workflow MUTECT_PLATYPUS {
         [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
         }
         .set{bam_intervals}
+    mutect_input.view()
 
-    // check for sample control mismatch
-    crosscheck_input.control.combine(crosscheck_input.tumour, by:0)
-            .map{patient, control_sample, control_status, control_bam, control_bai, tumour_sample, tumour_status, tumour_bam, tumour_bai -> [patient, control_bam, control_bai,tumour_sample, tumour_bam, tumour_bai]}
-            .set{control_tumour_match}
-    
-    PICARD_CROSSCHECKFINGERPRINTS ( control_tumour_match, haplotype_map )
+    PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
 
     GATK4_MUTECT2(
         bam_intervals,
