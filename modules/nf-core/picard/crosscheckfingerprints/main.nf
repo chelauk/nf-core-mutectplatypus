@@ -37,7 +37,7 @@ process PICARD_CROSSCHECKFINGERPRINTS {
         --NUM_THREADS ${task.cpus} \\
         $inputs_command \\
         --HAPLOTYPE_MAP ${haplotype_map} \\
-        --OUTPUT ${sample_tumour}_vs_control.crosscheck_metrics.txt
+        --OUTPUT ${patient}.crosscheck_metrics.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -69,7 +69,7 @@ process PICARD_CROSSCHECKFINGERPRINTS {
     "${task.process}":
         picard: \$( picard CrosscheckFingerprints --version 2>&1 | grep -o 'Version:.*' | cut -f2- -d: )
     END_VERSIONS"
-    touch ${sample_tumour}_vs_control.crosscheck_metrics.txt
+    touch ${patient}.crosscheck_metrics.txt
     touch versions.yml
     """
 }
