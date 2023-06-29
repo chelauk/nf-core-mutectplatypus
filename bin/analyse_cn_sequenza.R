@@ -22,6 +22,7 @@ if (ccf == "PDO") {
     high_ccf <- 0.99
     low_ccf <- 0.95
     } else {
+    ccf <- as.numeric(ccf)
     high_ccf <- ccf + 0.1
     low_ccf <- ccf - 0.1
     }
