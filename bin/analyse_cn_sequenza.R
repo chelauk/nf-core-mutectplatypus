@@ -14,30 +14,18 @@ gam <- as.integer(gam)
 if (ploidy == 7) {
     low_p <- 1
     up_p <- 7
-} else if (ploidy == 2) {
-    low_p <- 0.5
-    up_p <- 2.5
-} else if (ploidy == 3) {
-    low_p <- 2.5
-    up_p <- 3.5
-} else if (ploidy == 4) {
-    low_p <- 3.5
-    up_p <- 4.5
-} else if (ploidy == 5) {
-    low_p <- 4.5
-    up_p <- 5.5
-} else if (ploidy == 6) {
-    low_p <- 5.5
-    up_p <- 6.5
-    weighted_mean <- TRUE
-}
+    } else  {
+    low_p <- ploidy - 0.5
+    up_p <- ploidy + 0.5
+    }
 if (ccf == "PDO") {
     high_ccf <- 0.99
     low_ccf <- 0.95
-} else {
-    high_ccf <- 0.1
-    low_ccf <- 1
-}
+    } else {
+    ccf <- as.numeric(ccf)
+    high_ccf <- ccf + 0.1
+    low_ccf <- ccf - 0.1
+    }
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
 print(paste0("up_cell type: ", typeof(high_ccf), " ", high_ccf))

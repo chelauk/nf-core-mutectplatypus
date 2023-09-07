@@ -18,6 +18,7 @@ def checkPathParamList = [
     params.dict,
     params.germline_resource,
     params.germline_resource_idx,
+    params.haplotype_map,
     params.drivers
     ]
 
@@ -33,8 +34,9 @@ fasta_fai             = params.fasta_fai             ? Channel.fromPath(params.f
 dict                  = params.dict                  ? Channel.fromPath(params.dict).collect()                  : Channel.empty()
 germline_resource     = params.germline_resource     ? Channel.fromPath(params.germline_resource).collect()     : Channel.empty()
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : Channel.empty()
+haplotype_map         = params.haplotype_map         ? Channel.fromPath(params.haplotype_map).collect()         : Channel.empty()
 drivers               = params.drivers               ? Channel.fromPath(params.drivers).collect()               : Channel.empty()
-mappability_bw        = params.mappability_bw        ? Channel.fromPath(params.mappability_bw).collect()           : Channel.empty()
+mappability_bw        = params.mappability_bw        ? Channel.fromPath(params.mappability_bw).collect()        : Channel.empty()
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 
 // Initialize value channels based on params, defined in the params.genomes[params.genome] scope
@@ -107,34 +109,35 @@ include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main
 include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
+include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/local/concat_vcf/main'
+include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/main'
+include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils/mergeseqz/main'
+include { SEQUENZAUTILS_BINNING           } from '../modules/local/sequenzautils/seqzbin/main'
+include { SEQUENZAUTILS_RSEQZ             } from '../modules/local/sequenzautils/seqz_R/main.nf'
+include { MAPPABILITY                     } from '../modules/local/mappability/main'
+include { EVOVERSE_CNAQC                  } from '../modules/local/evoverse/main'
 
 //
 // MODULE: Installed directly from nf-core/modules
 //
 
-include { GATK4_MUTECT2                   } from '../modules/nf-core/modules/gatk4/mutect2/main'
-include { GATK4_LEARNREADORIENTATIONMODEL } from '../modules/nf-core/modules/gatk4/learnreadorientationmodel/main'
-include { GATK4_MERGEMUTECTSTATS          } from '../modules/nf-core/modules/gatk4/mergemutectstats/main'
-include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/nf-core/modules/concat_vcf/main'
-include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/nf-core/modules/concat_vcf/main'
-include { GATK4_GETPILEUPSUMMARIES as GET_PS_TUMOUR } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
-include { GATK4_GETPILEUPSUMMARIES as GET_PS_NORM } from '../modules/nf-core/modules/gatk4/getpileupsummaries/main'
-include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_TUMOUR } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
-include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_NORM } from '../modules/nf-core/modules/gatk4/gatherpileupsummaries/main'
-include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/modules/gatk4/calculatecontamination/main'
-include { GATK4_FILTERMUTECTCALLS         } from '../modules/nf-core/modules/gatk4/filtermutectcalls/main'
-include { ENSEMBLVEP as PLAT_VEP          } from '../modules/nf-core/modules/ensemblvep/main'
-include { ENSEMBLVEP                      } from '../modules/nf-core/modules/ensemblvep/main'
-include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/modules/sequenzautils/gcwiggle/main'
-include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/modules/sequenzautils/bam2seqz/main'
-include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/nf-core/modules/sequenzautils/mergeseqz/main'
+include { PICARD_CROSSCHECKFINGERPRINTS   } from '../modules/nf-core/picard/crosscheckfingerprints/main'
+include { GATK4_MUTECT2                   } from '../modules/nf-core/gatk4/mutect2/main'
+include { GATK4_LEARNREADORIENTATIONMODEL } from '../modules/nf-core/gatk4/learnreadorientationmodel/main'
+include { GATK4_MERGEMUTECTSTATS          } from '../modules/nf-core/gatk4/mergemutectstats/main'
+include { GATK4_GETPILEUPSUMMARIES as GET_PS_TUMOUR } from '../modules/nf-core/gatk4/getpileupsummaries/main'
+include { GATK4_GETPILEUPSUMMARIES as GET_PS_NORM } from '../modules/nf-core/gatk4/getpileupsummaries/main'
+include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_TUMOUR } from '../modules/nf-core/gatk4/gatherpileupsummaries/main'
+include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_NORM } from '../modules/nf-core/gatk4/gatherpileupsummaries/main'
+include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/gatk4/calculatecontamination/main'
+include { GATK4_FILTERMUTECTCALLS         } from '../modules/nf-core/gatk4/filtermutectcalls/main'
+include { ENSEMBLVEP as PLAT_VEP          } from '../modules/nf-core/ensemblvep/main'
+include { ENSEMBLVEP                      } from '../modules/nf-core/ensemblvep/main'
+include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/sequenzautils/gcwiggle/main'
+include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/sequenzautils/bam2seqz/main'
 //include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
-include { SEQUENZAUTILS_BINNING           } from '../modules/nf-core/modules/sequenzautils/seqzbin/main'
-include { SEQUENZAUTILS_RSEQZ             } from '../modules/nf-core/modules/sequenzautils/seqz_R/main.nf'
-include { MAPPABILITY                     } from '../modules/local/mappability/main'
-include { EVOVERSE_CNAQC                  } from '../modules/local/evoverse/main'
-include { MULTIQC                         } from '../modules/nf-core/modules/multiqc/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
+include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,6 +154,16 @@ def make_mutect_input(input) {
         .map { patient, id, status, bam, bai -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /normal/ }], bam, bai ]}
 }
 
+/*
+def make_crosscheck_imput(input) {
+    return input
+        .map { meta, files -> [ meta.patient, meta.id, meta.status, files[0],files[1]] }
+        .branch { control: it[2] == "normal"
+                 tumour:  it[2] == "tumour" 
+                  
+        }
+}
+*/
 // Info required for completion email and summary
 def multiqc_report = []
 
@@ -167,7 +180,10 @@ workflow MUTECT_PLATYPUS {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
-
+    //crosscheck_input = make_crosscheck_imput(INPUT_CHECK.out.bams)
+    //pair_input = crosscheck_input.control.combine(crosscheck_input.tumour, by:0)
+    
+    
     //
     // create intervals to split jobs.
     //
@@ -200,6 +216,8 @@ workflow MUTECT_PLATYPUS {
         [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
         }
         .set{bam_intervals}
+
+    PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
 
     GATK4_MUTECT2(
         bam_intervals,
@@ -281,7 +299,6 @@ workflow MUTECT_PLATYPUS {
     normal_gatherpileup_input = GATHER_PS_NORM.out.table
                                     .map{ meta, table ->
                                     [ meta.patient, meta.sample, meta.status, meta.id, table ] }
-    //tumour_gatherpileup_input.view()
     contamination_input = tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
                                     .map{ patient, sample1, status1, id1, table, sample2, status2, id2, table2 ->
                                     [patient, sample1,id1, table, table2] }
@@ -410,7 +427,6 @@ seq_input_pair = seq_input_pair
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
 
-    ZIP_MUTECT_ANN_VCF.out.vcf.view()
     MAPPABILITY(ZIP_MUTECT_ANN_VCF.out.vcf, mappability_bw, pan)
 
     //
