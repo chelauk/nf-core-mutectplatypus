@@ -30,6 +30,7 @@ process SEQUENZAUTILS_BAM2SEQZ {
     def args = task.ext.args ?: "-C ${chromosome}"
     def prefix = task.ext.prefix ?: "${id}_${chromosome}"
     """
+    chromosome=$chromosome
     sequenza-utils \\
         bam2seqz \\
         $args \\
@@ -40,16 +41,18 @@ process SEQUENZAUTILS_BAM2SEQZ {
         -gc $wigfile \\
         -o ${prefix}.seqz.gz
     
-    file_size=\$(head -n 10 < <( zcat ${prefix}.seqz.gz ) | wc -l )
-
-    if [ \$file_size -eq 1 ]
-    then
-        exit 104
-    fi
+     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sequenzautils: \$(echo \$(sequenza-utils 2>&1) | sed 's/^.*is version //; s/ .*\$//')
     END_VERSIONS
+    
+    file_size=\$(head -n 10 < <( zcat ${prefix}.seqz.gz ) | wc -l )
+
+    if [ \$file_size -eq 1 ] && [ \$chromosome != "chrY" ]
+      then
+        exit 104
+      fi
     """
     stub:
     def args = task.ext.args ?: "-C ${chromosome}"
