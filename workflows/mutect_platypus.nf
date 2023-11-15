@@ -109,6 +109,7 @@ include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main
 include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
+include { ZIP_VCF as ZIP_MUTECT_MONO_VCF  } from '../modules/local/zip_vcf/main'
 include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/local/concat_vcf/main'
 include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/main'
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils/mergeseqz/main'
@@ -327,8 +328,9 @@ workflow MUTECT_PLATYPUS {
         vep_cache,
         []
     )
-
+    VCF_SPLIT(ENSEMBLVEP.out.vcf)
     ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
+    ZIP_MUTECT_MONO_VCF ( VCF_SPLIT.out.vcf)
 
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
 
