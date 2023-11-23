@@ -4,7 +4,7 @@ process GATK4_MUTECT2 {
 
     conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/gatk4:4.2.5.0--hdfd78af_0"
+        container "https://depot.galaxyproject.org/singularity/gatk4:4.4.0.0--py36hdfd78af_0"
     } else {
         container "quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0"
     }
@@ -48,10 +48,15 @@ process GATK4_MUTECT2 {
     }
 
     """
+    if [ ! -d tmpdir ]
+    then
+      mkdir -p tmpdir
+    fi
     gatk Mutect2 \\
         -R ${fasta} \\
         ${inputs_command} \\
         ${normals_command} \\
+        --tmp-dir ./tmpdir \\
         --germline-resource $germline_resource \\
         --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\
         $args $task.cpus \\
