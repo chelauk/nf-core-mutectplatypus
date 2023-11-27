@@ -92,7 +92,7 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK } from '../subworkflows/local/input_check'
-
+include { SPLIT_VCF }   from '../subworkflows/local/vcf_split'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -328,9 +328,10 @@ workflow MUTECT_PLATYPUS {
         vep_cache,
         []
     )
-    VCF_SPLIT(ENSEMBLVEP.out.vcf)
-    ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
-    ZIP_MUTECT_MONO_VCF ( VCF_SPLIT.out.vcf)
+    SPLIT_VCF(ENSEMBLVEP.out.vcf)
+    // ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
+    SPLIT_VCF.out.split_vcf.view()
+    ZIP_MUTECT_MONO_VCF ( SPLIT_VCF.out.split_vcf)
 
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
 
@@ -425,11 +426,12 @@ seq_input_pair = seq_input_pair
     } else {
         SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf, seq_gam)
     }
+    SEQUENZAUTILS_RSEQZ.out.rseqz.view()
 
-    evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
+    evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine( ZIP_MUTECT_MONO_VCF.out.vcf, by:0 )
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
 
-    MAPPABILITY(ZIP_MUTECT_ANN_VCF.out.vcf, mappability_bw, pan)
+    MAPPABILITY(ZIP_MUTECT_MONO_VCF.out.vcf, mappability_bw, pan)
 
     //
     // MODULE: MultiQC

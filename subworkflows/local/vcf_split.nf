@@ -1,27 +1,21 @@
-process VCF_SPLIT{
-    tag "$meta.id"
-    label 'process_medium'
 
-    conda "bioconda::bcftools=1.17"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bcftools:1.17--haef29d1_0':
-        'biocontainers/bcftools:1.17--haef29d1_0' }"
+include { VCF_SPLIT } from '../../modules/local/split_vcf/main.nf'
 
-    input:
-    tuple val(meta), path(vcf)
+workflow SPLIT_VCF {
 
-    ouput:
-    tuple val(meta), path("*mono.vcf") , emit: vcf
-    path "versions.yml"           , emit: versions
+    take:
+    combined_vcf
 
-    script:
-    """
-    sed -n -e '/tumor_sample/s/##tumor_sample=//p' $vcf > temp
-    while read -r sample
-      do
-      bcftools view $vcf -s \$sample > "\$sample"_mutect2.mono.vcf
-      done<temp
-    """
+    main:
+        VCF_SPLIT(combined_vcf)
+        split_vcf  = VCF_SPLIT.out.vcf.flatMap { patient, vcfs ->
+            vcfs.collect { vcf ->
+            def parts = vcf.toString().tokenize('/')[-1].tokenize('_')
+            def sample = parts[2]
+           tuple(patient, sample, vcf)
+           }
+        }
 
-
+    emit:
+    split_vcf                                  // channel: [ val(patient), sample, vcf ]
 }
