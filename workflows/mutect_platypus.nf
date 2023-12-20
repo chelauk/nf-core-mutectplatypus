@@ -111,6 +111,7 @@ include { VCF_SPLIT                       } from '../subworkflows/local/vcf_spli
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_MUTECT_MONO_VCF  } from '../modules/local/zip_vcf/main'
+include { VCF2MAF                         } from '../modules/local/vcf2maf/main'
 include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/local/concat_vcf/main'
 include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/main'
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils/mergeseqz/main'
@@ -345,15 +346,10 @@ workflow MUTECT_PLATYPUS {
                                 [my_channel[0], patient_sample, file] }
                }
        .set { MONO_CHANNEL }  
-   // VCF_SPLIT.out.vcf
-   //    .flatMap{ my_channel -> my_channel[1].collect { 
-   //                             file -> 
-   //                             def patient_sample = file - '_mutect2.mono.vcf'
-   //                             [my_channel[0], patient_sample, file] }
-   //            }
-   //    .set{ MONO_CHANNEL }
 
-    ZIP_MUTECT_MONO_VCF ( MONO_CHANNEL )
+   VCF2MAF ( MONO_CHANNEL )
+    
+   ZIP_MUTECT_MONO_VCF ( MONO_CHANNEL )
 
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
 
