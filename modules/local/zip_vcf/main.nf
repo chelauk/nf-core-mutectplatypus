@@ -20,7 +20,7 @@ process ZIP_VCF {
     bgzip $vcf
     tabix -p vcf "${vcf}".gz
     touch versions.yml
-	"""
+    """
     stub:
     def args = task.ext.args ?: ''
     """

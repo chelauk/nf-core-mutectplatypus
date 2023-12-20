@@ -1,5 +1,5 @@
 process VCF_SPLIT{
-    tag "$meta.id"
+    tag "$meta"
     label 'process_medium'
 
     conda "bioconda::bcftools=1.17"
@@ -10,7 +10,7 @@ process VCF_SPLIT{
     input:
     tuple val(meta), path(vcf)
 
-    ouput:
+    output:
     tuple val(meta), path("*mono.vcf") , emit: vcf
     path "versions.yml"           , emit: versions
 
@@ -21,6 +21,11 @@ process VCF_SPLIT{
       do
       bcftools view $vcf -s \$sample > "\$sample"_mutect2.mono.vcf
       done<temp
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*(bedtools) v//; s/ .*\$//')
+    END_VERSIONS
     """
 
 

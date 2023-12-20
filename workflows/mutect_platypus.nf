@@ -107,6 +107,7 @@ include { CREATE_INTERVALS_BED            } from '../modules/local/create_interv
 include { BUILD_INTERVALS                 } from '../modules/local/build_intervals/main'
 include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
 include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
+include { VCF_SPLIT                       } from '../subworkflows/local/vcf_split.nf'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_MUTECT_MONO_VCF  } from '../modules/local/zip_vcf/main'
@@ -330,7 +331,17 @@ workflow MUTECT_PLATYPUS {
     )
     VCF_SPLIT(ENSEMBLVEP.out.vcf)
     ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
-    ZIP_MUTECT_MONO_VCF ( VCF_SPLIT.out.vcf)
+    
+    // split_channel = channel
+    //                    .flatMap { tuple ->
+    //                                tuple[1].collect { file -> [tuple[0], file] }
+    //    } 
+    VCF_SPLIT.out.vcf
+       .flatMap{ my_channel -> my_channel[1].collect { 
+                                file -> [my_channel[0], file] }
+               }
+       .set{ MONO_CHANNEL }
+    ZIP_MUTECT_MONO_VCF ( MONO_CHANNEL )
 
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
 
