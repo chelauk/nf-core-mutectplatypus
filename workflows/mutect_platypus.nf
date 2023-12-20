@@ -329,8 +329,10 @@ workflow MUTECT_PLATYPUS {
         vep_cache,
         []
     )
+
+    ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf[0], "spacer", ENSEMBLVEP.out.vcf[1] )
     VCF_SPLIT(ENSEMBLVEP.out.vcf)
-    ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
+   
     
     VCF_SPLIT.out.vcf
        .flatMap{ my_channel -> my_channel[1].collect { 
