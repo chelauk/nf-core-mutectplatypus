@@ -329,18 +329,30 @@ workflow MUTECT_PLATYPUS {
         vep_cache,
         []
     )
+    ENSEMBLVEP.out.vcf
+                  .map { patient, file -> [ patient , "spacer", file ] }
+                  .set { PATIENT_VCF }
 
-    ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf[0], "spacer", ENSEMBLVEP.out.vcf[1] )
+    ZIP_MUTECT_ANN_VCF ( PATIENT_VCF )
+
     VCF_SPLIT(ENSEMBLVEP.out.vcf)
    
-    
     VCF_SPLIT.out.vcf
-       .flatMap{ my_channel -> my_channel[1].collect { 
-                                file -> 
-                                def patient_sample = file - '_mutect2.mono.vcf'
+       .flatMap{ my_channel -> my_channel[1].collect {
+                                file ->
+                                def filename = file.getName() 
+                                def patient_sample = filename - '_mutect2.mono.vcf'
                                 [my_channel[0], patient_sample, file] }
                }
-       .set{ MONO_CHANNEL }
+       .set { MONO_CHANNEL }  
+   // VCF_SPLIT.out.vcf
+   //    .flatMap{ my_channel -> my_channel[1].collect { 
+   //                             file -> 
+   //                             def patient_sample = file - '_mutect2.mono.vcf'
+   //                             [my_channel[0], patient_sample, file] }
+   //            }
+   //    .set{ MONO_CHANNEL }
+
     ZIP_MUTECT_MONO_VCF ( MONO_CHANNEL )
 
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
@@ -375,7 +387,11 @@ workflow MUTECT_PLATYPUS {
         []
     )
 
-    ZIP_PLATYPUS_ANN_VCF ( PLAT_VEP.out.vcf )
+    PLAT_VEP.out.vcf
+                  .map { patient, file -> [ patient , "spacer", file ] }
+                  .set { PLAT_PATIENT_VCF }
+    
+    ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -405,10 +421,6 @@ workflow MUTECT_PLATYPUS {
         .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
         .collect()
 
-//    seq_input_pair.combine(seqz_chr)
-//                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2, chr ->
-//                [ patient, id1, chr, files1, files2] }
-//                .set{ seq_input_chr }
 
 seq_input_pair = seq_input_pair
                 .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2 ->
@@ -438,7 +450,10 @@ seq_input_pair = seq_input_pair
     }
 
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
-    EVOVERSE_CNAQC(evo_input, ploidy, drivers )
+    evo_input
+        .map{ patient, id, segments, spacer, vcf , vcf_tbi -> [ patient, id, segments, vcf , vcf_tbi ]}
+        .set{evo_fixed}
+    EVOVERSE_CNAQC(evo_fixed, ploidy, drivers )
 
     MAPPABILITY(ZIP_MUTECT_ANN_VCF.out.vcf, mappability_bw, pan)
 

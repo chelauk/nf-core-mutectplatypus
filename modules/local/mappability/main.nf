@@ -7,7 +7,7 @@ process MAPPABILITY {
     container 'mappability.sif'
 
     input:
-        tuple val(patient),  path(vcf), path(tbi)
+        tuple val(patient), val(spacer),  path(vcf), path(tbi)
         path mappability_bw
         val pan
 
