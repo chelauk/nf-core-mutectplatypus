@@ -332,13 +332,11 @@ workflow MUTECT_PLATYPUS {
     VCF_SPLIT(ENSEMBLVEP.out.vcf)
     ZIP_MUTECT_ANN_VCF ( ENSEMBLVEP.out.vcf )
     
-    // split_channel = channel
-    //                    .flatMap { tuple ->
-    //                                tuple[1].collect { file -> [tuple[0], file] }
-    //    } 
     VCF_SPLIT.out.vcf
        .flatMap{ my_channel -> my_channel[1].collect { 
-                                file -> [my_channel[0], file] }
+                                file -> 
+                                def patient_sample = file - '_mutect2.mono.vcf'
+                                [my_channel[0], patient_sample, file] }
                }
        .set{ MONO_CHANNEL }
     ZIP_MUTECT_MONO_VCF ( MONO_CHANNEL )
