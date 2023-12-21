@@ -4,11 +4,11 @@ process VCF2MAF {
 
     conda (params.enable_conda ? "bioconda::vcf2maf" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'vcf2maf.sif' : null }"
+        'vcf2maf.1.6.21--hdfd78af_0.sif' : null }"
 
     input:
     tuple val(patient), val(id), path(vcf)
-    fasta
+    path fasta
 
     output:
     tuple val(patient), val(id), path("*maf"), emit: maf
@@ -18,7 +18,12 @@ process VCF2MAF {
 
     script:
     """
-    perl /usr/bin/vcf2maf/vcf2maf.pl --input-vcf $vcf --output-maf ${id}.maf  --tumor-id ${id}  --ref-fasta 
+    vcf2maf.pl \
+    --input-vcf $vcf \
+    --output-maf ${id}.maf \
+    --ref-fasta $fasta \
+    --inhibit-vep \
+    --ncbi-build GRCh38
     """
     
     stub:

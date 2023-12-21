@@ -347,7 +347,7 @@ workflow MUTECT_PLATYPUS {
                }
        .set { MONO_CHANNEL }  
 
-   VCF2MAF ( MONO_CHANNEL )
+   VCF2MAF ( MONO_CHANNEL,fasta )
     
    ZIP_MUTECT_MONO_VCF ( MONO_CHANNEL )
 
