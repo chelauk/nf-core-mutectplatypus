@@ -17,8 +17,8 @@ process ENSEMBLVEP {
 
     output:
     tuple val(patient), path("*.ann.vcf"), emit: vcf
-    path "*.summary.html"             , emit: report
-    path "versions.yml"               , emit: versions
+    path "*.summary.html"                , emit: report
+    path "versions.yml"                  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
