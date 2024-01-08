@@ -27,11 +27,37 @@ process ENSEMBLVEP {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${patient}"
     def dir_cache = cache ? "\${PWD}/${cache}" : "/.vep"
+
+
+    vep  
+
     """
     mkdir $prefix
 
     vep \\
         -i $vcf \\
+        --sift b \\
+        --ccds \\
+        --uniprot \\
+        --hgvs \\
+        --symbol \\
+        --numbers \\
+        --domains \\
+        --gene_phenotype \\
+        --canonical \\
+        --protein \\
+        --biotype \\
+        --tsl \\
+        --variant_class \\
+        --shift_hgvs 1 \\
+        --check_existing \\
+        --total_length \\
+        --allele_number \\
+        --no_escape \\
+        --xref_refseq \\
+        --failed 1 \\
+        --flag_pick_allele \\
+        --pick_order canonical,tsl,biotype,rank,ccds,length \\
         -o ${prefix}_${args}.ann.vcf \\
         --force_overwrite \\
         --assembly $genome \\
