@@ -23,6 +23,7 @@ process VCF2MAF {
     --output-maf ${id}.maf \
     --ref-fasta $fasta \
     --inhibit-vep \
+    --tumor-id $id \
     --ncbi-build GRCh38
     """
     

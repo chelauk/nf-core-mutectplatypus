@@ -12,7 +12,7 @@ process MAPPABILITY {
         val pan
 
     output:
-        path "*out"
+        path "*out",                              emit: mappability
 
     script:
     """

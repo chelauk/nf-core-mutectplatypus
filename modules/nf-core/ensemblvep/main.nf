@@ -27,28 +27,15 @@ process ENSEMBLVEP {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${patient}"
     def dir_cache = cache ? "\${PWD}/${cache}" : "/.vep"
-
-
-    vep  
-
     """
-    mkdir $prefix
+    if [ ! -d $prefix ]; then
+        mkdir $prefix
+    fi
 
     vep \\
         -i $vcf \\
-        --sift b \\
-        --ccds \\
-        --uniprot \\
-        --hgvs \\
-        --symbol \\
-        --numbers \\
-        --domains \\
-        --gene_phenotype \\
-        --canonical \\
-        --protein \\
-        --biotype \\
-        --tsl \\
-        --variant_class \\
+        --fasta ${dir_cache}/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz \\
+        --everything \\
         --shift_hgvs 1 \\
         --check_existing \\
         --total_length \\
@@ -68,6 +55,8 @@ process ENSEMBLVEP {
         --fork $task.cpus \\
         --vcf \\
         --offline \\
+        --verbose \\
+        --format vcf \\
         --stats_file ${prefix}_${args}.summary.html
 
     rm -rf $prefix

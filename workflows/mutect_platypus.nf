@@ -139,6 +139,7 @@ include { ENSEMBLVEP                      } from '../modules/nf-core/ensemblvep/
 include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/sequenzautils/gcwiggle/main'
 include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/sequenzautils/bam2seqz/main'
 //include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
+include { ADD_MAPPABILITY                 } from '../modules/local/add_mappability/main'
 include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
@@ -330,6 +331,7 @@ workflow MUTECT_PLATYPUS {
         vep_cache,
         []
     )
+
     ENSEMBLVEP.out.vcf
                   .map { patient, file -> [ patient , "spacer", file ] }
                   .set { PATIENT_VCF }
@@ -452,6 +454,8 @@ seq_input_pair = seq_input_pair
     EVOVERSE_CNAQC(evo_fixed, ploidy, drivers )
 
     MAPPABILITY(ZIP_MUTECT_ANN_VCF.out.vcf, mappability_bw, pan)
+    
+    ADD_MAPPABILITY( MAPPABILITY.out.mappability.combine(VCF2MAF.out.maf))
 
     //
     // MODULE: MultiQC
