@@ -339,15 +339,30 @@ workflow MUTECT_PLATYPUS {
     ZIP_MUTECT_ANN_VCF ( PATIENT_VCF )
 
     VCF_SPLIT(ENSEMBLVEP.out.vcf)
-   
+    
+
+    // if there is more than one vcf file in the channel, then we need to split the channel and collect the files
+    // otherwise the flatMap will fail as it expects a channel of channels.
+ /*
     VCF_SPLIT.out.vcf
-       .flatMap{ my_channel -> my_channel[1].collect {
-                                file ->
-                                def filename = file.getName() 
-                                def patient_sample = filename - '_mutect2.mono.vcf'
-                                [my_channel[0], patient_sample, file] }
-               }
-       .set { MONO_CHANNEL }  
+    .flatMap{ my_channel -> my_channel[1].collect {
+                                 file ->
+                                 def filename = file.getName() 
+                                 def patient_sample = filename - '_mutect2.mono.vcf'
+                                 [my_channel[0], patient_sample, file] }
+                }
+    .set { MONO_CHANNEL }
+*/
+    VCF_SPLIT.out.vcf
+        .flatMap { name, files ->
+            (files instanceof List ? files : [files]).collect { file ->
+                def filename = file.getName()
+                def patient_sample = filename - '_mutect2.mono.vcf'
+                [name, patient_sample, file]
+            }
+        }
+        .set { MONO_CHANNEL }
+
 
    VCF2MAF ( MONO_CHANNEL,fasta )
     

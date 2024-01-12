@@ -18,12 +18,12 @@ process VCF2MAF {
 
     script:
     """
-    vcf2maf.pl \
-    --input-vcf $vcf \
-    --output-maf ${id}.maf \
-    --ref-fasta $fasta \
-    --inhibit-vep \
-    --tumor-id $id \
+    vcf2maf.pl \\
+    --input-vcf $vcf \\
+    --output-maf ${id}.maf \\
+    --ref-fasta $fasta \\
+    --inhibit-vep \\
+    --tumor-id $id \\
     --ncbi-build GRCh38
     """
     
