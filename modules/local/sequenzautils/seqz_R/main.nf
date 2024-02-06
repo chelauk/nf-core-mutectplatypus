@@ -15,7 +15,7 @@ process SEQUENZAUTILS_RSEQZ {
     val  seq_gam
 
     output:
-    tuple val(patient), val(id), path("${patient}_${id}"), emit: rseqz
+    tuple val(patient), val(id), path("${id}"), emit: rseqz
     path "versions.yml"          , emit: versions
 
     when:
@@ -27,7 +27,7 @@ process SEQUENZAUTILS_RSEQZ {
     def prefix = task.ext.prefix ?: "${patient}_${id}"
     """
     zcat ${seqz_bin} > $seqz_in
-    analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${ccf} ${seq_gam}
+    analyse_cn_sequenza.R ${seqz_in} ${id} ${gender} ${ploidy} ${ccf} ${seq_gam}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

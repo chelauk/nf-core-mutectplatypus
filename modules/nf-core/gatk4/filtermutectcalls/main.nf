@@ -16,8 +16,8 @@ process GATK4_FILTERMUTECTCALLS {
     output:
     tuple val(patient), path("*.filtered.vcf.gz")            , emit: vcf
     tuple val(patient), path("*.filtered.vcf.gz.tbi")        , emit: tbi
-    tuple val(patient), path("*.filteringStats.tsv"), emit: stats
-    path "versions.yml"                          , emit: versions
+    path "*.filteringStats.tsv"                              , emit: stats
+    path "versions.yml"                                      , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

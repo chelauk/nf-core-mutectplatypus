@@ -484,9 +484,17 @@ seq_input_pair = seq_input_pair
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+    ch_multiqc_files = ch_multiqc_files.mix(ENSEMBLVEP.out.report.collect().ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(GATK4_FILTERMUTECTCALLS.out.stats.collect().ifEmpty([]))
+
+
+    //mutect_input.view()
+    //multiqc_mutect_input = mutect_input.collect()
+    multiqc_mutect_input = mutect_input
+        .map{ patient, which_tumour, which_norm, bam, bai -> patient }
 
     MULTIQC (
-        ch_multiqc_files.collect()
+        ch_multiqc_files.collect(), multiqc_mutect_input
     )
     multiqc_report = MULTIQC.out.report.toList()
     ch_versions    = ch_versions.mix(MULTIQC.out.versions)
