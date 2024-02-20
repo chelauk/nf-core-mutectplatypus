@@ -18,14 +18,20 @@ if (ploidy == 7) {
     low_p <- ploidy - 0.5
     up_p <- ploidy + 0.5
     }
+if (ccf == "Tissue") {
+    high_ccf <- 0.05
+    low_ccf <- 0.99
+    }
 if (ccf == "PDO") {
     high_ccf <- 0.99
     low_ccf <- 0.95
     } else {
     ccf <- as.numeric(ccf)
-    high_ccf <- ccf + 0.1
-    low_ccf <- ccf - 0.1
+    high_ccf <- ccf + 0.2
+    low_ccf <- ccf - 0.2
     }
+
+
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
 print(paste0("up_cell type: ", typeof(high_ccf), " ", high_ccf))
