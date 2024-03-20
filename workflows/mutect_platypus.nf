@@ -19,7 +19,8 @@ def checkPathParamList = [
     params.germline_resource,
     params.germline_resource_idx,
     params.haplotype_map,
-    params.drivers
+    params.drivers,
+    params.ngscheckmate_bed
     ]
 
 for (param in checkPathParamList) if (param) file(param, checkIfExists: true)
@@ -37,6 +38,7 @@ germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.g
 haplotype_map         = params.haplotype_map         ? Channel.fromPath(params.haplotype_map).collect()         : Channel.empty()
 drivers               = params.drivers               ? Channel.fromPath(params.drivers).collect()               : Channel.empty()
 mappability_bw        = params.mappability_bw        ? Channel.fromPath(params.mappability_bw).collect()        : Channel.empty()
+ngscheckmate_bed      = params.ngscheckmate_bed      ? Channel.value(params.ngscheckmate_bed)                   : Channel.empty()
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 
 // Initialize value channels based on params, defined in the params.genomes[params.genome] scope
@@ -92,7 +94,10 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK } from '../subworkflows/local/input_check'
-include { BAM_NGSCHECKMATE } from '../subworkflows/nf-core/bam_ngscheckmate/main'
+
+// Sample QC on BAM files
+include { BAM_SAMPLEQC } from '../subworkflows/local/bam_sampleqc/main'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS

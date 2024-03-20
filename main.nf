@@ -35,6 +35,7 @@ params.vep_cache             = WorkflowMain.getGenomeAttribute(params, 'vep_cach
 params.wiggle                = WorkflowMain.getGenomeAttribute(params, 'wiggle' )
 params.drivers               = WorkflowMain.getGenomeAttribute(params, 'drivers' )
 params.mappability_bw        = WorkflowMain.getGenomeAttribute(params, 'mappability_bw' )
+params.ngscheckmate_bed      = WorkflowMain.getGenomeAttribute(params, 'ngscheckmate_bed')
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
