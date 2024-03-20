@@ -163,16 +163,6 @@ def make_mutect_input(input) {
         .map { patient, id, status, bam, bai -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /normal/ }], bam, bai ]}
 }
 
-/*
-def make_crosscheck_imput(input) {
-    return input
-        .map { meta, files -> [ meta.patient, meta.id, meta.status, files[0],files[1]] }
-        .branch { control: it[2] == "normal"
-                 tumour:  it[2] == "tumour" 
-                  
-        }
-}
-*/
 // Info required for completion email and summary
 def multiqc_report = []
 
@@ -228,7 +218,10 @@ workflow MUTECT_PLATYPUS {
 
 
     //PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
-    BAM_SAMPLEQC(mutect_input, ngscheckmate_bed, fasta)
+    ngscheckmate_input = INPUT_CHECK.out.bams
+                                        .groupTuple()
+    ngscheckmate_input.view()                                  
+    BAM_SAMPLEQC(ngscheckmate_input, ngscheckmate_bed, fasta)
 
     GATK4_MUTECT2(
         bam_intervals,
