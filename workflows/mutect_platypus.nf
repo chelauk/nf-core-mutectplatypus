@@ -226,7 +226,9 @@ workflow MUTECT_PLATYPUS {
         }
         .set{bam_intervals}
 
-    PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
+
+    //PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
+    BAM_SAMPLEQC(mutect_input, ngscheckmate_bed, fasta)
 
     GATK4_MUTECT2(
         bam_intervals,
