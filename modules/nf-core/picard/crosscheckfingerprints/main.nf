@@ -34,6 +34,7 @@ process PICARD_CROSSCHECKFINGERPRINTS {
         -Xmx${avail_mem}M \\
         CrosscheckFingerprints \\
         $args \\
+        --CROSSCHECK_BY FILE \\
         --EXIT_CODE_WHEN_MISMATCH 0 \\
         --NUM_THREADS ${task.cpus} \\
         $inputs_command \\
