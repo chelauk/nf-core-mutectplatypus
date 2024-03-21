@@ -7,6 +7,7 @@ process NGSCHECKMATE_NCM {
         'biocontainers/ngscheckmate:1.0.1--py27pl5321r40hdfd78af_1' }"
 
     input:
+    tuple val(patient), path(files)
     tuple val(meta) , path(files)
     tuple val(meta2), path(snp_bed)
     tuple val(meta3), path(fasta)

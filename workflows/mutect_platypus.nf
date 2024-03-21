@@ -218,9 +218,9 @@ workflow MUTECT_PLATYPUS {
 
 
     //PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
-    ngscheckmate_input = INPUT_CHECK.out.bams
-                                        .groupTuple()
-    ngscheckmate_input.view()                                  
+    INPUT_CHECK.out.bams
+                     .map{ meta, files -> [ meta, files[0], files[1] ] }
+                     .set { ngscheckmate_input }
     BAM_SAMPLEQC(ngscheckmate_input, ngscheckmate_bed, fasta)
 
     GATK4_MUTECT2(

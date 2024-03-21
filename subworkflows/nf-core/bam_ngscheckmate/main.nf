@@ -9,9 +9,8 @@ workflow BAM_NGSCHECKMATE {
     ch_fasta            // channel: [ val(meta3), fasta ]
 
     main:
-
+    ch_meta_input = ch_input
     ch_versions = Channel.empty()
-
     ch_input_bed = ch_input.combine(ch_snp_bed.collect())
                         // do something to combine the metas?
                         .map{ input_meta, input_file, bed_meta, bed_file ->
@@ -33,8 +32,12 @@ workflow BAM_NGSCHECKMATE {
     .map{meta, bed -> meta} // use the snp_bed file meta as the meta for the merged channel
     .combine(ch_collected_vcfs) // add the vcf files after the meta, now looks like [meta, [vcf1, vcf2, ... ] ]
     .set {ch_vcfs}
+    ch_meta_input
+              .map{ meta , files -> [ meta.patient, files ]}
+              .groupTuple()
+              .set{ meta_input }
 
-    NGSCHECKMATE_NCM (ch_vcfs, ch_snp_bed, ch_fasta)
+    NGSCHECKMATE_NCM ( meta_input, ch_vcfs, ch_snp_bed, ch_fasta)
     ch_versions = ch_versions.mix(NGSCHECKMATE_NCM.out.versions)
 
     emit:
