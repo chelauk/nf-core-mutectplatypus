@@ -1,5 +1,5 @@
 process VCF2MAF {
-    tag "${patient}_${id}"
+    tag "$patient"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::vcf2maf" : null)
@@ -7,11 +7,11 @@ process VCF2MAF {
         'vcf2maf.1.6.21--hdfd78af_0.sif' : null }"
 
     input:
-    tuple val(patient), val(id), path(vcf)
+    tuple val(patient), val(tumour_id), val(control_id), path(vcf)
     path fasta
 
     output:
-    tuple val(patient), val(id), path("*maf"), emit: maf
+    tuple val(patient), path("*maf"), emit: maf
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,10 +20,12 @@ process VCF2MAF {
     """
     vcf2maf.pl \\
     --input-vcf $vcf \\
-    --output-maf ${id}.maf \\
+    --retain-info MAPPABILITY \\
+    --output-maf ${tumour_id}.maf \\
     --ref-fasta $fasta \\
+    --vcf-tumor-id ${tumour_id} \\
+    --vcf-normal-id ${control_id} \\
     --inhibit-vep \\
-    --tumor-id $id \\
     --ncbi-build GRCh38
     """
     

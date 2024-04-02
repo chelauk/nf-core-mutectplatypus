@@ -20,7 +20,9 @@ def checkPathParamList = [
     params.germline_resource_idx,
     params.haplotype_map,
     params.drivers,
-    params.ngscheckmate_bed
+    params.ngscheckmate_bed,
+    params.mappability,
+    params.mappability_tbi
     ]
 
 for (param in checkPathParamList) if (param) file(param, checkIfExists: true)
@@ -37,7 +39,9 @@ germline_resource     = params.germline_resource     ? Channel.fromPath(params.g
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : Channel.empty()
 haplotype_map         = params.haplotype_map         ? Channel.fromPath(params.haplotype_map).collect()         : Channel.empty()
 drivers               = params.drivers               ? Channel.fromPath(params.drivers).collect()               : Channel.empty()
-mappability_bw        = params.mappability_bw        ? Channel.fromPath(params.mappability_bw).collect()        : Channel.empty()
+//mappability_bw        = params.mappability_bw        ? Channel.fromPath(params.mappability_bw).collect()        : Channel.empty()
+mappability           = params.mappability           ? Channel.fromPath(params.mappability).collect()           : Channel.empty()
+mappability_tbi       = params.mappability_tbi       ? Channel.fromPath(params.mappability_tbi).collect()       : Channel.empty()
 ngscheckmate_bed      = params.ngscheckmate_bed      ? Channel.value(params.ngscheckmate_bed)                   : Channel.empty()
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 
@@ -122,7 +126,8 @@ include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/ma
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils/mergeseqz/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/local/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/local/sequenzautils/seqz_R/main.nf'
-include { MAPPABILITY                     } from '../modules/local/mappability/main'
+//include { MAPPABILITY                     } from '../modules/local/mappability/main'
+include { BCFTOOLS_MAPPABILITY            } from '../modules/nf-core/bcftools/annotate/main'
 include { EVOVERSE_CNAQC                  } from '../modules/local/evoverse/main'
 
 //
@@ -144,7 +149,7 @@ include { ENSEMBLVEP                      } from '../modules/nf-core/ensemblvep/
 include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/sequenzautils/gcwiggle/main'
 include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/sequenzautils/bam2seqz/main'
 //include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
-include { ADD_MAPPABILITY                 } from '../modules/local/add_mappability/main'
+//include { ADD_MAPPABILITY                 } from '../modules/local/add_mappability/main'
 include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
@@ -332,41 +337,30 @@ workflow MUTECT_PLATYPUS {
         []
     )
 
-    ENSEMBLVEP.out.vcf
-                  .map { patient, file -> [ patient , "spacer", file ] }
-                  .set { PATIENT_VCF }
+    BCFTOOLS_MAPPABILITY(ENSEMBLVEP.out.vcf, mappability, mappability_tbi)
 
+    BCFTOOLS_MAPPABILITY.out.vcf
+                  .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
+                  .set { PATIENT_VCF }
+    
     ZIP_MUTECT_ANN_VCF ( PATIENT_VCF )
 
-    VCF_SPLIT(ENSEMBLVEP.out.vcf)
-    
+    pileup.normal.combine(pileup.tumour)
+                .map{ meta_control, files_control, meta_tumour, files_tumour ->
+                [ meta_control, meta_tumour] }
+                .combine(BCFTOOLS_MAPPABILITY.out.vcf)
+                .set{samples_for_split}
 
-    // if there is more than one vcf file in the channel, then we need to split the channel and collect the files
-    // otherwise the flatMap will fail as it expects a channel of channels.
- /*
+    VCF_SPLIT(samples_for_split)
+
     VCF_SPLIT.out.vcf
-    .flatMap{ my_channel -> my_channel[1].collect {
-                                 file ->
-                                 def filename = file.getName() 
-                                 def patient_sample = filename - '_mutect2.mono.vcf'
-                                 [my_channel[0], patient_sample, file] }
-                }
-    .set { MONO_CHANNEL }
-*/
-    VCF_SPLIT.out.vcf
-        .flatMap { name, files ->
-            (files instanceof List ? files : [files]).collect { file ->
-                def filename = file.getName()
-                def patient_sample = filename - '_mutect2.mono.vcf'
-                [name, patient_sample, file]
-            }
-        }
-        .set { MONO_CHANNEL }
+            .map{meta_control,meta_tumour,file -> 
+            [meta_control.patient, meta_tumour.id, meta_control.id, file] }
+            .set{vcf2maf_input}
 
-
-   VCF2MAF ( MONO_CHANNEL,fasta )
-    
-   ZIP_MUTECT_MONO_VCF ( MONO_CHANNEL )
+    VCF2MAF ( vcf2maf_input,fasta )
+   
+    ZIP_MUTECT_MONO_VCF ( vcf2maf_input )
 
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
 
@@ -401,7 +395,7 @@ workflow MUTECT_PLATYPUS {
     )
 
     PLAT_VEP.out.vcf
-                  .map { patient, file -> [ patient , "spacer", file ] }
+                  .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
                   .set { PLAT_PATIENT_VCF }
     
     ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
@@ -461,16 +455,15 @@ seq_input_pair = seq_input_pair
     } else {
         SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf, seq_gam)
     }
-
-    evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
-    evo_input
-        .map{ patient, id, segments, spacer, vcf , vcf_tbi -> [ patient, id, segments, vcf , vcf_tbi ]}
-        .set{evo_fixed}
-    EVOVERSE_CNAQC(evo_fixed, ploidy, drivers )
-
-    MAPPABILITY(ZIP_MUTECT_ANN_VCF.out.vcf, mappability_bw, pan)
     
-    ADD_MAPPABILITY( MAPPABILITY.out.mappability.combine(VCF2MAF.out.maf))
+    //SEQUENZAUTILS_RSEQZ.out.rseqz.view()
+    evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
+    evo_input.view()
+    //evo_input
+    //    .map{ patient, id, segments, spacer, vcf , vcf_tbi -> [ patient, id, segments, vcf , vcf_tbi ]}
+    //    .set{evo_fixed}
+    //    .view()
+    EVOVERSE_CNAQC(evo_input, ploidy, drivers )
 
     //
     // MODULE: MultiQC
@@ -487,8 +480,6 @@ seq_input_pair = seq_input_pair
     ch_multiqc_files = ch_multiqc_files.mix(ENSEMBLVEP.out.report.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(GATK4_FILTERMUTECTCALLS.out.stats.collect().ifEmpty([]))
 
-
-    //mutect_input.view()
     //multiqc_mutect_input = mutect_input.collect()
     multiqc_mutect_input = mutect_input
         .map{ patient, which_tumour, which_norm, bam, bai -> patient }

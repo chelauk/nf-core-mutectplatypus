@@ -1,5 +1,5 @@
 process VCF_SPLIT{
-    tag "$meta"
+    tag "$meta_tumour.patient"
     label 'process_medium'
 
     conda "bioconda::bcftools=1.17"
@@ -8,19 +8,15 @@ process VCF_SPLIT{
         'biocontainers/bcftools:1.17--haef29d1_0' }"
 
     input:
-    tuple val(meta), path(vcf)
+    tuple val(meta_control), val(meta_tumour), val(patient), path(vcf)
 
     output:
-    tuple val(meta), path("*mono.vcf") , emit: vcf
+    tuple val(meta_control), val(meta_tumour), path("*mono.vcf") , emit: vcf
     path "versions.yml"           , emit: versions
 
     script:
     """
-    sed -n -e '/tumor_sample/s/##tumor_sample=//p' $vcf > temp
-    while read -r sample
-      do
-      bcftools view $vcf -s \$sample > "\$sample"_mutect2.mono.vcf
-      done<temp
+    bcftools view $vcf -s $meta_control.id,$meta_tumour.id > ${meta_tumour.id}_mutect2.mono.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
