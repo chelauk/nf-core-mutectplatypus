@@ -8,7 +8,7 @@ process VCF_SPLIT{
         'biocontainers/bcftools:1.17--haef29d1_0' }"
 
     input:
-    tuple val(meta_control), val(meta_tumour), val(patient), path(vcf)
+    tuple val(patient), val(meta_control), val(meta_tumour), path(vcf)
 
     output:
     tuple val(meta_control), val(meta_tumour), path("*mono.vcf") , emit: vcf

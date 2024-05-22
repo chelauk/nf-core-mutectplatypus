@@ -23,6 +23,8 @@ process VCF2MAF {
     --retain-info MAPPABILITY \\
     --output-maf ${tumour_id}.maf \\
     --ref-fasta $fasta \\
+    --tumor-id ${tumour_id} \\
+    --normal-id ${control_id} \\
     --vcf-tumor-id ${tumour_id} \\
     --vcf-normal-id ${control_id} \\
     --inhibit-vep \\

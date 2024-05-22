@@ -186,8 +186,8 @@ workflow MUTECT_PLATYPUS {
     mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
     //crosscheck_input = make_crosscheck_imput(INPUT_CHECK.out.bams)
     //pair_input = crosscheck_input.control.combine(crosscheck_input.tumour, by:0)
-    
-    
+
+
     //
     // create intervals to split jobs.
     //
@@ -224,8 +224,8 @@ workflow MUTECT_PLATYPUS {
 
     //PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
     INPUT_CHECK.out.bams
-                     .map{ meta, files -> [ meta, files[0], files[1] ] }
-                     .set { ngscheckmate_input }
+                    .map{ meta, files -> [ meta, files[0], files[1] ] }
+                    .set { ngscheckmate_input }
     BAM_SAMPLEQC(ngscheckmate_input, ngscheckmate_bed, fasta)
 
     GATK4_MUTECT2(
@@ -340,26 +340,41 @@ workflow MUTECT_PLATYPUS {
     BCFTOOLS_MAPPABILITY(ENSEMBLVEP.out.vcf, mappability, mappability_tbi)
 
     BCFTOOLS_MAPPABILITY.out.vcf
-                  .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
-                  .set { PATIENT_VCF }
-    
+                .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
+                .set { PATIENT_VCF }
+
     ZIP_MUTECT_ANN_VCF ( PATIENT_VCF )
 
-    pileup.normal.combine(pileup.tumour)
-                .map{ meta_control, files_control, meta_tumour, files_tumour ->
-                [ meta_control, meta_tumour] }
-                .combine(BCFTOOLS_MAPPABILITY.out.vcf)
+    pileup.normal
+                .map{ meta, files -> [meta.patient,meta, files]}
+                .set{normal_for_split}
+
+    pileup.tumour
+                .map{ meta, files -> [meta.patient,meta, files]}
+                .set{tumour_for_split}
+
+    BCFTOOLS_MAPPABILITY.out.vcf
+                //.view()
+                //.map{ meta, files -> [ meta.patient, meta, files ]}
+                .set{mappability_for_split}
+
+    normal_for_split.combine(tumour_for_split, by:0)
+                .map{ patient, meta_control, files_control, meta_tumour, files_tumour ->
+                [ patient, meta_control, meta_tumour] }
+//                .view()
+                .combine(mappability_for_split, by:0)
+//                .view()
                 .set{samples_for_split}
 
     VCF_SPLIT(samples_for_split)
 
     VCF_SPLIT.out.vcf
-            .map{meta_control,meta_tumour,file -> 
+            .map{meta_control,meta_tumour,file ->
             [meta_control.patient, meta_tumour.id, meta_control.id, file] }
             .set{vcf2maf_input}
 
     VCF2MAF ( vcf2maf_input,fasta )
-   
+
     ZIP_MUTECT_MONO_VCF ( vcf2maf_input )
 
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
@@ -395,9 +410,9 @@ workflow MUTECT_PLATYPUS {
     )
 
     PLAT_VEP.out.vcf
-                  .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
-                  .set { PLAT_PATIENT_VCF }
-    
+                .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
+                .set { PLAT_PATIENT_VCF }
+
     ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
@@ -455,14 +470,9 @@ seq_input_pair = seq_input_pair
     } else {
         SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf, seq_gam)
     }
-    
-    //SEQUENZAUTILS_RSEQZ.out.rseqz.view()
+
     evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
-    evo_input.view()
-    //evo_input
-    //    .map{ patient, id, segments, spacer, vcf , vcf_tbi -> [ patient, id, segments, vcf , vcf_tbi ]}
-    //    .set{evo_fixed}
-    //    .view()
+
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
 
     //
