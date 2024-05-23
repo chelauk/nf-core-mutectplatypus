@@ -3,9 +3,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     nf-core/mutectplatypus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/nf-core/mutectplatypus
-    Website: https://nf-co.re/mutectplatypus
-    Slack  : https://nfcore.slack.com/channels/mutectplatypus
+    Github : https://github.com/chelauk/nf-core-mutectplatypus
 ----------------------------------------------------------------------------------------
 */
 
@@ -36,7 +34,6 @@ params.mappability           = WorkflowMain.getGenomeAttribute(params, 'mappabil
 params.mappability_tbi       = WorkflowMain.getGenomeAttribute(params, 'mappability_tbi')
 params.wiggle                = WorkflowMain.getGenomeAttribute(params, 'wiggle' )
 params.drivers               = WorkflowMain.getGenomeAttribute(params, 'drivers' )
-//params.mappability_bw        = WorkflowMain.getGenomeAttribute(params, 'mappability_bw' )
 params.ngscheckmate_bed      = WorkflowMain.getGenomeAttribute(params, 'ngscheckmate_bed')
 
 /*
