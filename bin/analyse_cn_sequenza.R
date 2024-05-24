@@ -8,8 +8,9 @@ input <- args[1]
 output_prefix <- args[2]
 gender <- args[3]
 ploidy <- args[4]
-ccf <- args[5]
-gam <- args[6]
+low_ccf <- args[5]
+high_ccf <- args[6]
+gam <- args[7]
 gam <- as.integer(gam)
 if (ploidy == 7) {
     low_p <- 1
@@ -18,14 +19,14 @@ if (ploidy == 7) {
     low_p <- ploidy - 0.5
     up_p <- ploidy + 0.5
     }
-if (ccf == "PDO") {
-    high_ccf <- 0.99
-    low_ccf <- 0.95
-    } else {
-    ccf <- as.numeric(ccf)
-    high_ccf <- ccf + 0.1
-    low_ccf <- ccf - 0.1
-    }
+#if (ccf == "PDO") {
+#    high_ccf <- 0.99
+#    low_ccf <- 0.95
+#    } else {
+#    ccf <- as.numeric(ccf)
+#    high_ccf <- ccf + 0.1
+#    low_ccf <- ccf - 0.1
+#    }
 print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
 print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
 print(paste0("up_cell type: ", typeof(high_ccf), " ", high_ccf))
