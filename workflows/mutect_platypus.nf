@@ -42,7 +42,7 @@ drivers               = params.drivers               ? Channel.fromPath(params.d
 //mappability_bw        = params.mappability_bw        ? Channel.fromPath(params.mappability_bw).collect()        : Channel.empty()
 mappability           = params.mappability           ? Channel.fromPath(params.mappability).collect()           : Channel.empty()
 mappability_tbi       = params.mappability_tbi       ? Channel.fromPath(params.mappability_tbi).collect()       : Channel.empty()
-ngscheckmate_bed      = params.ngscheckmate_bed      ? Channel.value(params.ngscheckmate_bed)                   : Channel.empty()
+ngscheckmate_bed      = params.ngscheckmate_bed      ? Channel.fromPath(params.ngscheckmate_bed).collect()                  : Channel.empty()
 intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
 
 // Initialize value channels based on params, defined in the params.genomes[params.genome] scope
@@ -57,11 +57,10 @@ pon_idx               = params.pon_idx               ? Channel.fromPath(params.p
 
 // Initialise value channels not defined in params.genomes[params.genome]
 
-seqz_het             = params.seqz_het               ?: Channel.empty()
+seqz_het             = params.seqz_het ? Channel.value(params.seqz_het) : Channel.empty()
 bin                  = params.bin                    ?: Channel.empty()
 gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
-ccf                  = params.ccf                    ?: Channel.empty()
 pan                  = params.pan                    ?: Channel.empty()
 tef                  = params.tef                    ?: Channel.empty()
 
@@ -114,15 +113,15 @@ include { BAM_SAMPLEQC } from '../subworkflows/local/bam_sampleqc/main'
 
 include { CREATE_INTERVALS_BED            } from '../modules/local/create_intervals_bed/main'
 include { BUILD_INTERVALS                 } from '../modules/local/build_intervals/main'
-include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
-include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
+//include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
+//include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
 include { VCF_SPLIT                       } from '../subworkflows/local/vcf_split.nf'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
-include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
+//include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_MUTECT_MONO_VCF  } from '../modules/local/zip_vcf/main'
 include { VCF2MAF                         } from '../modules/local/vcf2maf/main'
 include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/local/concat_vcf/main'
-include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/main'
+//include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/main'
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils/mergeseqz/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/local/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/local/sequenzautils/seqz_R/main.nf'
@@ -144,7 +143,7 @@ include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_TUMOUR } from '../modules/nf-
 include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_NORM } from '../modules/nf-core/gatk4/gatherpileupsummaries/main'
 include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/gatk4/calculatecontamination/main'
 include { GATK4_FILTERMUTECTCALLS         } from '../modules/nf-core/gatk4/filtermutectcalls/main'
-include { ENSEMBLVEP as PLAT_VEP          } from '../modules/nf-core/ensemblvep/main'
+//include { ENSEMBLVEP as PLAT_VEP          } from '../modules/nf-core/ensemblvep/main'
 include { ENSEMBLVEP                      } from '../modules/nf-core/ensemblvep/main'
 include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/sequenzautils/gcwiggle/main'
 include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/sequenzautils/bam2seqz/main'
@@ -183,7 +182,17 @@ workflow MUTECT_PLATYPUS {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
+    //INPUT_CHECK.out.bams.view{"input check out: $it"}
+    INPUT_CHECK.out.bams
+        .map { meta, files -> [ meta.patient, meta.id, meta.status, files[0], files[1] ] }
+        .groupTuple()
+        .map { patient, id, status, bams, bais -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /normal/ }], bams, bais ]}
+        .set{ mutect_input }
+
+//    mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
+//    mutect_input.view{"mutect input: $it"}
+    
+    //mutect_input.view{"mutect input: $it"}
     //crosscheck_input = make_crosscheck_imput(INPUT_CHECK.out.bams)
     //pair_input = crosscheck_input.control.combine(crosscheck_input.tumour, by:0)
 
@@ -214,10 +223,10 @@ workflow MUTECT_PLATYPUS {
         }.toSortedList({ a, b -> b[0] <=> a[0] })
         .flatten().collate(2)
         .map{duration, intervalFile -> intervalFile}
+    
 
-
-    mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bam, bai, intervals ->
-        [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bam, bai, intervals]
+    mutect_input.combine(result_intervals).map{ patient, which_tumour, which_norm, bams, bais, intervals ->
+        [patient, intervals.baseName + "_" + patient, which_tumour, which_norm, bams, bais, intervals]
         }
         .set{bam_intervals}
 
@@ -226,6 +235,7 @@ workflow MUTECT_PLATYPUS {
     INPUT_CHECK.out.bams
                     .map{ meta, files -> [ meta, files[0], files[1] ] }
                     .set { ngscheckmate_input }
+
     BAM_SAMPLEQC(ngscheckmate_input, ngscheckmate_bed, fasta)
 
     GATK4_MUTECT2(
@@ -251,7 +261,8 @@ workflow MUTECT_PLATYPUS {
         CONCAT_MUTECT ( concat_input, fasta_fai, intervals_ch )
         }
 
-    merge_stats_input = GATK4_MUTECT2.out.stats.groupTuple()
+    merge_stats_input = GATK4_MUTECT2.out.stats
+                                        .groupTuple()
 
     GATK4_MERGEMUTECTSTATS ( merge_stats_input )
 
@@ -294,40 +305,65 @@ workflow MUTECT_PLATYPUS {
         germline_resource,
         germline_resource_idx
     )
-    gather_pileup_normal_input = GET_PS_NORM.out.table
-                                    .groupTuple()
-                                    .map{ meta, interval_ids, table -> [meta,table]}
+
+    // remove intervals for join with GATHER_PS_NORM    
+    GET_PS_NORM.out.table
+                    .groupTuple()
+                    .map{ meta, interval_ids, table -> [meta,table]}
+                    .set{ gather_pileup_normal_input }
 
     GATHER_PS_NORM ( gather_pileup_normal_input, dict )
 
+    GATHER_PS_TUMOUR.out.table
+                        .map{ meta, table ->
+                        [ meta.patient, [ sample:meta.sample, status:meta.status, id:meta.id], table ] }
+                        .set{ tumour_gatherpileup_input }
 
-    tumour_gatherpileup_input = GATHER_PS_TUMOUR.out.table
-                                    .map{ meta, table ->
-                                    [ meta.patient, meta.sample, meta.status, meta.id, table ] }
+    GATHER_PS_NORM.out.table
+                        .map{ meta, table ->
+                        [ meta.patient, [ sample:meta.sample, status:meta.status, id:meta.id ], table ] }
+                        .set{ normal_gatherpileup_input  }
+    
+    tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
+                        .map{ patient, meta1, table, meta2, table2 ->
+                                    [ meta1 + [patient:patient], table, table2] }
+                        .set{ calculate_contamination_input }
 
-    normal_gatherpileup_input = GATHER_PS_NORM.out.table
-                                    .map{ meta, table ->
-                                    [ meta.patient, meta.sample, meta.status, meta.id, table ] }
-    contamination_input = tumour_gatherpileup_input.combine(normal_gatherpileup_input, by:0)
-                                    .map{ patient, sample1, status1, id1, table, sample2, status2, id2, table2 ->
-                                    [patient, sample1,id1, table, table2] }
+    GATK4_CALCULATECONTAMINATION( calculate_contamination_input )
 
-    GATK4_CALCULATECONTAMINATION( contamination_input )
+    GATK4_CALCULATECONTAMINATION.out.contamination
+                        .map{ meta, contamination_table ->
+                                    [ meta.patient , [sample:meta.sample,status:meta.status, id:meta.id],
+                                    contamination_table ]}
+                        .groupTuple()
+                        //.view{"contamination input: $it"}
+                        .set{ contamination_input }
 
-    contamination_input = GATK4_CALCULATECONTAMINATION.out.contamination.groupTuple()
+    GATK4_CALCULATECONTAMINATION.out.segmentation
+                        .map { meta, segmentation_table ->
+                                    [meta.patient, [sample:meta.sample,status:meta.status, id:meta.id],
+                                    segmentation_table]}
+                        .groupTuple()
+                        //.view{"segmentation input: $it"}
+                        .set{ segmentation_input }
 
-    segmentation_input = GATK4_CALCULATECONTAMINATION.out.segmentation.groupTuple()
+    contamination_input.join(segmentation_input)
+                      //  .view{"joint $it"}
+                        .set{ for_filter }
 
-    for_filter = contamination_input.join(segmentation_input)
-                                    .map{ patient, samples1, contamination, samples2, segmentation ->
-                                    [patient,contamination,segmentation] }
 
-    filter_input = CONCAT_MUTECT.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)
-    filter_input = filter_input.join(for_filter)
-    filter_input = filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
+    CONCAT_MUTECT.out.vcf.join(GATK4_LEARNREADORIENTATIONMODEL.out.artifactprior)         
+                            .join(for_filter)
+                            .set { filter_input }
 
-    GATK4_FILTERMUTECTCALLS ( filter_input, fasta, fasta_fai, dict )
 
+    filter_input.join(GATK4_MERGEMUTECTSTATS.out.stats)
+                .map{patient, vcf, tbi, prior, meta1, contamination_table, meta2, segementation_table, stats ->
+                    [patient, vcf, tbi, prior, contamination_table, segementation_table, stats] }
+                .set{ filter_mutect }
+
+    GATK4_FILTERMUTECTCALLS ( filter_mutect, fasta, fasta_fai, dict )
+    
     ENSEMBLVEP (
         GATK4_FILTERMUTECTCALLS.out.vcf,
         vep_genome,
@@ -336,10 +372,12 @@ workflow MUTECT_PLATYPUS {
         vep_cache,
         []
     )
+    //ENSEMBLVEP.out.vcf.view{"ensembl out $it"}
 
     BCFTOOLS_MAPPABILITY(ENSEMBLVEP.out.vcf, mappability, mappability_tbi)
 
     BCFTOOLS_MAPPABILITY.out.vcf
+              //  .view{ "bcftools mappability input: $it"}
                 .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
                 .set { PATIENT_VCF }
 
@@ -354,40 +392,41 @@ workflow MUTECT_PLATYPUS {
                 .set{tumour_for_split}
 
     BCFTOOLS_MAPPABILITY.out.vcf
-                //.view()
-                //.map{ meta, files -> [ meta.patient, meta, files ]}
                 .set{mappability_for_split}
 
     normal_for_split.combine(tumour_for_split, by:0)
                 .map{ patient, meta_control, files_control, meta_tumour, files_tumour ->
                 [ patient, meta_control, meta_tumour] }
-//                .view()
                 .combine(mappability_for_split, by:0)
-//                .view()
                 .set{samples_for_split}
 
+    
     VCF_SPLIT(samples_for_split)
 
     VCF_SPLIT.out.vcf
-            .map{meta_control,meta_tumour,file ->
-            [meta_control.patient, meta_tumour.id, meta_control.id, file] }
+            .map { meta_control, meta_tumour, vcf ->
+                    [[patient:meta_control.patient, control:meta_control.id, tumour:meta_tumour.id],vcf]}
             .set{vcf2maf_input}
 
-    VCF2MAF ( vcf2maf_input,fasta )
+    VCF2MAF ( vcf2maf_input, fasta )
+    
+    vcf2maf_input
+            .map { meta, vcf ->
+                  [meta.patient, meta.control, meta.tumour, vcf ]} 
+            .set { zip_mono_mutect_input }
 
-    ZIP_MUTECT_MONO_VCF ( vcf2maf_input )
+    ZIP_MUTECT_MONO_VCF ( zip_mono_mutect_input )
+    //gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
 
-    gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
+    //platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
 
-    platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
+    //PLATYPUS_CALLVARIANTS(  platypus_input,
+    //                        fasta,
+    //                        fasta_fai )
 
-    PLATYPUS_CALLVARIANTS(  platypus_input,
-                            fasta,
-                            fasta_fai )
+    //concat_platypus_input = PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
 
-    concat_platypus_input = PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
-
-
+    /*
     if (!params.intervals) {
         CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, [] )
         } else {
@@ -414,7 +453,7 @@ workflow MUTECT_PLATYPUS {
                 .set { PLAT_PATIENT_VCF }
 
     ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
-
+    */
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
@@ -426,16 +465,26 @@ workflow MUTECT_PLATYPUS {
 
 // Function to split input channel into tumour and normal for sequenza
     INPUT_CHECK.out.bams
-                    .map{ meta, files ->
-                    [meta.patient,meta.sample,meta.status,meta.id, files] }
-                    .branch {
-                        tumour: it[2] == "tumour"
-                        normal: it[2] == "normal"
+                    //.map{ meta, files ->
+                    //[meta.patient,meta.sample,meta.status,meta.id, files] }
+                    .branch { meta, files ->
+                        tumour: meta.status == "tumour"
+                        control: meta.status == "normal"
                     }
                     .set{seq_split}
-
-    seq_split.tumour.combine(seq_split.normal, by:0)
-                    .set{seq_input_pair}
+    
+    seq_split.tumour
+                    .map { meta , files -> 
+                         [meta.patient, [ id:meta.id , status:meta.status], files]}
+                    .set{tumour_bam}
+    seq_split.control
+                    .map { meta , files -> 
+                         [meta.patient, [ id:meta.id, status:meta.status], files]}
+                    .set { control_bam }
+    
+    tumour_bam
+            .combine(control_bam, by:0)
+            .set{seq_input_pair}
 
     seqz_chr = fasta_fai
         .splitCsv(sep: "\t")
@@ -444,12 +493,14 @@ workflow MUTECT_PLATYPUS {
         .collect()
 
 
-seq_input_pair = seq_input_pair
-                .map{ patient, sample1, status1, id1, files1, sample2, status2, id2, files2 ->
-                [ patient, id1, files1, files2] }
-//                .set{ seq_input_chr }
+    seq_input_pair
+            .map { patient, meta1, files1, meta2, files2 ->
+ //                   tumour_id  meta1.id 
+                    [meta1 + [patient:patient], files1, files2]
+                    }
+            .set{ seq_input_matched }
 
-    SEQUENZAUTILS_BAM2SEQZ(seq_input_pair,
+    SEQUENZAUTILS_BAM2SEQZ(seq_input_matched,
                             fasta,
                             fasta_fai,
                             seqz_het,
@@ -457,22 +508,51 @@ seq_input_pair = seq_input_pair
                             seqz_chr)
 
     SEQUENZAUTILS_BAM2SEQZ.out.seqz
-                            .groupTuple(by:[0,1])
+                            .groupTuple()
                             .set{merge_seqz_input}
 
     SEQUENZAUTILS_MERGESEQZ (merge_seqz_input)
 
 //    SEQUENZAUTILS_HETSNPS(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz)
-
+//    SEQUENZAUTILS_MERGESEQZ.out.concat_seqz.view()
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
-    if ( params.sequenza_change_ccf ) {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf, seq_gam)
-    } else {
-        SEQUENZAUTILS_RSEQZ(SEQUENZAUTILS_BINNING.out.seqz_bin, gender, ploidy, ccf, seq_gam)
+
+    if ( params.sequenza_tissue_type == "PDO" ) {
+        purity = Channel.of(["PDO_1",0.95],["PDO_2",0.98])
+        rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity) 
+        SEQUENZAUTILS_RSEQZ(    rseqz_input,
+                                gender,
+                                ploidy,
+                                seq_gam )
+    } else if ( params.sequenza_tissue_type == "WES" ) {
+        purity = Channel.of(["WES_1",0.1],["WES_2",0.3],["WES_3",0.5],["WES_4", 0.7],["WES_5",0.9])
+        rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity)
+        SEQUENZAUTILS_RSEQZ(    rseqz_input,
+                                gender,
+                                ploidy,
+                                seq_gam )
     }
 
-    evo_input = SEQUENZAUTILS_RSEQZ.out.rseqz.combine(ZIP_MUTECT_ANN_VCF.out.vcf, by:0 )
+    
+   // SEQUENZAUTILS_RSEQZ.out.rseqz.view{"RSEQZ: $it"} 
+    ZIP_MUTECT_MONO_VCF.out.vcf
+                .map{ patient, control, tumour, vcf_gz, vcf_tbi ->
+                      [patient, tumour, vcf_gz, vcf_tbi]}
+                .set{ vcf_for_combine }
 
+    SEQUENZAUTILS_RSEQZ.out.rseqz
+        .map { meta, out_dir ->
+                [ meta.patient, meta.id, out_dir ] }
+        .set{ rseqz_for_combine }
+
+
+        vcf_for_combine
+            .combine(rseqz_for_combine,by:1)
+            .map{ id, patient, vcf_gz, vcf_tbi, patient2, segment_dir ->
+                    [ [patient:patient, id:id ], [vcf_gz,vcf_tbi], segment_dir]}
+            .view{"evoInput $it"}
+            .set{ evo_input }
+    
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
 
     //

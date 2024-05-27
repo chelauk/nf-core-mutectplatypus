@@ -1,6 +1,6 @@
 process ZIP_VCF {
 
-    tag "${patient}"
+    tag "${tumour_id}"
     label 'process_low'
 
     conda (params.enable_conda ? "conda-forge::samtools=1.15" : null)
@@ -11,7 +11,7 @@ process ZIP_VCF {
     tuple val(patient), val(tumour_id), val(control_id), path(vcf)
 
     output:
-    tuple val(patient), path("*.vcf.gz"), path("*vcf.gz.tbi"), emit: vcf
+    tuple val(patient), val(tumour_id), val(control_id), path("*.vcf.gz"), path("*vcf.gz.tbi"), emit: vcf
     path "*versions.yml",                                      emit: versions
 
     script:

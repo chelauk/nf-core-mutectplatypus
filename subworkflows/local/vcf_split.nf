@@ -15,12 +15,25 @@ process VCF_SPLIT{
     path "versions.yml"           , emit: versions
 
     script:
+    def control = task.ext.control ?: "${meta_control.id}" ?: "${meta_control.sample}" 
+    def tumour = task.ext.tumour ?: "${meta_tumour.id}" ?: "${meta_tumour.sample}" 
     """
-    bcftools view $vcf -s $meta_control.id,$meta_tumour.id > ${meta_tumour.id}_mutect2.mono.vcf
+    bcftools view $vcf -s $control,$tumour > ${tumour}_mutect2.mono.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*(bedtools) v//; s/ .*\$//')
+    END_VERSIONS
+    """
+    stub:
+    def control = task.ext.control ?: "${meta_control.id}" ?: "${meta_control.sample}" 
+    def tumour = task.ext.tumour ?: "${meta_tumour.id}" ?: "${meta_tumour.sample}" 
+    """
+    touch ${tumour}_mutect2.mono.vcf
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bcftools: stub 
     END_VERSIONS
     """
 

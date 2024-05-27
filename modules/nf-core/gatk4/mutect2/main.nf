@@ -20,10 +20,10 @@ process GATK4_MUTECT2 {
     path germline_resource_idx
 
     output:
-    tuple val(patient), path("*.vcf")         , emit: vcf
+    tuple val(patient), val(interval_patient), path("*.vcf")         , emit: vcf
 //    tuple val(patient), path("*.tbi")         , emit: tbi
-    tuple val(patient), path("*.stats")       , emit: stats
-    tuple val(patient), path("*.f1r2.tar.gz") , optional:true, emit: f1r2
+    tuple val(patient), val(interval_patient), path("*.stats")       , emit: stats
+    tuple val(patient), val(interval_patient), path("*.f1r2.tar.gz") , optional:true, emit: f1r2
     path "versions.yml"                       , emit: versions
 
     when:

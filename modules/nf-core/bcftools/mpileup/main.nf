@@ -55,4 +55,24 @@ process BCFTOOLS_MPILEUP {
         bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
     END_VERSIONS
     """
+    stub:
+    def args = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ''
+    def args3 = task.ext.args3 ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}" 
+    def mpileup = save_mpileup ? "| tee ${prefix}.mpileup" : ""
+    def bgzip_mpileup = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
+    def intervals = intervals ? "-T ${intervals}" : ""
+    """
+    echo $prefix > sample_name.list
+    touch ${prefix}.vcf.gz
+    touch ${prefix}.vcf.gz.tbi
+    touch ${prefix}.stats.txt
+    touch ${prefix}.mpileup.gz
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bcftools: stub
+    END_VERSIONS
+    """
 }

@@ -1,5 +1,5 @@
 process SEQUENZAUTILS_BINNING {
-    tag "$id"
+    tag "${meta.id}"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
@@ -8,11 +8,11 @@ process SEQUENZAUTILS_BINNING {
         'quay.io/biocontainers/sequenza-utils:3.0.0--py39h67e14b5_5' }"
 
     input:
-    tuple val(patient), val(id), path(concat_seqz)
+    tuple val(meta), path(concat_seqz), path(concat_seqz_tbi)
     val(bin)
 
     output:
-    tuple val(patient), val(id), path("*bin${bin}.seqz.gz"), emit: seqz_bin
+    tuple val(meta), path("*bin${bin}.seqz.gz"), emit: seqz_bin
     path "versions.yml"          , emit: versions
 
     when:
@@ -20,14 +20,14 @@ process SEQUENZAUTILS_BINNING {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     sequenza-utils \\
         seqz_binning \\
         $args \\
         --seqz $concat_seqz \\
         -o - |\\
-        gzip > ${id}_bin${bin}.seqz.gz
+        gzip > ${meta.id}_bin${bin}.seqz.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -36,7 +36,7 @@ process SEQUENZAUTILS_BINNING {
     """
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     cat << 'EOF'
     sequenza-utils \\
@@ -44,9 +44,9 @@ process SEQUENZAUTILS_BINNING {
         $args \\
         -w $concat_seqz \\
         -o - |\\
-        gzip > ${id}_bin${bin}.seqz.gz
+        gzip > ${meta.id}_bin${bin}.seqz.gz
     EOF
-    touch ${id}_bin${bin}.seqz.gz
+    touch ${meta.id}_bin${bin}.seqz.gz
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sequenzautils: 3.0.0

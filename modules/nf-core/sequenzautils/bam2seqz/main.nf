@@ -2,7 +2,7 @@
 // so I include if statement to check the size of the output file
 
 process SEQUENZAUTILS_BAM2SEQZ {
-    tag "$id"
+    tag  "${meta.id}_$chromosome"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
@@ -12,7 +12,7 @@ process SEQUENZAUTILS_BAM2SEQZ {
 
     input:
     //tuple val(patient), val(id), val(chr), path(tumourbam), path(normalbam)
-    tuple val(patient), val(id), path(tumourbam), path(normalbam)
+    tuple val(meta), path(tumourbam), path(normalbam)
     path fasta
     path fasta_fai
     val  het
@@ -20,7 +20,7 @@ process SEQUENZAUTILS_BAM2SEQZ {
     each chromosome
 
     output:
-    tuple val(patient), val(id), path("*seqz.gz"), emit: seqz
+    tuple val(meta), path("*seqz.gz"), emit: seqz
     path "versions.yml"          , emit: versions
 
     when:
@@ -28,7 +28,7 @@ process SEQUENZAUTILS_BAM2SEQZ {
 
     script:
     def args = task.ext.args ?: "-C ${chromosome}"
-    def prefix = task.ext.prefix ?: "${id}_${chromosome}"
+    def prefix = task.ext.prefix ?: "${meta.id}_${chromosome}"
     """
     chromosome=$chromosome
     sequenza-utils \\
@@ -56,7 +56,7 @@ process SEQUENZAUTILS_BAM2SEQZ {
     """
     stub:
     def args = task.ext.args ?: "-C ${chromosome}"
-    def prefix = task.ext.prefix ?: "${id}_${chromosome}"
+    def prefix = task.ext.prefix ?: "${meta.id}_${chromosome}"
     """
     echo -e "sequenza-utils \\
         bam2seqz \\

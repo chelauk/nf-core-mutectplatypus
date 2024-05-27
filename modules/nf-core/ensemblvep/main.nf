@@ -1,5 +1,5 @@
 process ENSEMBLVEP {
-    tag "$patient"
+    tag "${patient}"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::ensembl-vep:108.1" : null)

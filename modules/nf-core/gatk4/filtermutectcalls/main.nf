@@ -1,5 +1,5 @@
 process GATK4_FILTERMUTECTCALLS {
-    tag "$patient"
+    tag "${patient}"
     label 'process_low'
 
     conda (params.enable_conda ? "bioconda::gatk4=4.2.5.0" : null)
@@ -8,7 +8,7 @@ process GATK4_FILTERMUTECTCALLS {
         'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
-    tuple val(patient), path(vcf), path(tbi), path(orientationbias), path(table), path(segmentation), path(stats)
+    tuple val(patient), path(vcf), path(tbi), path(orientationbias), path(contamination), path(segmentation), path(stats)
     path  fasta
     path  fai
     path  dict
@@ -28,7 +28,7 @@ process GATK4_FILTERMUTECTCALLS {
 
     def orientationbias_command = orientationbias ? orientationbias.collect{"--orientation-bias-artifact-priors $it"}.join(' ') : ''
     def segmentation_command    = segmentation    ? segmentation.collect{"--tumor-segmentation $it"}.join(' ')                  : ''
-    def table_command           = table           ? table.collect{"--contamination-table $it"}.join(' ')                        : ''
+    def contamination_command   = contamination   ? contamination.collect{"--contamination-table $it"}.join(' ')                        : ''
 
     def avail_mem = 3
     if (!task.memory) {
@@ -43,7 +43,7 @@ process GATK4_FILTERMUTECTCALLS {
         --reference $fasta \\
         $orientationbias_command \\
         $segmentation_command \\
-        $table_command \\
+        $contamination_command \\
         --tmp-dir . \\
         $args
 
@@ -59,7 +59,7 @@ process GATK4_FILTERMUTECTCALLS {
 
     def orientationbias_command = orientationbias ? orientationbias.collect{"--orientation-bias-artifact-priors $it"}.join(' ') : ''
     def segmentation_command    = segmentation    ? segmentation.collect{"--tumor-segmentation $it"}.join(' ')                  : ''
-    def table_command           = table           ? " --contamination-table ${table} "                                          : ''
+    def contamination_command   = contamination   ? contamination.collect{" --contamination-table $it"}.join(' ')                                          : ''
 
     def avail_mem = 3
     if (!task.memory) {
@@ -74,7 +74,7 @@ process GATK4_FILTERMUTECTCALLS {
         --reference $fasta \\
         $orientationbias_command \\
         $segmentation_command \\
-        $table_command \\
+        $contamination_command \\
         --tmp-dir . \\
         $args"
     
