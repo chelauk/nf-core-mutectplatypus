@@ -282,7 +282,7 @@
         "seq_type": {
             "type": "string",
             "default": "wes",
-            "description": "whole genome or whole exome"
+            "description": "whole genome or whole exome. Essentially decides the outflow directory"
         },
         "pon": {
             "type": "string",
