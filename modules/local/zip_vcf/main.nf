@@ -8,10 +8,10 @@ process ZIP_VCF {
        'https://depot.galaxyproject.org/singularity/samtools:1.15--h3843a85_0' :
         'quay.io/biocontainers/samtools:1.15--0' }"
     input:
-    tuple val(patient), val(tumour_id), val(control_id), path(vcf)
+    tuple val(patient), val(control_id), val(tumour_id), path(vcf)
 
     output:
-    tuple val(patient), val(tumour_id), val(control_id), path("*.vcf.gz"), path("*vcf.gz.tbi"), emit: vcf
+    tuple val(patient), val(control_id), val(tumour_id), path("*.vcf.gz"), path("*vcf.gz.tbi"), emit: vcf
     path "*versions.yml",                                      emit: versions
 
     script:
