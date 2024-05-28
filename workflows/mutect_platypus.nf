@@ -112,15 +112,11 @@ include { BAM_SAMPLEQC } from '../subworkflows/local/bam_sampleqc/main'
 
 include { CREATE_INTERVALS_BED            } from '../modules/local/create_intervals_bed/main'
 include { BUILD_INTERVALS                 } from '../modules/local/build_intervals/main'
-//include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
-//include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
 include { VCF_SPLIT                       } from '../subworkflows/local/vcf_split.nf'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
-//include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_MUTECT_MONO_VCF  } from '../modules/local/zip_vcf/main'
 include { VCF2MAF                         } from '../modules/local/vcf2maf/main'
 include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/local/concat_vcf/main'
-//include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/main'
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils/mergeseqz/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/local/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/local/sequenzautils/seqz_R/main.nf'
@@ -141,7 +137,6 @@ include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_TUMOUR } from '../modules/nf-
 include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_NORM } from '../modules/nf-core/gatk4/gatherpileupsummaries/main'
 include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/gatk4/calculatecontamination/main'
 include { GATK4_FILTERMUTECTCALLS         } from '../modules/nf-core/gatk4/filtermutectcalls/main'
-//include { ENSEMBLVEP as PLAT_VEP          } from '../modules/nf-core/ensemblvep/main'
 include { ENSEMBLVEP                      } from '../modules/nf-core/ensemblvep/main'
 include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/sequenzautils/gcwiggle/main'
 include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/sequenzautils/bam2seqz/main'
@@ -220,8 +215,6 @@ workflow MUTECT_PLATYPUS {
         }
         .set{bam_intervals}
 
-
-    //PICARD_CROSSCHECKFINGERPRINTS ( mutect_input, haplotype_map )
     INPUT_CHECK.out.bams
                     .map{ meta, files -> [ meta, files[0], files[1] ] }
                     .set { ngscheckmate_input }
@@ -401,47 +394,6 @@ workflow MUTECT_PLATYPUS {
             .set { zip_mono_mutect_input }
 
     ZIP_MUTECT_MONO_VCF ( zip_mono_mutect_input )
-    //gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
-
-    //platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
-
-    //PLATYPUS_CALLVARIANTS(  platypus_input,
-    //                        fasta,
-    //                        fasta_fai )
-
-    //concat_platypus_input = PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
-
-    /*
-    if (!params.intervals) {
-        CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, [] )
-        } else {
-        CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, intervals_ch )
-        }
-
-    filter_platypus_input = CONCAT_PLATYPUS.out.vcf.join(bam_intervals)
-                                .map{patient,vcf,tbi,region,which_tumour,which_norm,bam,bai,bed ->
-                                [patient, vcf, which_norm]}
-
-    PLATYPUS_FILTER ( filter_platypus_input, tef )
-
-    PLAT_VEP (
-        PLATYPUS_FILTER.out.vcf,
-        vep_genome,
-        vep_species,
-        vep_cache_version,
-        vep_cache,
-        []
-    )
-
-    PLAT_VEP.out.vcf
-                .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
-                .set { PLAT_PATIENT_VCF }
-
-    ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
-    */
-    CUSTOM_DUMPSOFTWAREVERSIONS (
-        ch_versions.unique().collectFile(name: 'collated_versions.yml')
-    )
 
     // check if wiggle is done already
     if ( file(params.wiggle).exists() ) {
@@ -504,40 +456,40 @@ workflow MUTECT_PLATYPUS {
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
 
     if ( params.sequenza_tissue_type == "PDO" ) {
-        purity = Channel.of(["PDO_1",0.95],["PDO_2",0.98])
+        purity = Channel.of(["PDO_1",0.80 ],["PDO_2",0.90 ])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity) 
-        SEQUENZAUTILS_RSEQZ(    rseqz_input,
-                                gender,
-                                ploidy,
-                                seq_gam )
     } else if ( params.sequenza_tissue_type == "TISSUE" ) {
         purity = Channel.of(["TISSUE_1",0.1],["TISSUE_2",0.3],["TISSUE_3",0.5],["TISSUE_4", 0.7],["TISSUE_5",0.9])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity)
-        SEQUENZAUTILS_RSEQZ(    rseqz_input,
-                                gender,
-                                ploidy,
-                                seq_gam )
     }
-
     
+    SEQUENZAUTILS_RSEQZ(    rseqz_input,
+                            gender,
+                            ploidy,
+                            seq_gam )
+
     ZIP_MUTECT_MONO_VCF.out.vcf
                 .map{ patient, control, tumour, vcf_gz, vcf_tbi ->
                       [patient, tumour, vcf_gz, vcf_tbi]}
                 .set{ vcf_for_combine }
-
+    
     SEQUENZAUTILS_RSEQZ.out.rseqz
-        .map { meta, out_dir ->
-                [ meta.patient, meta.id, out_dir ] }
+        .map { meta, tissue, purity, out_dir ->
+                [ meta.patient, meta.id, tissue, out_dir ] }
         .set{ rseqz_for_combine }
 
 
         vcf_for_combine
             .combine(rseqz_for_combine,by:1)
-            .map{ id, patient, vcf_gz, vcf_tbi, patient2, segment_dir ->
-                    [ [patient:patient, id:id ], [vcf_gz,vcf_tbi], segment_dir]}
+            .map{ id, patient, vcf_gz, vcf_tbi, patient2, tissue, segment_dir ->
+                    [ [patient:patient, id:id ], [vcf_gz,vcf_tbi], tissue, segment_dir]}
             .set{ evo_input }
     
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
+
+    CUSTOM_DUMPSOFTWAREVERSIONS (
+        ch_versions.unique().collectFile(name: 'collated_versions.yml')
+    )
 
     //
     // MODULE: MultiQC

@@ -14,7 +14,7 @@ process SEQUENZAUTILS_RSEQZ {
     val  seq_gam
 
     output:
-    tuple val(meta), path("$tissue"), emit: rseqz
+    tuple val(meta), val(tissue), val(purity), path("${tissue}"), emit: rseqz
     path "versions.yml"          , emit: versions
 
     when:

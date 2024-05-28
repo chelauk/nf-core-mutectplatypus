@@ -7,7 +7,7 @@ process EVOVERSE_CNAQC {
     container 'r-evoverse.sif'
 
     input:
-    tuple val(meta), path(vcf), path(segments)
+    tuple val(meta), path(vcf), val(tissue), path(segments)
     val(ploidy)
     path(drivers)
 
