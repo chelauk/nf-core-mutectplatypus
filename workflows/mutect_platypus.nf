@@ -182,19 +182,12 @@ workflow MUTECT_PLATYPUS {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    //INPUT_CHECK.out.bams.view{"input check out: $it"}
+    
     INPUT_CHECK.out.bams
         .map { meta, files -> [ meta.patient, meta.id, meta.status, files[0], files[1] ] }
         .groupTuple()
         .map { patient, id, status, bams, bais -> [ patient, id[status.findIndexValues { it ==~ /tumour/ }], id[status.findIndexValues { it ==~ /normal/ }], bams, bais ]}
         .set{ mutect_input }
-
-//    mutect_input = make_mutect_input(INPUT_CHECK.out.bams)
-//    mutect_input.view{"mutect input: $it"}
-    
-    //mutect_input.view{"mutect input: $it"}
-    //crosscheck_input = make_crosscheck_imput(INPUT_CHECK.out.bams)
-    //pair_input = crosscheck_input.control.combine(crosscheck_input.tumour, by:0)
 
 
     //
@@ -336,7 +329,6 @@ workflow MUTECT_PLATYPUS {
                                     [ meta.patient , [sample:meta.sample,status:meta.status, id:meta.id],
                                     contamination_table ]}
                         .groupTuple()
-                        //.view{"contamination input: $it"}
                         .set{ contamination_input }
 
     GATK4_CALCULATECONTAMINATION.out.segmentation
@@ -344,11 +336,9 @@ workflow MUTECT_PLATYPUS {
                                     [meta.patient, [sample:meta.sample,status:meta.status, id:meta.id],
                                     segmentation_table]}
                         .groupTuple()
-                        //.view{"segmentation input: $it"}
                         .set{ segmentation_input }
 
     contamination_input.join(segmentation_input)
-                      //  .view{"joint $it"}
                         .set{ for_filter }
 
 
@@ -372,12 +362,10 @@ workflow MUTECT_PLATYPUS {
         vep_cache,
         []
     )
-    //ENSEMBLVEP.out.vcf.view{"ensembl out $it"}
 
     BCFTOOLS_MAPPABILITY(ENSEMBLVEP.out.vcf, mappability, mappability_tbi)
 
     BCFTOOLS_MAPPABILITY.out.vcf
-              //  .view{ "bcftools mappability input: $it"}
                 .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
                 .set { PATIENT_VCF }
 
@@ -516,8 +504,6 @@ workflow MUTECT_PLATYPUS {
 
     SEQUENZAUTILS_MERGESEQZ (merge_seqz_input)
 
-//    SEQUENZAUTILS_HETSNPS(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz)
-//    SEQUENZAUTILS_MERGESEQZ.out.concat_seqz.view()
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
 
     if ( params.sequenza_tissue_type == "PDO" ) {
@@ -537,7 +523,6 @@ workflow MUTECT_PLATYPUS {
     }
 
     
-   // SEQUENZAUTILS_RSEQZ.out.rseqz.view{"RSEQZ: $it"} 
     ZIP_MUTECT_MONO_VCF.out.vcf
                 .map{ patient, control, tumour, vcf_gz, vcf_tbi ->
                       [patient, tumour, vcf_gz, vcf_tbi]}
@@ -553,7 +538,6 @@ workflow MUTECT_PLATYPUS {
             .combine(rseqz_for_combine,by:1)
             .map{ id, patient, vcf_gz, vcf_tbi, patient2, segment_dir ->
                     [ [patient:patient, id:id ], [vcf_gz,vcf_tbi], segment_dir]}
-            .view{"evoInput $it"}
             .set{ evo_input }
     
     EVOVERSE_CNAQC(evo_input, ploidy, drivers )
