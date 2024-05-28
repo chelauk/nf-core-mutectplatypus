@@ -4,7 +4,7 @@
 library(evoverse)
 
 args <- commandArgs(TRUE)
-my_segments <- paste0(args[1],"/", args[1])
+my_segments <- paste0(args[1], "/", args[2])
 my_sample <- args[2]
 my_vcf <- args[3]
 my_drivers <- args[4]
