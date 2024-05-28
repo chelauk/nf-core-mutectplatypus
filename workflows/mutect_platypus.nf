@@ -524,8 +524,8 @@ workflow MUTECT_PLATYPUS {
                                 gender,
                                 ploidy,
                                 seq_gam )
-    } else if ( params.sequenza_tissue_type == "WES" ) {
-        purity = Channel.of(["WES_1",0.1],["WES_2",0.3],["WES_3",0.5],["WES_4", 0.7],["WES_5",0.9])
+    } else if ( params.sequenza_tissue_type == "TISSUE" ) {
+        purity = Channel.of(["TISSUE_1",0.1],["TISSUE_2",0.3],["TISSUE_3",0.5],["TISSUE_4", 0.7],["TISSUE_5",0.9])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity)
         SEQUENZAUTILS_RSEQZ(    rseqz_input,
                                 gender,
