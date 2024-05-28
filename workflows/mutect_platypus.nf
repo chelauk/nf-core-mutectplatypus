@@ -39,7 +39,6 @@ germline_resource     = params.germline_resource     ? Channel.fromPath(params.g
 germline_resource_idx = params.germline_resource_idx ? Channel.fromPath(params.germline_resource_idx).collect() : Channel.empty()
 haplotype_map         = params.haplotype_map         ? Channel.fromPath(params.haplotype_map).collect()         : Channel.empty()
 drivers               = params.drivers               ? Channel.fromPath(params.drivers).collect()               : Channel.empty()
-//mappability_bw        = params.mappability_bw        ? Channel.fromPath(params.mappability_bw).collect()        : Channel.empty()
 mappability           = params.mappability           ? Channel.fromPath(params.mappability).collect()           : Channel.empty()
 mappability_tbi       = params.mappability_tbi       ? Channel.fromPath(params.mappability_tbi).collect()       : Channel.empty()
 ngscheckmate_bed      = params.ngscheckmate_bed      ? Channel.fromPath(params.ngscheckmate_bed).collect()                  : Channel.empty()
@@ -125,7 +124,6 @@ include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/local/concat_vcf/ma
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils/mergeseqz/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/local/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/local/sequenzautils/seqz_R/main.nf'
-//include { MAPPABILITY                     } from '../modules/local/mappability/main'
 include { BCFTOOLS_MAPPABILITY            } from '../modules/nf-core/bcftools/annotate/main'
 include { EVOVERSE_CNAQC                  } from '../modules/local/evoverse/main'
 
@@ -148,7 +146,6 @@ include { ENSEMBLVEP                      } from '../modules/nf-core/ensemblvep/
 include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/sequenzautils/gcwiggle/main'
 include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/sequenzautils/bam2seqz/main'
 //include { SEQUENZAUTILS_HETSNPS           } from '../modules/nf-core/modules/sequenzautils/hetsnps/main'
-//include { ADD_MAPPABILITY                 } from '../modules/local/add_mappability/main'
 include { MULTIQC                         } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS     } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
