@@ -19,9 +19,10 @@ process EVOVERSE_CNAQC {
     task.ext.when == null || task.ext.when
 
     script:
+    def vcf_file = "${vcf[0]}"
     def prefix = task.ext.prefix ?: "${segments}"
     """
-    zgrep -P "^#|PASS" $vcf | gzip > temp.vcf.gz
+    zgrep -P "^#|PASS" $vcf_file | gzip > temp.vcf.gz
     evoverse.R $prefix $prefix temp.vcf.gz $drivers
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
