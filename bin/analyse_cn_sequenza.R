@@ -7,10 +7,10 @@ print(args)
 input <- args[1]
 output_prefix <- args[2]
 gender <- args[3]
-ploidy <- args[4]
-ccf <- args[5]
-gam <- args[6]
-gam <- as.integer(gam)
+ploidy <- as.integer(args[4])
+ccf <- as.numeric(args[5])
+gam <- as.integer(args[6])
+
 if (ploidy == 7) {
     low_p <- 1
     up_p <- 7
@@ -19,8 +19,8 @@ if (ploidy == 7) {
     up_p <- ploidy + 0.5
     }
 
-high_ccf <- ccf + 0.01
-low_ccf <- ccf - 0.01
+high_ccf <- ccf + 0.1
+low_ccf <- ccf - 0.1
 #if (ccf == "PDO") {
 #    high_ccf <- 0.99
 #    low_ccf <- 0.95
