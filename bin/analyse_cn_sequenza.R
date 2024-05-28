@@ -5,11 +5,12 @@ if (!require(sequenza)) stop("Package 'sequenza' missing\n.")
 args <- commandArgs(TRUE)
 print(args)
 input <- args[1]
-output_prefix <- args[2]
-gender <- args[3]
-ploidy <- as.integer(args[4])
-ccf <- as.numeric(args[5])
-gam <- as.integer(args[6])
+output_dir <- args[2]
+output_prefix <- args[3]
+gender <- args[4]
+ploidy <- as.integer(args[5])
+ccf <- as.numeric(args[6])
+gam <- as.integer(args[7])
 
 if (ploidy == 7) {
     low_p <- 1

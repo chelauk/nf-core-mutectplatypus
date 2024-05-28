@@ -26,7 +26,7 @@ process SEQUENZAUTILS_RSEQZ {
     def prefix = task.ext.prefix ?: "${tissue}"
     """
     zcat ${seqz_bin} > $seqz_in
-    analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${purity} ${seq_gam}
+    analyse_cn_sequenza.R ${seqz_in} ${prefix} ${meta.id} ${gender} ${ploidy} ${purity} ${seq_gam}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -38,7 +38,7 @@ process SEQUENZAUTILS_RSEQZ {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${tissue}"
     """
-    echo "analyse_cn_sequenza.R ${seqz_in} ${prefix} ${gender} ${ploidy} ${purity} ${seq_gam}"
+    echo "analyse_cn_sequenza.R ${seqz_in} ${prefix} ${meta.id} ${gender} ${ploidy} ${purity} ${seq_gam}"
     mkdir ${tissue}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
