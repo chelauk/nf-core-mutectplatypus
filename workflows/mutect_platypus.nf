@@ -459,7 +459,7 @@ workflow MUTECT_PLATYPUS {
         purity = Channel.of(["PDO_70",0.70 ],["PDO_90",0.90 ])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity) 
     } else if ( params.sequenza_tissue_type == "TISSUE" ) {
-        purity = Channel.of(["TISSUE_10",0.1],["TISSUE_30",0.3],["TISSUE_50",0.5],["TISSUE_70", 0.7],["TISSUE_90",0.9])
+        purity = Channel.of(["TISSUE_10",0.1],["TISSUE_20",0.2],["TISSUE_30",0.3],["TISSUE_50",0.5],["TISSUE_70", 0.7],["TISSUE_90",0.9])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity)
     }
     
