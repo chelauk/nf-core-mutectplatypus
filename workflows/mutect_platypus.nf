@@ -115,9 +115,11 @@ include { BUILD_INTERVALS                 } from '../modules/local/build_interva
 include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
 include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
 include { VCF_SPLIT                       } from '../subworkflows/local/vcf_split.nf'
+include { VCF_SPLIT as PLAT_VCF_SPLIT     } from '../subworkflows/local/vcf_split.nf'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_MUTECT_MONO_VCF  } from '../modules/local/zip_vcf/main'
+include { ZIP_VCF as ZIP_PLATYPUS_MONO    } from '../modules/local/zip_vcf/main'
 include { VCF2MAF                         } from '../modules/local/vcf2maf/main'
 include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/local/concat_vcf/main'
 include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/main'
@@ -436,8 +438,22 @@ workflow MUTECT_PLATYPUS {
     PLAT_VEP.out.vcf
                 .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
                 .set { PLAT_PATIENT_VCF }
+    
+    PLAT_PATIENT_VCF.combine(mutect_samples_for_split)
+                    .map{ patient, spacer, spacer2, plat_vcf, mut_pat, meta_control, meta_tumour, mutect_vcf ->
+                        [patient, meta_control, meta_tumour, plat_vcf]}
+                    .set{ plat_for_split }
+
+    PLAT_VCF_SPLIT(plat_for_split)
 
     ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
+    PLAT_VCF_SPLIT.out.vcf
+            .map{ meta_control,meta_tumour,vcf ->
+            [meta_control.patient, meta_control, meta_tumour, vcf]}
+            .view{"plat split out $it"}
+            .set{ zip_platypus_mono_input }
+    
+    ZIP_PLATYPUS_MONO(zip_platypus_mono_input)
 
     // check if wiggle is done already
     if ( file(params.wiggle).exists() ) {

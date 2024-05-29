@@ -1,5 +1,5 @@
 process VCF_SPLIT{
-    tag "$meta_tumour.patient"
+    tag "${meta_tumour.id}"
     label 'process_medium'
 
     conda "bioconda::bcftools=1.17"
