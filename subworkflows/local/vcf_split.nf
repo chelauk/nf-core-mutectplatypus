@@ -15,6 +15,7 @@ process VCF_SPLIT{
     path "versions.yml"           , emit: versions
 
     script:
+    def args = task.ext.args ?: "mutect2"
     def control = task.ext.control ?: "${meta_control.id}" ?: "${meta_control.sample}" 
     def tumour = task.ext.tumour ?: "${meta_tumour.id}" ?: "${meta_tumour.sample}" 
     """
