@@ -112,11 +112,15 @@ include { BAM_SAMPLEQC } from '../subworkflows/local/bam_sampleqc/main'
 
 include { CREATE_INTERVALS_BED            } from '../modules/local/create_intervals_bed/main'
 include { BUILD_INTERVALS                 } from '../modules/local/build_intervals/main'
+include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
+include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
 include { VCF_SPLIT                       } from '../subworkflows/local/vcf_split.nf'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
+include { ZIP_VCF as ZIP_PLATYPUS_ANN_VCF } from '../modules/local/zip_vcf/main'
 include { ZIP_VCF as ZIP_MUTECT_MONO_VCF  } from '../modules/local/zip_vcf/main'
 include { VCF2MAF                         } from '../modules/local/vcf2maf/main'
 include { CONCAT_VCF as CONCAT_MUTECT     } from '../modules/local/concat_vcf/main'
+include { CONCAT_VCF as CONCAT_PLATYPUS   } from '../modules/local/concat_vcf/main'
 include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils/mergeseqz/main'
 include { SEQUENZAUTILS_BINNING           } from '../modules/local/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/local/sequenzautils/seqz_R/main.nf'
@@ -137,6 +141,7 @@ include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_TUMOUR } from '../modules/nf-
 include { GATK4_GATHERPILEUPSUMMARIES as GATHER_PS_NORM } from '../modules/nf-core/gatk4/gatherpileupsummaries/main'
 include { GATK4_CALCULATECONTAMINATION    } from '../modules/nf-core/gatk4/calculatecontamination/main'
 include { GATK4_FILTERMUTECTCALLS         } from '../modules/nf-core/gatk4/filtermutectcalls/main'
+include { ENSEMBLVEP as PLAT_VEP          } from '../modules/nf-core/ensemblvep/main'
 include { ENSEMBLVEP                      } from '../modules/nf-core/ensemblvep/main'
 include { SEQUENZAUTILS_GCWIGGLE          } from '../modules/nf-core/sequenzautils/gcwiggle/main'
 include { SEQUENZAUTILS_BAM2SEQZ          } from '../modules/nf-core/sequenzautils/bam2seqz/main'
@@ -376,10 +381,11 @@ workflow MUTECT_PLATYPUS {
                 .map{ patient, meta_control, files_control, meta_tumour, files_tumour ->
                 [ patient, meta_control, meta_tumour] }
                 .combine(mappability_for_split, by:0)
-                .set{samples_for_split}
+                .view{"samples for split $it"}
+                .set{mutect_samples_for_split}
 
     
-    VCF_SPLIT(samples_for_split)
+    VCF_SPLIT(mutect_samples_for_split)
 
     VCF_SPLIT.out.vcf
             .map { meta_control, meta_tumour, vcf ->
@@ -394,6 +400,42 @@ workflow MUTECT_PLATYPUS {
             .set { zip_mono_mutect_input }
 
     ZIP_MUTECT_MONO_VCF ( zip_mono_mutect_input )
+    
+    gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
+
+    platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
+
+    PLATYPUS_CALLVARIANTS(  platypus_input,
+                            fasta,
+                            fasta_fai )
+
+    PLATYPUS_CALLVARIANTS.out.vcf.groupTuple()
+                                 .map{ patient, vcf ->
+                                      [patient, [], vcf]}
+                                 .set{ concat_platypus_input }
+
+    if (!params.intervals) {
+        CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, [] )
+        } else {
+        CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, intervals_ch )
+        }
+
+
+
+    PLAT_VEP (
+        CONCAT_PLATYPUS.out.vcf,
+        vep_genome,
+        vep_species,
+        vep_cache_version,
+        vep_cache,
+        []
+    )
+
+    PLAT_VEP.out.vcf
+                .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
+                .set { PLAT_PATIENT_VCF }
+
+    ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
 
     // check if wiggle is done already
     if ( file(params.wiggle).exists() ) {
