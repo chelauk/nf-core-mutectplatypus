@@ -420,10 +420,12 @@ workflow MUTECT_PLATYPUS {
         CONCAT_PLATYPUS ( concat_platypus_input, fasta_fai, intervals_ch )
         }
 
-
+    CONCAT_PLATYPUS.out.vcf
+                    .map{ patient, vcf, tbi -> [patient, vcf]}
+                    .set { plat_vep_input }
 
     PLAT_VEP (
-        CONCAT_PLATYPUS.out.vcf,
+        plat_vep_input,
         vep_genome,
         vep_species,
         vep_cache_version,
