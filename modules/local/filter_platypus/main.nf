@@ -1,6 +1,6 @@
 process PLATYPUS_FILTER {
 
-    tag "$patient"
+    tag "${meta_control.patient}"
     label 'process_low'
 
     conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
@@ -9,23 +9,23 @@ process PLATYPUS_FILTER {
         'quay.io/biocontainers/pandas:1.4.3' }"
 
     input:
-    tuple val(patient), path(vcf), val(norm)
+    tuple val(meta_control), val(meta_tumour), path(vcf)
     val (tef)
 
     output:
-    tuple val(patient), path("*filtered.vcf"), emit: vcf
-    tuple val(patient), path("*removed.vcf"),  optional:true, emit: rejected
+    tuple val(meta_control), val(meta_tumour), path("*filtered.vcf"), emit: vcf
+    tuple val(meta_control), path("*removed.vcf"),  optional:true, emit: rejected
     path "*versions.yml",               emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def prefix = "${patient}_platypus"
+    def prefix = "${meta_control.patient}_platypus"
     def my_vcf = "${vcf.toString().minus(".gz")}"
     """
     gunzip $vcf
-    filter_platypus.py $my_vcf ${norm[0]} $tef
+    filter_platypus.py $my_vcf ${meta_control.id} $tef
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         1
@@ -33,8 +33,8 @@ process PLATYPUS_FILTER {
 	"""
     stub:
     """
-    echo "filter_platypus.py $vcf ${norm[0]} $tef"
-    touch "$patient"_platypus_filtered.vcf
+    echo "filter_platypus.py $vcf ${meta_control.id} $tef"
+    touch "${meta_control.patient}"_platypus_filtered.vcf
     touch versions.yml
     """
 }

@@ -383,6 +383,7 @@ workflow MUTECT_PLATYPUS {
                 .map{ patient, meta_control, files_control, meta_tumour, files_tumour ->
                 [ patient, meta_control, meta_tumour] }
                 .combine(mappability_for_split, by:0)
+//                .view{"mutect_samples_for_split: $it"}
                 .set{mutect_samples_for_split}
 
     
@@ -452,22 +453,42 @@ workflow MUTECT_PLATYPUS {
     PLAT_VEP.out.vcf
                 .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
                 .set { PLAT_PATIENT_VCF }
-    
-    PLAT_PATIENT_VCF.combine(mutect_samples_for_split)
+
+    if ( params.seq_type != "sc_wgs") {
+        PLAT_PATIENT_VCF.combine(mutect_samples_for_split)
                     .map{ patient, spacer, spacer2, plat_vcf, mut_pat, meta_control, meta_tumour, mutect_vcf ->
-                        [patient, meta_control, meta_tumour, plat_vcf]}
-                    .set{ plat_for_split }
+                        [patient, meta_tumour, meta_control, plat_vcf]}
+                    .groupTuple()
+                    //.view{"thing $it"}
+                    .map { patient, tumour, normal, vcf ->
+                         [normal[0],tumour, vcf[0]]}
+//                    .view{ "plat_for_filter: $it"}
+                    .set{ plat_for_filter }
 
-    PLAT_VCF_SPLIT(plat_for_split)
+        PLATYPUS_FILTER( plat_for_filter, tef)
+        PLATYPUS_FILTER.out.vcf
+            .map{ meta_control, meta_tumour, vcf ->
+            [meta_control.patient, meta_control, meta_tumour, vcf ]}
+            .set{ for_zip_platypus }
+        ZIP_PLATYPUS_ANN_VCF ( for_zip_platypus )
 
-    ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
-    PLAT_VCF_SPLIT.out.vcf
+        PLATYPUS_FILTER.out.vcf
+            .transpose()
+            .map{ meta_control, meta_tumour, vcf ->
+                [ meta_control.patient, meta_control, meta_tumour, vcf ]}
+            .set{plat_for_split}
+    
+            PLAT_VCF_SPLIT(plat_for_split)
+
+        PLAT_VCF_SPLIT.out.vcf
             .map{ meta_control,meta_tumour,vcf ->
             [meta_control.patient, meta_control.id, meta_tumour.id, vcf]}
             .set{ zip_platypus_mono_input }
     
-    ZIP_PLATYPUS_MONO(zip_platypus_mono_input)
-
+        ZIP_PLATYPUS_MONO(zip_platypus_mono_input)
+    } else if ( params.seq_type == "sc_wgs "){
+        
+    }
     // check if wiggle is done already
     if ( file(params.wiggle).exists() ) {
         wiggle = Channel.fromPath(params.wiggle).collect() 
