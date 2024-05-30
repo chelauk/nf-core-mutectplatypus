@@ -35,11 +35,13 @@ process PLATYPUS_CALLVARIANTS {
         awk 'BEGIN{OFS=""}{print \$1,":",\$2,"-",\$3}' ${intervals} > ${intervals}.txt
     fi
 
+    bgzip ${vcf}
+    tabix -p vcf ${vcf}.gz
 
     platypus callVariants \
         --refFile=${fasta} --bamFiles=${bam.join(',')} \
         --output=${prefix}.platypus.vcf \
-        --source=${vcf} \
+        --source=${vcf}.gz \
         --filterReadPairsWithSmallInserts=0 \
         --maxReads=100000000 \
         --maxVariants=100 \
