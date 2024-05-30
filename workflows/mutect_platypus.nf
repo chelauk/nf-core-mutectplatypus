@@ -450,7 +450,7 @@ workflow MUTECT_PLATYPUS {
     ZIP_PLATYPUS_ANN_VCF ( PLAT_PATIENT_VCF )
     PLAT_VCF_SPLIT.out.vcf
             .map{ meta_control,meta_tumour,vcf ->
-            [meta_control.patient, meta_control, meta_tumour, vcf]}
+            [meta_control.patient, meta_control.id, meta_tumour.id, vcf]}
             .view{"plat split out $it"}
             .set{ zip_platypus_mono_input }
     
