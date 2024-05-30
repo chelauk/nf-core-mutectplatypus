@@ -398,7 +398,8 @@ workflow MUTECT_PLATYPUS {
     
     vcf2maf_input
             .map { meta, vcf ->
-                  [meta.patient, meta.control, meta.tumour, vcf ]} 
+                  [meta.patient, meta.control, meta.tumour, vcf ]}
+            .view{"zip mono input mutect: $it"} 
             .set { zip_mono_mutect_input }
 
     ZIP_MUTECT_MONO_VCF ( zip_mono_mutect_input )
