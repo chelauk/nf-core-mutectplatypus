@@ -1,4 +1,5 @@
 process VCF_SPLIT{
+    debug true
     tag "${meta_tumour.id}"
     label 'process_medium'
 
@@ -27,10 +28,11 @@ process VCF_SPLIT{
     END_VERSIONS
     """
     stub:
+    def suffix = task.ext.args ?: "mutect2"
     def control = task.ext.control ?: "${meta_control.id}" ?: "${meta_control.sample}" 
     def tumour = task.ext.tumour ?: "${meta_tumour.id}" ?: "${meta_tumour.sample}" 
     """
-    touch ${tumour}_mutect2.mono.vcf
+    touch ${tumour}_${suffix}.mono.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
