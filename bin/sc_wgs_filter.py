@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 ############################################################
-#  Minimal filter for sc_swgs 
+#  Minimal filter for sc_wgs 
 #
 # Filters the VCF file produced by Platypus
 #
 # The filtering criteria are:
-#   1) The variant is not a known GL variant or aligned to the decoy genome.
+#   1) The variant is not a known GL variant.
 #
 ############################################################
 
@@ -18,7 +18,6 @@ def main():
     parser = argparse.ArgumentParser(description="Filter Platypus VCF file")
     parser.add_argument("input_file", help="Input VCF file produced by Platypus")
     parser.add_argument("normal_name", help="Name of the normal sample")
-    parser.add_argument("tumour_enrichment", help="Tumor enrichment (not used in the script but kept for compatibility)")
     
     args = parser.parse_args()
     
@@ -69,4 +68,3 @@ def main():
                 
 if __name__ == "__main__":
     main()
-

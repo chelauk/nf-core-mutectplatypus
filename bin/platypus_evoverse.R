@@ -8,40 +8,24 @@ my_segments <- paste0(args[1], "/", args[2])
 my_sample <- args[2]
 my_vcf <- args[3]
 my_drivers <- args[4]
-coverage <- args[5]
 
 x <- vcfR::read.vcfR(my_vcf)
 normal <- str_replace(x@meta[grep("normal_sample", x@meta)],
 "##normal_sample=", "")
 load(my_drivers)
 
-mutect_calls <- evoparse_mutect_mutations(my_vcf)
+platypus_calls <- evoparse_platypus_mutations(my_vcf)
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
-if (coverage == "high") {
-  snvs <- mutect_calls[[my_sample]]$mutations %>%
-    dplyr::filter(FILTER == "PASS") %>%
-    dplyr::filter(!is.na(VAF), VAF > 0) %>%
-    dplyr::filter(str_count(gt_F1R2, ",") == 1) %>%
-    dplyr::filter(str_count(gt_F2R1, ",") == 1) %>%
-    mutate(alt_gt_F1R2 = as.numeric(str_replace(gt_F1R2, "[0-9]*,", ""))) %>%
-    mutate(alt_gt_F2R1 = as.numeric(str_replace(gt_F2R1, "[0-9]*,", ""))) %>%
-    dplyr::filter(alt_gt_F1R2 + alt_gt_F2R1  >= 3)
-} else {
-  snvs <- mutect_calls[[my_sample]]$mutations
-}
+snvs <- platypus_calls[[my_sample]]$mutations %>%
+    dplyr::filter(FILTER == "PASS")
 
 my_colnames <- colnames(snvs)[4:28]
 my_colnames <- c(paste0(my_colnames, ".x"))
 
-if (coverage == "high") { 
-  snvs <- left_join(snvs, mutect_calls[[normal]]$mutations, by = c("chr", "from", "to")) %>%
-    dplyr::filter(DP.x >= 5, DP.y >= 5) %>%
+snvs <- left_join(snvs, mutect_calls[[normal]]$mutations,
+    by = c("chr", "from", "to")) %>%
     select("chr", "from", "to", all_of(my_colnames))
-} else {
-  snvs <- left_join(snvs, mutect_calls[[normal]]$mutations, by = c("chr", "from", "to")) %>%
-    select("chr", "from", "to", all_of(my_colnames)) 
-}
 
 my_colnames <-  my_colnames %>% str_replace(".x", "")
 my_colnames <- c("chr", "from", "to", my_colnames)

@@ -114,6 +114,7 @@ include { CREATE_INTERVALS_BED            } from '../modules/local/create_interv
 include { BUILD_INTERVALS                 } from '../modules/local/build_intervals/main'
 include { PLATYPUS_CALLVARIANTS           } from '../modules/local/platypus/main'
 include { PLATYPUS_FILTER                 } from '../modules/local/filter_platypus/main'
+include { SIMPLE_FILTER                   } from '../modules/local/simple_filter/main'
 include { VCF_SPLIT                       } from '../subworkflows/local/vcf_split.nf'
 include { VCF_SPLIT as PLAT_VCF_SPLIT     } from '../subworkflows/local/vcf_split.nf'
 include { ZIP_VCF as ZIP_MUTECT_ANN_VCF   } from '../modules/local/zip_vcf/main'
@@ -454,25 +455,32 @@ workflow MUTECT_PLATYPUS {
                 .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
                 .set { PLAT_PATIENT_VCF }
 
+    PLAT_PATIENT_VCF.combine(mutect_samples_for_split)
+                .map{ patient, spacer, spacer2, plat_vcf, mut_pat, meta_control, meta_tumour, mutect_vcf ->
+                    [patient, meta_tumour, meta_control, plat_vcf]}
+                .groupTuple()
+                //.view{"thing $it"}
+                .map { patient, tumour, normal, vcf ->
+                     [normal[0],tumour, vcf[0]]}
+//                .view{ "plat_for_filter: $it"}
+                .set{ plat_for_filter }
+
     if ( params.seq_type != "sc_wgs") {
-        PLAT_PATIENT_VCF.combine(mutect_samples_for_split)
-                    .map{ patient, spacer, spacer2, plat_vcf, mut_pat, meta_control, meta_tumour, mutect_vcf ->
-                        [patient, meta_tumour, meta_control, plat_vcf]}
-                    .groupTuple()
-                    //.view{"thing $it"}
-                    .map { patient, tumour, normal, vcf ->
-                         [normal[0],tumour, vcf[0]]}
-//                    .view{ "plat_for_filter: $it"}
-                    .set{ plat_for_filter }
-
         PLATYPUS_FILTER( plat_for_filter, tef)
-        PLATYPUS_FILTER.out.vcf
-            .map{ meta_control, meta_tumour, vcf ->
-            [meta_control.patient, meta_control, meta_tumour, vcf ]}
-            .set{ for_zip_platypus }
-        ZIP_PLATYPUS_ANN_VCF ( for_zip_platypus )
+        PLATYPUS_FILTER.out.vcf.set{ platypus_filter_out }
+    } else {
+        SIMPLE_FILTER ( plat_for_filter )
+        SIMPLE_FILTER.out.vcf.set{ platypus_filter_out } 
+    }
 
-        PLATYPUS_FILTER.out.vcf
+    platypus_filter_out
+        .map{ meta_control, meta_tumour, vcf ->
+        [meta_control.patient, meta_control, meta_tumour, vcf ]}
+        .set{ for_zip_platypus }
+    
+    ZIP_PLATYPUS_ANN_VCF ( for_zip_platypus )
+
+    platypus_filter_out
             .transpose()
             .map{ meta_control, meta_tumour, vcf ->
                 [ meta_control.patient, meta_control, meta_tumour, vcf ]}
@@ -486,9 +494,7 @@ workflow MUTECT_PLATYPUS {
             .set{ zip_platypus_mono_input }
     
         ZIP_PLATYPUS_MONO(zip_platypus_mono_input)
-    } else if ( params.seq_type == "sc_wgs "){
-        
-    }
+
     // check if wiggle is done already
     if ( file(params.wiggle).exists() ) {
         wiggle = Channel.fromPath(params.wiggle).collect() 
@@ -550,7 +556,10 @@ workflow MUTECT_PLATYPUS {
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
 
     if ( params.sequenza_tissue_type == "PDO" ) {
-        purity = Channel.of(["PDO_70",0.70 ],["PDO_90",0.90 ])
+        purity = Channel.of(["PDO_90",0.90])
+        rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity) 
+    }  else if ( params.sequenza_tissue_type == "SC_WGS" ) {
+        purity = Channel.of(["SC_WGS_90",0.90])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity) 
     } else if ( params.sequenza_tissue_type == "TISSUE" ) {
         purity = Channel.of(["TISSUE_10",0.1],["TISSUE_20",0.2],["TISSUE_30",0.3],["TISSUE_50",0.5],["TISSUE_70", 0.7],["TISSUE_90",0.9])
@@ -567,6 +576,11 @@ workflow MUTECT_PLATYPUS {
                       [patient, tumour, vcf_gz, vcf_tbi]}
                 .set{ vcf_for_combine }
     
+    ZIP_PLATYPUS_MONO.out.vcf 
+                .map{ patient, control, tumour, vcf_gz, vcf_tbi ->
+                      [patient, tumour, vcf_gz, vcf_tbi]}
+                .set{ platypus_vcf_for_combine }
+    
     SEQUENZAUTILS_RSEQZ.out.rseqz
         .map { meta, tissue, purity, out_dir ->
                 [ meta.patient, meta.id, tissue, out_dir ] }
@@ -577,10 +591,17 @@ workflow MUTECT_PLATYPUS {
             .combine(rseqz_for_combine,by:1)
             .map{ id, patient, vcf_gz, vcf_tbi, patient2, tissue, segment_dir ->
                     [ [patient:patient, id:id ], [vcf_gz,vcf_tbi], tissue, segment_dir]}
-            .set{ evo_input }
+            .set{ evo_mutect_input }
     
-    EVOVERSE_CNAQC(evo_input, ploidy, drivers )
+    EVOVERSE_CNAQC(evo_mutect_input, ploidy, drivers , params.evoverse_coverage)
 
+        platypus_vcf_for_combine
+            .combine(rseqz_for_combine,by:1)
+            .map{ id, patient, vcf_gz, vcf_tbi, patient2, tissue, segment_dir ->
+                    [ [patient:patient, id:id ], [vcf_gz,vcf_tbi], tissue, segment_dir]}
+            .set{ evo_platypus_input }
+
+    
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )

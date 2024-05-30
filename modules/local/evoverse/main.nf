@@ -10,6 +10,7 @@ process EVOVERSE_CNAQC {
     tuple val(meta), path(vcf), val(tissue), path(segments)
     val(ploidy)
     path(drivers)
+    val(coverage)
 
     output:
     tuple val(meta), path("*pdf"), path("*rds"), emit: evoverse_pdf
@@ -22,8 +23,7 @@ process EVOVERSE_CNAQC {
     def vcf_file = "${vcf[0]}"
     def prefix = task.ext.prefix ?: "${segments}"
     """
-    zgrep -P "^#|PASS" $vcf_file | gzip > temp.vcf.gz
-    evoverse.R $prefix ${meta.id} temp.vcf.gz $drivers
+    evoverse.R $prefix ${meta.id} $vcf_file $drivers $coverage
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         1
@@ -32,7 +32,7 @@ process EVOVERSE_CNAQC {
     stub:
     def prefix = task.ext.prefix ?: "${segments}"
     """
-    echo "evoverse $prefix ${meta.id} $vcf $drivers"
+    echo "evoverse $prefix ${meta.id} $vcf $drivers $coverage"
     touch ${meta.id}_${ploidy}.pdf
     touch ${meta.id}_${ploidy}.rds
     touch versions.yml
