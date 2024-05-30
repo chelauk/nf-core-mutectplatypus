@@ -41,8 +41,8 @@ haplotype_map         = params.haplotype_map         ? Channel.fromPath(params.h
 drivers               = params.drivers               ? Channel.fromPath(params.drivers).collect()               : Channel.empty()
 mappability           = params.mappability           ? Channel.fromPath(params.mappability).collect()           : Channel.empty()
 mappability_tbi       = params.mappability_tbi       ? Channel.fromPath(params.mappability_tbi).collect()       : Channel.empty()
-ngscheckmate_bed      = params.ngscheckmate_bed      ? Channel.fromPath(params.ngscheckmate_bed).collect()                  : Channel.empty()
-intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : []
+ngscheckmate_bed      = params.ngscheckmate_bed      ? Channel.fromPath(params.ngscheckmate_bed).collect()      : Channel.empty()
+intervals_ch          = params.intervals             ? Channel.fromPath(params.intervals).collect()             : Channel.empty()
 
 // Initialize value channels based on params, defined in the params.genomes[params.genome] scope
 vep_cache_version    = params.vep_cache_version     ?: Channel.empty()
@@ -194,7 +194,7 @@ workflow MUTECT_PLATYPUS {
     //
 
     if (!params.intervals) {
-        result_intervals = CREATE_INTERVALS_BED(BUILD_INTERVALS(fasta_fai))
+        result_intervals = CREATE_INTERVALS_BED()
         } else {
         result_intervals = CREATE_INTERVALS_BED(intervals_ch)
         }
@@ -242,7 +242,7 @@ workflow MUTECT_PLATYPUS {
     orientation_input = GATK4_MUTECT2.out.f1r2.groupTuple()
 
     GATK4_LEARNREADORIENTATIONMODEL ( orientation_input )
-
+    
     concat_input = GATK4_MUTECT2.out.vcf.groupTuple()
 
     if (!params.intervals) {
@@ -383,7 +383,6 @@ workflow MUTECT_PLATYPUS {
                 .map{ patient, meta_control, files_control, meta_tumour, files_tumour ->
                 [ patient, meta_control, meta_tumour] }
                 .combine(mappability_for_split, by:0)
-                .view{"samples for split $it"}
                 .set{mutect_samples_for_split}
 
     
@@ -399,14 +398,28 @@ workflow MUTECT_PLATYPUS {
     vcf2maf_input
             .map { meta, vcf ->
                   [meta.patient, meta.control, meta.tumour, vcf ]}
-            .view{"zip mono input mutect: $it"} 
             .set { zip_mono_mutect_input }
 
     ZIP_MUTECT_MONO_VCF ( zip_mono_mutect_input )
     
     gatk_filter_out = GATK4_FILTERMUTECTCALLS.out.vcf.join(GATK4_FILTERMUTECTCALLS.out.tbi)
 
-    platypus_input = gatk_filter_out.combine(bam_intervals, by:0)
+    bam_intervals
+            .map{
+                patient, interval, tumour_samples, control_samples, bams, bais, bed ->
+                [
+                    [ patient:patient, interval:interval ], tumour_samples, control_samples, bams, bais, bed 
+                ]
+            }
+            .set{ intervals_for_platypus }
+
+    GATK4_MUTECT2.out.vcf
+            .map{
+                patient, interval, vcf ->
+                [ [ patient:patient, interval:interval], vcf ]
+            }
+            .set{ mutect_unfiltered }
+    platypus_input = mutect_unfiltered.combine(intervals_for_platypus, by:0)
 
     PLATYPUS_CALLVARIANTS(  platypus_input,
                             fasta,
@@ -451,7 +464,6 @@ workflow MUTECT_PLATYPUS {
     PLAT_VCF_SPLIT.out.vcf
             .map{ meta_control,meta_tumour,vcf ->
             [meta_control.patient, meta_control.id, meta_tumour.id, vcf]}
-            .view{"plat split out $it"}
             .set{ zip_platypus_mono_input }
     
     ZIP_PLATYPUS_MONO(zip_platypus_mono_input)
