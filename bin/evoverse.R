@@ -22,7 +22,6 @@ if (caller == "mutect") {
 }
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
-print(paste("column names of calls data frame",unlist(names(calls))))
 my_samples <- names(calls)
 
 normal <- my_samples[my_samples != my_sample ]
@@ -43,11 +42,11 @@ if (coverage == "high" && caller == "mutect") {
 my_colnames <- colnames(snvs)[4:length(colnames(snvs))]
 my_colnames <- c(paste0(my_colnames, ".x"))
 
-if (coverage == "high") { 
+if (coverage == "high" && caller == "mutect" ) { 
   snvs <- left_join(snvs, calls[[normal]]$mutations, 
                     by = c("chr", "from", "to")) %>%
     dplyr::filter(DP.x >= 5, DP.y >= 5) %>%
-    select("chr", "from", "to", all_of(my_colnames))
+    select(1:30)
 } else {
   snvs <- left_join(snvs, calls[[normal]]$mutations,
                     by = c("chr", "from", "to")) %>%
