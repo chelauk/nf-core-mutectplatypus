@@ -9,17 +9,22 @@ my_sample <- args[2]
 my_vcf <- args[3]
 my_drivers <- args[4]
 coverage <- args[5]
+caller <- args[6]
 
 x <- vcfR::read.vcfR(my_vcf)
 normal <- str_replace(x@meta[grep("normal_sample", x@meta)],
-"##normal_sample=", "")
+                      "##normal_sample=", "")
 load(my_drivers)
 
-mutect_calls <- evoparse_mutect_mutations(my_vcf)
+if (caller == "mutect") {
+  calls <- evoparse_mutect_mutations(my_vcf)
+} else if (caller == "platypus") {
+  calls <- evoparse_platypus_mutations(my_vcf)
+}
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
 if (coverage == "high") {
-  snvs <- mutect_calls[[my_sample]]$mutations %>%
+  snvs <- calls[[my_sample]]$mutations %>%
     dplyr::filter(FILTER == "PASS") %>%
     dplyr::filter(!is.na(VAF), VAF > 0) %>%
     dplyr::filter(str_count(gt_F1R2, ",") == 1) %>%
@@ -28,18 +33,20 @@ if (coverage == "high") {
     mutate(alt_gt_F2R1 = as.numeric(str_replace(gt_F2R1, "[0-9]*,", ""))) %>%
     dplyr::filter(alt_gt_F1R2 + alt_gt_F2R1  >= 3)
 } else {
-  snvs <- mutect_calls[[my_sample]]$mutations
+  snvs <- calls[[my_sample]]$mutations
 }
 
 my_colnames <- colnames(snvs)[4:28]
 my_colnames <- c(paste0(my_colnames, ".x"))
 
 if (coverage == "high") { 
-  snvs <- left_join(snvs, mutect_calls[[normal]]$mutations, by = c("chr", "from", "to")) %>%
+  snvs <- left_join(snvs, calls[[normal]]$mutations, 
+                    by = c("chr", "from", "to")) %>%
     dplyr::filter(DP.x >= 5, DP.y >= 5) %>%
     select("chr", "from", "to", all_of(my_colnames))
 } else {
-  snvs <- left_join(snvs, mutect_calls[[normal]]$mutations, by = c("chr", "from", "to")) %>%
+  snvs <- left_join(snvs, calls[[normal]]$mutations,
+                    by = c("chr", "from", "to")) %>%
     select("chr", "from", "to", all_of(my_colnames)) 
 }
 
@@ -77,4 +84,4 @@ fit <- pipeline_qc_copynumbercalls(
     purity_error = 0.03
 )
 plot(fit) %>%
-    ggsave(filename = my_filename, height = 17, width = 21)
+  ggsave(filename = my_filename, height = 17, width = 21)

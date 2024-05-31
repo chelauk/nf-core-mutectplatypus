@@ -12,13 +12,15 @@ my_drivers <- args[4]
 x <- vcfR::read.vcfR(my_vcf)
 normal <- str_replace(x@meta[grep("normal_sample", x@meta)],
 "##normal_sample=", "")
+
+# load TCGA drivers
 load(my_drivers)
 
 platypus_calls <- evoparse_platypus_mutations(my_vcf)
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
 snvs <- platypus_calls[[my_sample]]$mutations %>%
-    dplyr::filter(FILTER == "PASS")
+  dplyr::filter(FILTER == "PASS")
 
 my_colnames <- colnames(snvs)[4:28]
 my_colnames <- c(paste0(my_colnames, ".x"))
