@@ -1,5 +1,5 @@
 process EVOVERSE_CNAQC {
-    debug true
+
     errorStrategy 'ignore'
     tag "${meta.id}_${caller}"
     label 'process_low'

@@ -385,7 +385,6 @@ workflow MUTECT_PLATYPUS {
                 .map{ patient, meta_control, files_control, meta_tumour, files_tumour ->
                 [ patient, meta_control, meta_tumour] }
                 .combine(mappability_for_split, by:0)
-//                .view{"mutect_samples_for_split: $it"}
                 .set{mutect_samples_for_split}
 
     
@@ -460,10 +459,8 @@ workflow MUTECT_PLATYPUS {
                 .map{ patient, spacer, spacer2, plat_vcf, mut_pat, meta_control, meta_tumour, mutect_vcf ->
                     [patient, meta_tumour, meta_control, plat_vcf]}
                 .groupTuple()
-                //.view{"thing $it"}
                 .map { patient, tumour, normal, vcf ->
                      [normal[0],tumour, vcf[0]]}
-//                .view{ "plat_for_filter: $it"}
                 .set{ plat_for_filter }
 
     if ( params.seq_type != "sc_wgs") {
