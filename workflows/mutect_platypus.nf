@@ -128,7 +128,8 @@ include { SEQUENZAUTILS_MERGESEQZ         } from '../modules/local/sequenzautils
 include { SEQUENZAUTILS_BINNING           } from '../modules/local/sequenzautils/seqzbin/main'
 include { SEQUENZAUTILS_RSEQZ             } from '../modules/local/sequenzautils/seqz_R/main.nf'
 include { BCFTOOLS_MAPPABILITY            } from '../modules/nf-core/bcftools/annotate/main'
-include { EVOVERSE_CNAQC                  } from '../modules/local/evoverse/main'
+include { EVOVERSE_CNAQC as PLAT_CNAQC    } from '../modules/local/evoverse/main' 
+include { EVOVERSE_CNAQC as MUTECT_CNAQC  } from '../modules/local/evoverse/main'
 
 //
 // MODULE: Installed directly from nf-core/modules
@@ -593,7 +594,7 @@ workflow MUTECT_PLATYPUS {
                     [ [patient:patient, id:id ], [vcf_gz,vcf_tbi], tissue, segment_dir]}
             .set{ evo_mutect_input }
     
-    EVOVERSE_CNAQC(evo_mutect_input, ploidy, drivers , params.evoverse_coverage)
+    MUTECT_CNAQC(evo_mutect_input, ploidy, drivers , params.evoverse_coverage, "mutect")
 
         platypus_vcf_for_combine
             .combine(rseqz_for_combine,by:1)
@@ -601,7 +602,8 @@ workflow MUTECT_PLATYPUS {
                     [ [patient:patient, id:id ], [vcf_gz,vcf_tbi], tissue, segment_dir]}
             .set{ evo_platypus_input }
 
-    
+    PLAT_CNAQC( evo_platypus_input, ploidy, drivers, params.evoverse_coverage, "platypus") 
+
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )

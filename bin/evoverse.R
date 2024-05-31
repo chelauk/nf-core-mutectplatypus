@@ -68,20 +68,26 @@ purity <- fit_cnas$purity
 
 my_calls <- list(cna_calls, snv_marked)
 
-my_filename <- paste0(my_sample, ".pdf")
-my_rds <- paste0(my_sample, ".rds")
+if (caller == "mutect") {
+  my_filename <- paste0(my_sample, "_mutect.pdf")
+  my_rds <- paste0(my_sample, "_mutect.rds")
+} else if (caller == "platypus") {
+  my_filename <- paste0(my_sample, "_platypus.pdf")
+  my_rds <- paste0(my_sample, "_platypus.rds")
+}
+
 saveRDS(my_calls, file = my_rds)
 
 fit <- pipeline_qc_copynumbercalls(
-    mutations = snv_marked,
-    cna = cna_calls,
-    purity = purity,
-    smooth = TRUE,
-    reference = "GRCh38",
-    description = my_sample,
-    ccf_method = "ROUGH",
-    peak_method = "closest",
-    purity_error = 0.03
+  mutations = snv_marked,
+  cna = cna_calls,
+  purity = purity,
+  smooth = TRUE,
+  reference = "GRCh38",
+  description = my_sample,
+  ccf_method = "ROUGH",
+  peak_method = "closest",
+  purity_error = 0.03
 )
 plot(fit) %>%
   ggsave(filename = my_filename, height = 17, width = 21)
