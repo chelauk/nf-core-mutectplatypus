@@ -23,7 +23,6 @@ if (caller == "mutect") {
 }
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
-if (coverage == "high" && caller == "mutect" ) {
 print(paste("column names of calls data frame",colnames(calls)))
 
 if (coverage == "high" && caller == "mutect") {
