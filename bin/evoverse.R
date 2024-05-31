@@ -23,7 +23,7 @@ if (caller == "mutect") {
 }
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
-if (coverage == "high") {
+if (coverage == "high" && caller == "mutect" ) {
   snvs <- calls[[my_sample]]$mutations %>%
     dplyr::filter(FILTER == "PASS") %>%
     dplyr::filter(!is.na(VAF), VAF > 0) %>%

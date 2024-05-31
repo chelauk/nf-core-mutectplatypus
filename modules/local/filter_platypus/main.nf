@@ -24,7 +24,6 @@ process PLATYPUS_FILTER {
     def prefix = "${meta_control.patient}_platypus"
     def my_vcf = "${vcf.toString().minus(".gz")}"
     """
-    gunzip $vcf
     filter_platypus.py $my_vcf ${meta_control.id} $tef
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
