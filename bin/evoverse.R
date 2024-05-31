@@ -23,7 +23,10 @@ if (caller == "mutect") {
 }
 fit_cnas <- evoparse_Sequenza_CNAs(my_segments)
 
-print(paste("column names of calls data frame",colnames(calls)))
+print(paste("column names of calls data frame",unlist(names(calls))))
+my_samples <- names(calls)
+
+normal <- my_samples[my_samples != my_sample ]
 
 if (coverage == "high" && caller == "mutect") {
   snvs <- calls[[my_sample]]$mutations %>%
