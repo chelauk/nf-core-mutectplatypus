@@ -12,8 +12,7 @@ coverage <- args[5]
 caller <- args[6]
 
 x <- vcfR::read.vcfR(my_vcf)
-normal <- str_replace(x@meta[grep("normal_sample", x@meta)],
-                      "##normal_sample=", "")
+
 load(my_drivers)
 
 if (caller == "mutect") {
@@ -41,7 +40,7 @@ if (coverage == "high" && caller == "mutect") {
   snvs <- calls[[my_sample]]$mutations
 }
 
-my_colnames <- colnames(snvs)[4:28]
+my_colnames <- colnames(snvs)[4:length(colnames(snvs))]
 my_colnames <- c(paste0(my_colnames, ".x"))
 
 if (coverage == "high") { 
