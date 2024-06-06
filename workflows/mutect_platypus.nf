@@ -463,7 +463,7 @@ workflow MUTECT_PLATYPUS {
                      [normal[0],tumour, vcf[0]]}
                 .set{ plat_for_filter }
 
-    if ( params.seq_type != "sc_wgs") {
+    if ( params.seq_type != "sc_wgs" || params.evoverse_coverage == "high" ) {
         PLATYPUS_FILTER( plat_for_filter, tef)
         PLATYPUS_FILTER.out.vcf.set{ platypus_filter_out }
     } else {

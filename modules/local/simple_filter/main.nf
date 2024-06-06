@@ -22,7 +22,6 @@ process SIMPLE_FILTER {
     def prefix = "${meta_control.patient}_platypus"
     def my_vcf = "${vcf.toString().minus(".gz")}"
     """
-    gunzip $vcf
     sc_wgs_filter.py $my_vcf ${meta_control.id}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -31,7 +30,6 @@ process SIMPLE_FILTER {
 	"""
     stub:
     """
-    echo "sc_wgs_filter.py $vcf ${meta_control.id}"
     touch "${meta_control.patient}"_platypus_filtered.vcf
     touch versions.yml
     """

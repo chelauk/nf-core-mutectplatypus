@@ -35,8 +35,10 @@ process PLATYPUS_CALLVARIANTS {
         awk 'BEGIN{OFS=""}{print \$1,":",\$2,"-",\$3}' ${intervals} > ${intervals}.txt
     fi
 
-    bgzip ${vcf}
-    tabix -p vcf ${vcf}.gz
+    if [[ ! -f ${vcf}.gz ]]; then
+        bgzip ${vcf}
+        tabix -p vcf ${vcf}.gz
+    fi 
 
     platypus callVariants \
         --refFile=${fasta} --bamFiles=${bam.join(',')} \
