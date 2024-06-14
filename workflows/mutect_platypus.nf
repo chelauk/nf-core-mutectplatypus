@@ -560,14 +560,19 @@ workflow MUTECT_PLATYPUS {
         purity = Channel.of(["SC_WGS_90",0.90])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity) 
     } else if ( params.sequenza_tissue_type == "TISSUE" ) {
-        purity = Channel.of(["TISSUE_10",0.1],["TISSUE_20",0.2],["TISSUE_30",0.3],["TISSUE_50",0.5],["TISSUE_70", 0.7],["TISSUE_90",0.9])
+        purity = Channel.of(["TISSUE_10",0.1],["TISSUE_20",0.2],["TISSUE_30",0.3],
+                            ["TISSUE_50",0.5],["TISSUE_70", 0.7],["TISSUE_90",0.9])
+        rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity)
+    } else if ( params.sequenza_tissue_type == "CF_DNA" ) {
+        purity = Channel.of(["CF_DNA_10",0.1],["CF_DNA_20",0.2],["CF_DNA_30",0.3],
+                            ["CF_DNA_50",0.5],["CF_DNA_70", 0.7],["CF_DNA_90",0.9])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity)
     }
     
-    SEQUENZAUTILS_RSEQZ(    rseqz_input,
-                            gender,
-                            ploidy,
-                            seq_gam )
+    SEQUENZAUTILS_RSEQZ( rseqz_input,
+                         gender,
+                         ploidy,
+                         seq_gam )
 
     ZIP_MUTECT_MONO_VCF.out.vcf
                 .map{ patient, control, tumour, vcf_gz, vcf_tbi ->
