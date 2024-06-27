@@ -1,4 +1,4 @@
-process PLATYPUS_FILTER {
+process SIMPLE_FILTER {
 
     tag "${meta_control.patient}"
     label 'process_low'
@@ -10,11 +10,9 @@ process PLATYPUS_FILTER {
 
     input:
     tuple val(meta_control), val(meta_tumour), path(vcf)
-    val (tef)
 
     output:
     tuple val(meta_control), val(meta_tumour), path("*filtered.vcf"), emit: vcf
-    tuple val(meta_control), path("*removed.vcf"),  optional:true, emit: rejected
     path "*versions.yml",               emit: versions
 
     when:
@@ -24,7 +22,7 @@ process PLATYPUS_FILTER {
     def prefix = "${meta_control.patient}_platypus"
     def my_vcf = "${vcf.toString().minus(".gz")}"
     """
-    filter_platypus.py $my_vcf ${meta_control.id} $tef
+    sc_wgs_filter.py $my_vcf ${meta_control.id}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         1
@@ -32,7 +30,6 @@ process PLATYPUS_FILTER {
 	"""
     stub:
     """
-    echo "filter_platypus.py $vcf ${meta_control.id} $tef"
     touch "${meta_control.patient}"_platypus_filtered.vcf
     touch versions.yml
     """

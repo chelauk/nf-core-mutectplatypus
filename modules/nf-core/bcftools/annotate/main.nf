@@ -39,4 +39,19 @@ process BCFTOOLS_MAPPABILITY {
         bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
     END_VERSIONS
     """
+    stub:
+    def output = "${meta}.mutect.mappability.vcf"
+    def args = task.ext.args ?: ''
+    def args2 = task.ext.args2 ?: ''
+    def args3 = task.ext.args3 ?: ''
+    def prefix = task.ext.prefix ?: ''
+    """
+    echo '##INFO=<ID=MAPPABILITY,Number=1,Type=Float,Description="k100 mappability">' > mappability.h
+    touch $output
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bcftools: stub 
+    END_VERSIONS
+    """
 }

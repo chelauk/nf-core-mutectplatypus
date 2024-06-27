@@ -1,5 +1,6 @@
 process VCF_SPLIT{
-    tag "$meta_tumour.patient"
+    debug true
+    tag "${meta_tumour.id}"
     label 'process_medium'
 
     conda "bioconda::bcftools=1.17"
@@ -15,12 +16,27 @@ process VCF_SPLIT{
     path "versions.yml"           , emit: versions
 
     script:
+    def suffix = task.ext.args ?: "mutect2"
+    def control = task.ext.control ?: "${meta_control.id}" ?: "${meta_control.sample}" 
+    def tumour = task.ext.tumour ?: "${meta_tumour.id}" ?: "${meta_tumour.sample}" 
     """
-    bcftools view $vcf -s $meta_control.id,$meta_tumour.id > ${meta_tumour.id}_mutect2.mono.vcf
+    bcftools view $vcf -s $control,$tumour > ${tumour}_${suffix}.mono.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*(bedtools) v//; s/ .*\$//')
+    END_VERSIONS
+    """
+    stub:
+    def suffix = task.ext.args ?: "mutect2"
+    def control = task.ext.control ?: "${meta_control.id}" ?: "${meta_control.sample}" 
+    def tumour = task.ext.tumour ?: "${meta_tumour.id}" ?: "${meta_tumour.sample}" 
+    """
+    touch ${tumour}_${suffix}.mono.vcf
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bcftools: stub 
     END_VERSIONS
     """
 

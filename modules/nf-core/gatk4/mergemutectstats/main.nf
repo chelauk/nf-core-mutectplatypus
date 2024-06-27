@@ -8,7 +8,7 @@ process GATK4_MERGEMUTECTSTATS {
         'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
-    tuple val(patient), path(stats)
+    tuple val(patient), val(intervals), path(stats)
 
     output:
     tuple val(patient), path("*.vcf.gz.stats"), emit: stats

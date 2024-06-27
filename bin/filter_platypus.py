@@ -20,42 +20,11 @@ import sys
 import pandas as pd
 
 #####################################################################
-# Filter list - the list of FILTER entries that are acceptable.
 # Amend this list to include/exclude specific FILTER values.
 #####################################################################
 
 # We are going to remove list filtering for now, because it seems we are only filtering out the "strandbias" and "MQ" filter
 #  ...so instead we will track how many come through with these flags
-
-# filterList =   ['PASS', 'alleleBias', 'Q20', 'Q20;alleleBias','QD', 'Q20;QD', 'QD;alleleBias',
-#                 'Q20;QD;alleleBias', 'SC', 'SC;Q20', 'SC;alleleBias', 'SC;Q20;alleleBias', 'SC;QD',
-#                 'SC;Q20;QD', 'SC;QD;alleleBias', 'SC;Q20;QD;alleleBias', 'HapScore', 'Q20;HapScore',
-#                 'HapScore;alleleBias', 'Q20;HapScore;alleleBias', 'QD;HapScore', 'Q20;HapScore;QD',
-#                 'QD;HapScore;alleleBias', 'Q20;HapScore;QD;alleleBias', 'SC;HapScore', 'SC;Q20;HapScore',
-#                 'SC;HapScore;alleleBias', 'SC;Q20;HapScore;alleleBias', 'SC;HapScore;QD', 'SC;Q20;HapScore;QD',
-#                 'SC;HapScore;QD;alleleBias', 'SC;Q20;HapScore;QD;alleleBias',
-#                 # These are experimental pass flag and IS NOT comprehesive and needs to made so
-#                 'HapScore;badReads;QD;alleleBias',
-#                 'Q20;HapScore;badReads;QD;alleleBias',
-#                 'Q20;HapScore;badReads;QD',
-#                 'SC;Q20;badReads;alleleBias',
-#                 'HapScore;badReads;alleleBias',
-#                 'SC;badReads;QD',
-#                 'SC;badReads',
-#                 'SC;Q20;badReads',
-#                 'badReads;QD',
-#                 'SC;Q20;badReads;QD;alleleBias',
-#                 'Q20;badReads;alleleBias',
-#                 'SC;badReads;QD;alleleBias',
-#                 'SC;badReads;alleleBias',
-#                 'SC;Q20;badReads;QD',
-#                 'badReads',
-#                 'Q20;badReads',
-#                 'Q20;badReads;QD;alleleBias',
-#                 'badReads;QD;alleleBias',
-#                 'badReads;alleleBias',
-#                 'Q20;badReads;QD']
-
 
 #####################################################################
 # Parse the arguments

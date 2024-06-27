@@ -1,5 +1,5 @@
 process SEQUENZAUTILS_MERGESEQZ {
-    tag "$id"
+    tag "${meta.id}"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::sequenza-utils=3.0.0" : null)
@@ -8,11 +8,10 @@ process SEQUENZAUTILS_MERGESEQZ {
         'quay.io/biocontainers/sequenza-utils:3.0.0--py39h67e14b5_5' }"
     
     input:
-    tuple val(patient), val(id), path(seqz)
+    tuple val(meta), path(seqz)
 
     output:
-    tuple val(patient), val(id), path("*concat.seqz.gz"), emit: concat_seqz
-    tuple val(patient), val(id), path("*concat.seqz.gz.tbi"), emit: concat_seqz_tbi
+    tuple val(meta), path("*concat.seqz.gz"), path("*concat.seqz.gz.tbi"), emit: concat_seqz
     path "versions.yml"          , emit: versions
 
     when:
@@ -20,7 +19,7 @@ process SEQUENZAUTILS_MERGESEQZ {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "$id"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     head -n 1  <( zcat ${seqz[0]} ) > header
 	cat header <( zcat $seqz | awk '{if (NR!=1 && \$1 != "chromosome") {print \$0}}' ) | bgzip > \
@@ -34,19 +33,19 @@ process SEQUENZAUTILS_MERGESEQZ {
 
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "$id"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cat << 'EOF' 
+    echo "
     zcat $seqz | \
-    awk '{if (NR!=1 && \$1 != "chromosome") {print \$0}}' | bgzip > \
+    awk '{if (NR!=1 && dollar1 != "chromosome") {print dollar0}}' | bgzip > \
     ${prefix}_concat.seqz.gz
     tabix -f -s 1 -b 2 -e 2 -S 1 ${prefix}_concat.seqz.gz
-    EOF
+    "
     touch ${prefix}_concat.seqz.gz
     touch ${prefix}_concat.seqz.gz.tbi
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        sequenzautils: 3.0.0
+        sequenzautils: stub
     END_VERSIONS
     """
 }

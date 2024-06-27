@@ -11,7 +11,7 @@ process CONCAT_VCF {
 
 
     input:
-    tuple val(patient), path(vcf)
+    tuple val(patient), val(intervals), path(vcf)
     path fasta_fai
 	path target_bed
 

@@ -5,31 +5,23 @@ if (!require(sequenza)) stop("Package 'sequenza' missing\n.")
 args <- commandArgs(TRUE)
 print(args)
 input <- args[1]
-output_prefix <- args[2]
-gender <- args[3]
-ploidy <- args[4]
-ccf <- args[5]
-gam <- args[6]
-gam <- as.integer(gam)
+output_dir <- args[2]
+output_prefix <- args[3]
+gender <- args[4]
+ploidy <- as.integer(args[5])
+ccf <- as.numeric(args[6])
+gam <- as.integer(args[7])
+
 if (ploidy == 7) {
-    low_p <- 1
-    up_p <- 7
-    } else  {
-    low_p <- ploidy - 0.5
-    up_p <- ploidy + 0.5
-    }
-if (ccf == "PDO") {
-    high_ccf <- 0.99
-    low_ccf <- 0.95
-    } else {
-    ccf <- as.numeric(ccf)
-    high_ccf <- ccf + 0.1
-    low_ccf <- ccf - 0.1
-    }
-print(paste0("up_ploidy type: ", typeof(up_p), " ", up_p))
-print(paste0("low_ploidy type: ", typeof(low_p), " ", low_p))
-print(paste0("up_cell type: ", typeof(high_ccf), " ", high_ccf))
-print(paste0("low_cell type: ", typeof(low_ccf), " ", low_ccf))
+  low_p <- 1
+  up_p <- 7
+} else  {
+  low_p <- ploidy - 0.5
+  up_p <- ploidy + 0.5
+}
+
+high_ccf <- ccf + 0.1
+low_ccf <- ccf - 0.1
 params_list <- list("input" = input, "output_prefix" = output_prefix)
 # Function:
 sequenzaAnalysis <- function(input,
@@ -108,7 +100,7 @@ sequenzaAnalysis <- function(input,
     sequenza.results(modDat,
         fit,
         output_prefix,
-        out.dir = output_prefix,
+        out.dir = output_dir,
         female = is_female,
         CNt.max = CNt_max,
         XY = c(X = "chrX", Y = "chrY"),

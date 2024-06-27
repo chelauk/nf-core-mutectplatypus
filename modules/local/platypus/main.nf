@@ -1,5 +1,5 @@
 process PLATYPUS_CALLVARIANTS {
-    tag "$patient"
+    tag "${meta.patient}_${meta.interval}"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::platypus-variant:0.8.1.2" : null)
@@ -8,12 +8,12 @@ process PLATYPUS_CALLVARIANTS {
         'quay.io/biocontainers/platypus-variant:0.8.1.2--py27hb763d49_0' }"
 
     input:
-    tuple val(patient), path(vcf), path(tbi), val(interval_patient), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
+    tuple val(meta), path(vcf), val(which_tumour), val(which_norm), path(bam), path(bai), path(intervals)
     path fasta
     path fasta_fai
 
     output:
-    tuple val(patient), path("*platypus.vcf")     , emit: vcf
+    tuple val("${meta.patient}"), path("*platypus.vcf")     , emit: vcf
     path "versions.yml"                   , emit: versions
 
     when:
@@ -21,7 +21,7 @@ process PLATYPUS_CALLVARIANTS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${interval_patient}"
+    def prefix = task.ext.prefix ?: "${meta.interval}"
     def interval_command = intervals ? "--regions=${intervals}.txt" : ""
 
     def avail_mem = 3
@@ -35,10 +35,15 @@ process PLATYPUS_CALLVARIANTS {
         awk 'BEGIN{OFS=""}{print \$1,":",\$2,"-",\$3}' ${intervals} > ${intervals}.txt
     fi
 
+    if [[ ! -f ${vcf}.gz ]]; then
+        bgzip ${vcf}
+        tabix -p vcf ${vcf}.gz
+    fi 
+
     platypus callVariants \
         --refFile=${fasta} --bamFiles=${bam.join(',')} \
         --output=${prefix}.platypus.vcf \
-        --source=${vcf.join(',')} \
+        --source=${vcf}.gz \
         --filterReadPairsWithSmallInserts=0 \
         --maxReads=100000000 \
         --maxVariants=100 \
@@ -55,7 +60,7 @@ process PLATYPUS_CALLVARIANTS {
 
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${interval_patient}"
+    def prefix = task.ext.prefix ?: "${meta.interval}"
     def interval_command = intervals ? "--regions=${intervals}.txt" : ""
     """
     if [[ -f ${intervals} ]]; then

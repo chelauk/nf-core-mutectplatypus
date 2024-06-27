@@ -8,10 +8,10 @@ process GATK4_LEARNREADORIENTATIONMODEL {
         'quay.io/biocontainers/gatk4:4.2.5.0--hdfd78af_0' }"
 
     input:
-    tuple val(patient), path(f1r2)
+    tuple val(patient), val(intervals), path(f1r2)
 
     output:
-    tuple val(patient), path("*.tar.gz"), emit: artifactprior
+    tuple val(patient),  path("*.tar.gz"), emit: artifactprior
     path "versions.yml"                 , emit: versions
 
     when:
