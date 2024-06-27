@@ -455,12 +455,11 @@ workflow MUTECT_PLATYPUS {
                 .map { patient, file -> [ patient , "spacer", "spacer2", file ] }
                 .set { PLAT_PATIENT_VCF }
 
-    PLAT_PATIENT_VCF.combine(mutect_samples_for_split)
-                .map{ patient, spacer, spacer2, plat_vcf, mut_pat, meta_control, meta_tumour, mutect_vcf ->
-                    [patient, meta_tumour, meta_control, plat_vcf]}
-                .groupTuple()
-                .map { patient, tumour, normal, vcf ->
-                     [normal[0],tumour, vcf[0]]}
+    PLAT_PATIENT_VCF.join(mutect_samples_for_split) 
+                .view{ "pre map $it" }
+                .map{ patient, spacer, spacer2, plat_vcf, meta_control, meta_tumour, mutect_vcf ->
+                    [meta_control,meta_tumour, plat_vcf] }
+                .view()
                 .set{ plat_for_filter }
 
     if ( params.seq_type != "sc_wgs" || params.evoverse_coverage == "high" ) {
