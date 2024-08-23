@@ -20,8 +20,13 @@ if (ploidy == 7) {
   up_p <- ploidy + 0.5
 }
 
-high_ccf <- ccf + 0.1
-low_ccf <- ccf - 0.1
+if (ccf == 100) {
+  low_ccf <- 0.99
+  high_ccf <- 0.1
+} else {
+  high_ccf <- ccf + 0.1
+  low_ccf <- ccf - 0.1
+}
 params_list <- list("input" = input, "output_prefix" = output_prefix)
 # Function:
 sequenzaAnalysis <- function(input,

@@ -16,6 +16,7 @@ process GATK4_MUTECT2 {
     path dict
     path pon
     path pon_idx
+    val af_resource
     path germline_resource
     path germline_resource_idx
 
@@ -63,7 +64,7 @@ process GATK4_MUTECT2 {
         ${panel_of_normals_command} \\
         -L $intervals \\
         -O ${prefix}.vcf \\
-        --af-of-alleles-not-in-resource 0.0000025 \\
+        --af-of-alleles-not-in-resource $af_resource \\
         --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter 
     
     echo "GATK4.2.0" > versions.yml

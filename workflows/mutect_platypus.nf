@@ -62,6 +62,7 @@ gender               = params.gender                 ?: Channel.empty()
 ploidy               = params.ploidy                 ?: Channel.empty()
 pan                  = params.pan                    ?: Channel.empty()
 tef                  = params.tef                    ?: Channel.empty()
+af_resource          = params.af_resource            ?: Channel.empty()
 
 // initialise sequenza gamma values
 
@@ -237,6 +238,7 @@ workflow MUTECT_PLATYPUS {
         dict,
         pon,
         pon_idx,
+        af_resource,
         germline_resource,
         germline_resource_idx,
     )
@@ -560,7 +562,8 @@ workflow MUTECT_PLATYPUS {
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity) 
     } else if ( params.sequenza_tissue_type == "TISSUE" ) {
         purity = Channel.of(["TISSUE_10",0.1],["TISSUE_20",0.2],["TISSUE_30",0.3],
-                            ["TISSUE_50",0.5],["TISSUE_70", 0.7],["TISSUE_90",0.9])
+                            ["TISSUE_50",0.5],["TISSUE_70", 0.7],["TISSUE_90",0.9],
+							["TISSUE_10_100",100])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity)
     } else if ( params.sequenza_tissue_type == "CF_DNA" ) {
         purity = Channel.of(["CF_DNA_10",0.1],["CF_DNA_20",0.2],["CF_DNA_30",0.3],
