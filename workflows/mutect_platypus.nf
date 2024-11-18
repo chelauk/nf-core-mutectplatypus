@@ -229,7 +229,9 @@ workflow MUTECT_PLATYPUS {
                     .map{ meta, files -> [ meta, files[0], files[1] ] }
                     .set { ngscheckmate_input }
 
-    BAM_SAMPLEQC(ngscheckmate_input, ngscheckmate_bed, fasta)
+    if (params.ngscheck) {
+	BAM_SAMPLEQC(ngscheckmate_input, ngscheckmate_bed, fasta)
+    }
 
     GATK4_MUTECT2(
         bam_intervals,
@@ -555,7 +557,9 @@ workflow MUTECT_PLATYPUS {
     SEQUENZAUTILS_BINNING(SEQUENZAUTILS_MERGESEQZ.out.concat_seqz, bin)
 
     if ( params.sequenza_tissue_type == "PDO" ) {
-        purity = Channel.of(["PDO_90",0.90])
+        purity = Channel.of(["PDO_10",0.1],["PDO_20", 0.2],["PDO_30",0.3],
+		                    ["PDO_50",0.5],["PDO_70", 0.7],["PDO_90",0.9],
+							["PDO_10_100",100])
         rseqz_input = SEQUENZAUTILS_BINNING.out.seqz_bin.combine(purity) 
     }  else if ( params.sequenza_tissue_type == "SC_WGS" ) {
         purity = Channel.of(["SC_WGS_90",0.90])

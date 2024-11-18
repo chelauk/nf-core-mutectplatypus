@@ -45,7 +45,7 @@ my_colnames <- c(paste0(my_colnames, ".x"))
 if (coverage == "high" && caller == "mutect" ) { 
   snvs <- left_join(snvs, calls[[normal]]$mutations, 
                     by = c("chr", "from", "to")) %>%
-    dplyr::filter(DP.x >= 5, DP.y >= 5) %>%
+    dplyr::filter(DP.x >= 10, DP.y >= 10) %>%
     select(1:30)
 } else {
   snvs <- left_join(snvs, calls[[normal]]$mutations,
