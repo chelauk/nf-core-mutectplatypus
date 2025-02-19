@@ -19,7 +19,9 @@ def checkPathParamList = [
     params.germline_resource,
     params.germline_resource_idx,
     params.haplotype_map,
-    params.drivers,
+    params.pon,
+	params.pon_idx,
+	params.drivers,
     params.ngscheckmate_bed,
     params.mappability,
     params.mappability_tbi
