@@ -9,6 +9,7 @@ workflow INPUT_CHECK {
     samplesheet // file: /path/to/samplesheet.csv
 
     main:
+        SAMPLESHEET_CHECK ( samplesheet )
         SAMPLESHEET_CHECK.out.csv
             | splitCsv(header: true)
             | map { row ->
